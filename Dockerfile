@@ -5,7 +5,7 @@ ADD . /build/
 
 
 RUN mkdir /tmp/cache
-RUN make
+RUN make -C manager manager
 
 FROM wcp-ibm-streams-docker-local.artifactory.swg-devops.com/dev_ngoracke/suede:latest
 
