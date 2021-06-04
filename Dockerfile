@@ -7,9 +7,9 @@ ADD . /build/
 RUN mkdir /tmp/cache
 RUN make -C manager manager
 
-FROM wcp-ibm-streams-docker-local.artifactory.swg-devops.com/dev_ngoracke/suede:latest
+FROM gcr.io/distroless/static:nonroot
+WORKDIR /
+COPY manager .
+USER nonroot:nonroot
 
-WORKDIR /app
-COPY --from=builder /tmp/api-server /app/api-server
-
-CMD [ "/app/api-server" ]
+ENTRYPOINT ["/manager"]
