@@ -10,7 +10,7 @@ RUN ls -l && pwd && ls -l manager
 
 FROM gcr.io/distroless/static:nonroot
 WORKDIR /
-COPY --from=builder /build/manager/manager/* .
+COPY --from=builder /build/manager/bin/* .
 USER nonroot:nonroot
 
 ENTRYPOINT ["/manager"]
