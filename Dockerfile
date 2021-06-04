@@ -1,6 +1,6 @@
 FROM wcp-ibm-streams-docker-local.artifactory.swg-devops.com/dev_ngoracke/suede:latest as builder
 
-RUN yum whatprovides tree && yum -y install tree
+RUN which tree
 WORKDIR /build
 ADD . /build/
 
