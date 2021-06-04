@@ -22,6 +22,9 @@ test: pre-test
 manager: generate fmt vet
 	go build -o bin/manager main.go
 
+managerforimage: generate fmt vet
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -o manager main.go
+
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet manifests
 	go run ./main.go --enable-all-controllers --metrics-bind-addr=0
