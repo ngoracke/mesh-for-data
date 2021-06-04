@@ -6,11 +6,11 @@ ADD . /build/
 
 RUN mkdir /tmp/cache
 RUN make -C manager manager
-RUN ls -l
+RUN ls -l && pwd
 
 FROM gcr.io/distroless/static:nonroot
 WORKDIR /
-COPY --from=builder manager .
+COPY --from=builder /build/manager/manager .
 USER nonroot:nonroot
 
 ENTRYPOINT ["/manager"]
