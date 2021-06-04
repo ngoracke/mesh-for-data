@@ -10,6 +10,7 @@ RUN make -C manager manager
 FROM gcr.io/distroless/static:nonroot
 WORKDIR /
 COPY manager .
+RUN ls -l /
 USER nonroot:nonroot
 
 ENTRYPOINT ["/manager"]
