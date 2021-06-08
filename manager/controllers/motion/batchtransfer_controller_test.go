@@ -6,6 +6,7 @@ package motion
 import (
 	"context"
 	"io/ioutil"
+	"os"
 	"time"
 
 	kbatch "k8s.io/api/batch/v1"
@@ -52,7 +53,10 @@ var _ = Describe("BatchTransfer Controller", func() {
 			batchTransfer := &motionv1.BatchTransfer{}
 			err = yaml.Unmarshal(batchTransferYAML, batchTransfer)
 			Expect(err).ToNot(HaveOccurred())
-
+			registry := os.Getenv("DOCKER_HOSTNAME")
+			if len(registry) > 0 {
+				batchTransfer.Spec.Image = registry + "/dummy-mover:latest"
+			}
 			key := client.ObjectKeyFromObject(batchTransfer)
 
 			// Create BatchTransfer
