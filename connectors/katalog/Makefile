@@ -18,6 +18,10 @@ docker-build: generate
 	docker build . -t ${IMG}
 	rm katalog
 
+.PHONY: source-build
+source-build:
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -o katalog main.go
+
 .PHONY: run
 run: generate
 	go run main.go run
