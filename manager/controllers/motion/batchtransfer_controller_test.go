@@ -5,6 +5,7 @@ package motion
 
 import (
 	"context"
+        "fmt"
 	"io/ioutil"
 	"os"
 	"time"
@@ -54,9 +55,10 @@ var _ = Describe("BatchTransfer Controller", func() {
 			err = yaml.Unmarshal(batchTransferYAML, batchTransfer)
 			Expect(err).ToNot(HaveOccurred())
 			registry := os.Getenv("DOCKER_HOSTNAME")
-			if len(registry) > 0 {
+			if len(registry) > 0 && registry != "ghcr.io" {
 				batchTransfer.Spec.Image = registry + "/dummy-mover:latest"
 			}
+                        fmt.Printf("%v\n", registry)
 			key := client.ObjectKeyFromObject(batchTransfer)
 
 			// Create BatchTransfer
