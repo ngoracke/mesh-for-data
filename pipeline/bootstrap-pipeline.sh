@@ -21,14 +21,14 @@ realpath() {
     [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
 }
 
-repo_root=$(realpath $(dirname $(realpath $0)))
+repo_root=$(realpath $(dirname $(realpath $0)))/..
 
 oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${unique_prefix}:pipeline
-oc apply -f pipeline/make.yaml
+oc apply -f ${repo_root}/pipeline/make.yaml
 set +e
-oc delete -f pipeline/pipeline.yaml
+oc delete -f ${repo_root}/pipeline/pipeline.yaml
 set -e
-oc apply -f pipeline/pipeline.yaml
+oc apply -f ${repo_root}/pipeline/pipeline.yaml
 
 art="c3RybWR2b3BAdXMuaWJtLmNvbTpBS0NwNWUzb3gxa1Y0ZXJuaVIzTDNma244QlpkWVJEUHlUWTlpZTRjMTVwUTFrZjZzTWc2Vko0RGdYWWJHSFNUVW9Kakh1UFdl"
 art_u=$(echo "${art}" | base64 --decode | cut -d: -f 1)
