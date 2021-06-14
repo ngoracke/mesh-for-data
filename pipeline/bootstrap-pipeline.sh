@@ -73,10 +73,6 @@ oc create secret generic -n ${unique_prefix} sourceregcred --from-file=.dockerco
 oc secrets link pipeline regcred --for=mount
 oc secrets link builder regcred --for=mount
 
-curl -kLo ${TMP}/tkn-linux-amd64-0.17.2.tar.gz https://mirror.openshift.com/pub/openshift-v4/clients/pipeline/0.17.2/tkn-linux-amd64-0.17.2.tar.gz
-tar -xvf ${TMP}/tkn-linux-amd64-0.17.2.tar.gz -C ${TMP}/
-cp ${TMP}/tkn ~/streams.helm-charts/bin/
-
 if [[ "${unique_prefix}" == "m4d-system" ]]; then
     extra_params='-p clusterScoped="true" -p deployVault="true"'
 fi
