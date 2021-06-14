@@ -25,6 +25,9 @@ manager: generate fmt vet
 managerforimage: generate fmt vet
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -o manager main.go
 
+source-build: generate fmt vet
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -o manager main.go
+
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet manifests
 	go run ./main.go --enable-all-controllers --metrics-bind-addr=0
@@ -48,8 +51,7 @@ manifests: $(TOOLBIN)/controller-gen $(TOOLBIN)/yq
 		$(TOOLBIN)/yq eval '(.webhooks.[].clientConfig.service.namespace) = "{{ .Release.Namespace }}"' - > $(ROOT_DIR)/charts/fybrik/files/webhook-configs.yaml
 
 # Overwrite docker-build from docker.mk
-docker-build: generate
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -o manager main.go
+docker-build: generate source-build
 	docker build . -t ${IMG} -f Dockerfile
 	rm manager
 
