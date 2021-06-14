@@ -24,7 +24,12 @@ realpath() {
 repo_root=$(realpath $(dirname $(realpath $0)))/..
 
 oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${unique_prefix}:pipeline
+set +e
+resource_version=$(oc get -f ${repo_root}/pipeline/make.yaml -o jsonpath='{.metadata.resourceVersion}')
+set -e
 oc apply -f ${repo_root}/pipeline/make.yaml
+oc patch clustertask helm-upgrade-from-repo -p '{"spec":{"steps":[{"name":"upgrade-from-repo","image":"wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/k8s-helm:$(inputs.params.helm_version)"}]}}' --type=merge
+oc patch clustertask helm-upgrade-from-source -p '{"spec":{"steps":[{"name":"upgrade-from-repo","image":"wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/k8s-helm:$(inputs.params.helm_version)"}]}}' --type=merge
 set +e
 oc delete -f ${repo_root}/pipeline/pipeline.yaml
 set -e
