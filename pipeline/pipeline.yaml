@@ -110,7 +110,7 @@ spec:
     - name: TLSVERIFY
       value: "false"
     - name: BUILD_EXTRA_ARGS
-      value: --build-arg REGISTRY=$(params.docker-hostname)/$(params.docker-namespace)
+      value: --build-arg REGISTRY=$(params.docker-hostname)/pipelines-tutorial
     runAfter:
     - fetch-repository
     taskRef:
