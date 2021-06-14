@@ -1,0 +1,377 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: build-and-deploy
+spec:
+  params:
+  - description: name of the deployment to be patched
+    name: deployment-name
+    type: string
+  - default: wcp-ibm-streams-docker-local.artifactory.swg-devops.com
+    description: docker registry hostname
+    name: docker-hostname
+    type: string
+  - default: pipelines-tutorial
+    description: docker registry hostname
+    name: docker-namespace
+    type: string
+  - description: url of the git repo for the code of deployment
+    name: git-url
+    type: string
+  - default: pipelines-1.4
+    description: revision to be used from repo of the code for deployment
+    name: git-revision
+    type: string
+  - default: manager
+    description: image to be built from the code
+    name: MANAGER_IMAGE
+    type: string
+  - default: katalog-connector
+    description: image to be built from the code
+    name: KATALOG_IMAGE
+    type: string
+  - default: dummy-mover
+    description: image name for the dummy data mover
+    name: dummy-image
+    type: string
+  - default: m4d-system
+    description: namespace to deploy control plane to
+    name: NAMESPACE
+    type: string
+  - default: "false"
+    description: deploy vault or no
+    name: deployVault
+    type: string
+  - default: "false"
+    description: deploy vault or no
+    name: deployCRD
+    type: string
+  - default: "false"
+    description: install cluster scoped helm resources
+    name: clusterScoped
+    type: string
+  tasks:
+  - name: fetch-repository
+    params:
+    - name: url
+      value: $(params.git-url)
+    - name: subdirectory
+      value: ""
+    - name: deleteExisting
+      value: "true"
+    - name: revision
+      value: $(params.git-revision)
+    taskRef:
+      kind: ClusterTask
+      name: git-clone
+    workspaces:
+    - name: output
+      workspace: shared-workspace
+  - name: build-manager
+    params:
+    - name: target
+      value: managerforimage
+    - name: context
+      value: manager
+    runAfter:
+    - fetch-repository
+    taskRef:
+      kind: Task
+      name: make
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: build-image-manager
+    params:
+    - name: IMAGE
+      value: $(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)
+    - name: TLSVERIFY
+      value: "false"
+    - name: DOCKERFILE
+      value: manager/Dockerfile
+    - name: CONTEXT
+      value: manager
+    - name: BUILD_EXTRA_ARGS
+      value: --build-arg REGISTRY=$(params.docker-hostname)/$(params.docker-namespace)
+    runAfter:
+    - build-manager
+    taskRef:
+      kind: ClusterTask
+      name: buildah
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: build-image-dummy-mover
+    params:
+    - name: IMAGE
+      value: $(params.docker-hostname)/$(params.docker-namespace)/$(params.dummy-image)
+    - name: DOCKERFILE
+      value: test/dummy-mover/Dockerfile.dummy-mover
+    - name: TLSVERIFY
+      value: "false"
+    - name: BUILD_EXTRA_ARGS
+      value: --build-arg REGISTRY=$(params.docker-hostname)/$(params.docker-namespace)
+    runAfter:
+    - fetch-repository
+    taskRef:
+      kind: ClusterTask
+      name: buildah
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: build-katalog
+    params:
+    - name: target
+      value: source-build
+    - name: context
+      value: connectors/katalog
+    runAfter:
+    - fetch-repository
+    taskRef:
+      kind: Task
+      name: make
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: build-image-katalog
+    params:
+    - name: IMAGE
+      value: $(params.docker-hostname)/$(params.docker-namespace)/katalog-connector
+    - name: DOCKERFILE
+      value: connectors/katalog/Dockerfile
+    - name: TLSVERIFY
+      value: "false"
+    - name: BUILD_EXTRA_ARGS
+      value: --build-arg REGISTRY=$(params.docker-hostname)/$(params.docker-namespace)
+    - name: CONTEXT
+      value: connectors/katalog
+    runAfter:
+    - build-katalog
+    taskRef:
+      kind: ClusterTask
+      name: buildah
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: build-opa
+    params:
+    - name: target
+      value: source-build
+    - name: context
+      value: connectors/opa
+    runAfter:
+    - fetch-repository
+    taskRef:
+      kind: Task
+      name: make
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: build-image-opa
+    params:
+    - name: IMAGE
+      value: $(params.docker-hostname)/$(params.docker-namespace)/opa-connector
+    - name: DOCKERFILE
+      value: connectors/opa/Dockerfile
+    - name: TLSVERIFY
+      value: "false"
+    - name: BUILD_EXTRA_ARGS
+      value: --build-arg REGISTRY=$(params.docker-hostname)/$(params.docker-namespace)
+    - name: CONTEXT
+      value: connectors/opa
+    runAfter:
+    - build-opa
+    taskRef:
+      kind: ClusterTask
+      name: buildah
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: build-datacatalog
+    params:
+    - name: target
+      value: source-build
+    - name: context
+      value: test/services/datacatalog
+    runAfter:
+    - fetch-repository
+    taskRef:
+      kind: Task
+      name: make
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: build-image-datacatalog
+    params:
+    - name: IMAGE
+      value: $(params.docker-hostname)/$(params.docker-namespace)/data-catalog-mock
+    - name: DOCKERFILE
+      value: test/services/datacatalog/Dockerfile
+    - name: TLSVERIFY
+      value: "false"
+    - name: BUILD_EXTRA_ARGS
+      value: --build-arg REGISTRY=$(params.docker-hostname)/$(params.docker-namespace)
+    - name: CONTEXT
+      value: test/services/datacatalog
+    runAfter:
+    - build-datacatalog
+    taskRef:
+      kind: ClusterTask
+      name: buildah
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: build-servicepolicycompiler
+    params:
+    - name: target
+      value: source-build
+    - name: context
+      value: test/services/policycompiler
+    runAfter:
+    - fetch-repository
+    taskRef:
+      kind: Task
+      name: make
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: build-image-serverpolicycompiler
+    params:
+    - name: IMAGE
+      value: $(params.docker-hostname)/$(params.docker-namespace)/serverpolicycompiler-mock
+    - name: DOCKERFILE
+      value: test/services/policycompiler/Dockerfile
+    - name: TLSVERIFY
+      value: "false"
+    - name: BUILD_EXTRA_ARGS
+      value: --build-arg REGISTRY=$(params.docker-hostname)/$(params.docker-namespace)
+    - name: CONTEXT
+      value: test/services/policycompiler
+    runAfter:
+    - build-servicepolicycompiler
+    taskRef:
+      kind: ClusterTask
+      name: buildah
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: upgrade-helm-from-source
+    params:
+    - name: charts_dir
+      value: /workspace/source/charts/m4d
+    - name: release_name
+      value: m4d
+    - name: release_namespace
+      value: $(params.NAMESPACE)
+    - name: overwrite_values
+      value: clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),$(params.docker-hostname)/$(params.docker-namespace)/opaConnector.image=opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),vault.address=http://vault.m4d-system:8200
+    - name: helm_version
+      value: latest
+    - name: release_version
+      value: 0.1.0
+    runAfter:
+    - build-image-manager
+    - build-image-katalog
+    - build-image-opa
+    - build-image-datacatalog
+    taskRef:
+      kind: ClusterTask
+      name: helm-upgrade-from-source
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: upgrade-helm-crd-from-source
+    params:
+    - name: charts_dir
+      value: /workspace/source/charts/m4d-crd
+    - name: release_name
+      value: m4d-crd
+    - name: release_namespace
+      value: $(params.NAMESPACE)
+    - name: helm_version
+      value: latest
+    - name: release_version
+      value: 0.1.0
+    runAfter:
+    - fetch-repository
+    taskRef:
+      kind: ClusterTask
+      name: helm-upgrade-from-source
+    when:
+    - Input: $(params.deployCRD)
+      Operator: in
+      Values:
+      - "true"
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: upgrade-helm-vault-from-repo
+    params:
+    - name: helm_version
+      value: latest
+    - name: helm_repo
+      value: https://helm.releases.hashicorp.com
+    - name: chart_name
+      value: hashicorp/vault --values https://raw.githubusercontent.com/mesh-for-data/mesh-for-data/v0.1.0/third_party/vault/vault-single-cluster/values.yaml
+        --create-namespace
+    - name: release_version
+      value: 0.9.1
+    - name: release_name
+      value: vault
+    - name: release_namespace
+      value: $(params.NAMESPACE)
+    - name: overwrite_values
+      value: server.dev.enabled=true,injector.enabled=false,global.openshift=true
+    taskRef:
+      kind: ClusterTask
+      name: helm-upgrade-from-repo
+    when:
+    - Input: $(params.deployVault)
+      Operator: in
+      Values:
+      - "true"
+  - name: oc-apply-vault-roles
+    params:
+    - name: ARGS
+      value:
+      - apply -f https://raw.githubusercontent.com/mesh-for-data/mesh-for-data/v0.1.0/third_party/vault/vault-single-cluster/vault-rbac.yaml
+        -n $(params.NAMESPACE)
+    runAfter:
+    - upgrade-helm-vault-from-repo
+    taskRef:
+      kind: ClusterTask
+      name: openshift-client
+    when:
+    - Input: $(params.deployVault)
+      Operator: in
+      Values:
+      - "true"
+  - name: oc-install-flight-opensource
+    params:
+    - name: ARGS
+      value:
+      - apply -f https://github.com/mesh-for-data/arrow-flight-module/releases/latest/download/module.yaml
+        -n $(params.NAMESPACE)
+    runAfter:
+    - upgrade-helm-crd-from-source
+    taskRef:
+      kind: ClusterTask
+      name: openshift-client
+  - name: run-integration-tests
+    params:
+    - name: target
+      value: run-integration-tests
+    - name: context
+      value: manager
+    - name: flags
+      value: DOCKER_HOSTNAME=$(params.docker-hostname)/$(params.docker-namespace)
+    runAfter:
+    - upgrade-helm-from-source
+    taskRef:
+      kind: Task
+      name: make
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  workspaces:
+  - name: shared-workspace
