@@ -1,10 +1,10 @@
 # Tekton pipeline 
 
-[vscode tekton extension doc](https://github.com/redhat-developer/vscode-tekton)
+[vscode tekton pipelines extension doc](https://github.com/redhat-developer/vscode-tekton)
 
 ## Bootstrapping
 
-Initial install for a cluster must happen in m4d-system (currently)
+Initial install for a cluster must happen in m4d-system (currently).  It won't hurt anything if you aren't sure, and reinstall in m4d-system.
 ```
 bash -x bootstrap-pipeline.sh m4d-system
 # follow on screen instructions
