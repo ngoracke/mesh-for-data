@@ -23,6 +23,12 @@ var _ = Describe("M4DApplication Controller", func() {
 	Context("M4DApplication", func() {
 		BeforeEach(func() {
 			// Add any setup steps that needs to be executed before each test
+                        module := &app.M4DModule{}
+                        Expect(readObjectFromFile("../../testdata/e2e/module-read.yaml", module)).ToNot(HaveOccurred())
+                        application := &app.M4DApplication{}
+                        Expect(readObjectFromFile("../../testdata/e2e/m4dapplication.yaml", application)).ToNot(HaveOccurred())
+                        _ = k8sClient.Delete(context.Background(), application)
+                        _ = k8sClient.Delete(context.Background(), module)
 		})
 
 		AfterEach(func() {
