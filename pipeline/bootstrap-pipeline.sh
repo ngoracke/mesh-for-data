@@ -28,8 +28,22 @@ set +e
 resource_version=$(oc get -f ${repo_root}/pipeline/make.yaml -o jsonpath='{.metadata.resourceVersion}')
 set -e
 oc apply -f ${repo_root}/pipeline/make.yaml
-oc patch clustertask helm-upgrade-from-repo -p '{"spec":{"steps":[{"name":"upgrade-from-repo","image":"wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/k8s-helm:$(inputs.params.helm_version)"}]}}' --type=merge
-oc patch clustertask helm-upgrade-from-source -p '{"spec":{"steps":[{"name":"upgrade-from-repo","image":"wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/k8s-helm:$(inputs.params.helm_version)"}]}}' --type=merge
+oc patch clustertask helm-upgrade-from-repo -p '{"spec":{"steps":[{"name":"upgrade-from-repo","image":"wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/k8s-helm:$(inputs.params.helm_version)"}]}}' --type=strategic
+
+oc patch clustertask helm-upgrade-from-repo -p '
+[{
+  "op": "replace",
+  "path": "/spec/steps/0/image",
+  "value": "wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/k8s-helm:$(inputs.params.helm_version)"
+}]' --type=json
+
+oc patch clustertask helm-upgrade-from-source -p '
+[{
+  "op": "replace",
+  "path": "/spec/steps/0/image",
+  "value": "wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/k8s-helm:$(inputs.params.helm_version)"
+}]' --type=json
+
 set +e
 oc delete -f ${repo_root}/pipeline/pipeline.yaml
 set -e
@@ -77,6 +91,7 @@ oc create secret generic -n ${unique_prefix} sourceregcred --from-file=.dockerco
 
 oc secrets link pipeline regcred --for=mount
 oc secrets link builder regcred --for=mount
+oc secrets link pipeline regcred --for=pull
 
 if [[ "${unique_prefix}" == "m4d-system" ]]; then
     extra_params='-p clusterScoped="true" -p deployVault="true"'
