@@ -47,6 +47,10 @@ spec:
     name: deployCRD
     type: string
   - default: "false"
+    description: deploy certmanager or no
+    name: deployCertManager
+    type: string
+  - default: "false"
     description: install cluster scoped helm resources
     name: clusterScoped
     type: string
@@ -264,9 +268,7 @@ spec:
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
-      value: clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),$(params.docker-hostname)/$(params.docker-namespace)/opaConnector.image=opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),vault.address=http://vault.m4d-system:8200
-    - name: helm_version
-      value: latest
+      value: clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),$(params.docker-hostname)/$(params.docker-namespace)/opaConnector.image=opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),vault.address=http://vault.m4d-system:8200,global.imagePullSecrets=regcred
     - name: release_version
       value: 0.1.0
     runAfter:
@@ -288,8 +290,6 @@ spec:
       value: m4d-crd
     - name: release_namespace
       value: $(params.NAMESPACE)
-    - name: helm_version
-      value: latest
     - name: release_version
       value: 0.1.0
     runAfter:
@@ -307,8 +307,6 @@ spec:
       workspace: shared-workspace
   - name: upgrade-helm-vault-from-repo
     params:
-    - name: helm_version
-      value: latest
     - name: helm_repo
       value: https://helm.releases.hashicorp.com
     - name: chart_name
@@ -327,6 +325,28 @@ spec:
       name: helm-upgrade-from-repo
     when:
     - Input: $(params.deployVault)
+      Operator: in
+      Values:
+      - "true"
+  - name: upgrade-helm-certmgr-from-repo
+    params:
+    - name: helm_repo
+      value: https://charts.jetstack.io
+    - name: chart_name
+      value: jetstack/cert-mgr --create-namespace
+    - name: release_version
+      value: v1.2.0
+    - name: release_name
+      value: cert-manager
+    - name: release_namespace
+      value: cert-manager 
+    - name: overwrite_values
+      value: installCRDs=true
+    taskRef:
+      kind: ClusterTask
+      name: helm-upgrade-from-repo
+    when:
+    - Input: $(params.deployCertManager)
       Operator: in
       Values:
       - "true"

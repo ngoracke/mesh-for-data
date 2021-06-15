@@ -25,7 +25,7 @@ repo_root=$(realpath $(dirname $(realpath $0)))/..
 
 oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${unique_prefix}:pipeline
 set +e
-resource_version=$(oc get -f ${repo_root}/pipeline/make.yaml -o jsonpath='{.metadata.resourceVersion}')
+#resource_version=$(oc get -f ${repo_root}/pipeline/make.yaml -o jsonpath='{.metadata.resourceVersion}')
 set -e
 oc apply -f ${repo_root}/pipeline/make.yaml
 
@@ -100,6 +100,11 @@ oc get crd | grep "m4dapplications.app.m4d.ibm.com"
 rc=$?
 if [[ $rc -ne 0 ]]; then
     extra_params="${extra_params} deployCRD='true'"
+fi
+
+oc get crd | grep "cert-manager"
+if [[ $rc -ne 0 ]]; then
+    extra_params="${extra_params} deployCertManager='true'"
 fi
 
 set +e
