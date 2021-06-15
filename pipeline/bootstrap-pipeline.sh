@@ -33,14 +33,14 @@ oc patch clustertask helm-upgrade-from-repo -p '
 [{
   "op": "replace",
   "path": "/spec/steps/0/image",
-  "value": "wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/k8s-helm:$(inputs.params.helm_version)"
+  "value": "wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/k8s-helm:latest"
 }]' --type=json
 
 oc patch clustertask helm-upgrade-from-source -p '
 [{
   "op": "replace",
   "path": "/spec/steps/0/image",
-  "value": "wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/k8s-helm:$(inputs.params.helm_version)"
+  "value": "wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/k8s-helm:latest"
 }]' --type=json
 
 set +e
