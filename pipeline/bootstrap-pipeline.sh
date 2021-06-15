@@ -28,7 +28,6 @@ set +e
 resource_version=$(oc get -f ${repo_root}/pipeline/make.yaml -o jsonpath='{.metadata.resourceVersion}')
 set -e
 oc apply -f ${repo_root}/pipeline/make.yaml
-oc patch clustertask helm-upgrade-from-repo -p '{"spec":{"steps":[{"name":"upgrade-from-repo","image":"wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/k8s-helm:$(inputs.params.helm_version)"}]}}' --type=strategic
 
 oc patch clustertask helm-upgrade-from-repo -p '
 [{
