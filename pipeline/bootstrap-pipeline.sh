@@ -28,6 +28,7 @@ set +e
 #resource_version=$(oc get -f ${repo_root}/pipeline/make.yaml -o jsonpath='{.metadata.resourceVersion}')
 set -e
 oc apply -f ${repo_root}/pipeline/make.yaml
+oc apply -f ${repo_root}/pipeline/subscription.yaml
 
 oc patch clustertask helm-upgrade-from-repo -p '
 [{
