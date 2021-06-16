@@ -11,7 +11,7 @@ else
 fi
 set -e
 if [[ $rc -ne 0 ]]; then
-    oc create ns ${1:-m4d-system}
+    oc new-project ${1:-m4d-system}
 else
     oc project ${1:-m4d-system} 
 fi
