@@ -23,12 +23,13 @@ realpath() {
 
 repo_root=$(realpath $(dirname $(realpath $0)))/..
 
+oc apply -f ${repo_root}/pipeline/subscription.yaml
+
 oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${unique_prefix}:pipeline
 set +e
 #resource_version=$(oc get -f ${repo_root}/pipeline/make.yaml -o jsonpath='{.metadata.resourceVersion}')
 set -e
 oc apply -f ${repo_root}/pipeline/make.yaml
-oc apply -f ${repo_root}/pipeline/subscription.yaml
 
 oc patch clustertask helm-upgrade-from-repo -p '
 [{
