@@ -1,6 +1,27 @@
 #!/bin/bash
 set -e
 set +e
+
+realpath() {
+    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
+}
+
+repo_root=$(realpath $(dirname $(realpath $0)))/..
+
+. ${repo_root}/pipeline/common_functions.sh
+
+function cleanup {
+    if [[ ! -z ${TMP} ]]; then
+        rm -rf ${TMP}
+#        echo "Deleted temp working directory ${TMP}"
+    fi
+}
+
+if [[ -z "$TMP" ]]; then
+    TMP=$(mktemp -d) || exit 1
+    trap cleanup EXIT
+fi
+
 rc=1
 if [[ ! -z $1 ]]; then
     oc get project $1
@@ -17,13 +38,16 @@ else
 fi
 unique_prefix=$(kubectl config view --minify --output 'jsonpath={..namespace}'; echo)
 
-realpath() {
-    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
-}
-
-repo_root=$(realpath $(dirname $(realpath $0)))/..
-
 oc apply -f ${repo_root}/pipeline/subscription.yaml
+
+cat > ${TMP}/streams_csv_check_script.sh <<EOH
+#!/bin/bash
+set -x
+oc get -n openshift-pipelines csv | grep redhat-openshift-pipelines-operator 
+oc get -n openshift-pipelines csv | grep redhat-openshift-pipelines-operator | grep Succeeded
+EOH
+chmod u+x ${TMP}/streams_csv_check_script.sh
+try_command "${TMP}/streams_csv_check_script.sh"  40 false 5
 
 oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${unique_prefix}:pipeline
 set +e
@@ -63,18 +87,6 @@ icr_p=$(echo "${icr}" | base64 --decode | cut -d: -f 2)
 reg_username=${art_u}
 reg_password=${art_p}
 auth=${art}
-
-function cleanup {
-    if [[ ! -z ${TMP} ]]; then
-        rm -rf ${TMP}
-#        echo "Deleted temp working directory ${TMP}"
-    fi
-}
-
-if [[ -z "$TMP" ]]; then
-    TMP=$(mktemp -d) || exit 1
-    trap cleanup EXIT
-fi
 
 image_repo="wcp-ibm-streams-docker-local.artifactory.swg-devops.com"
 cat > ${TMP}/secret.yaml <<EOH
