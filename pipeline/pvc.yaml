@@ -7,4 +7,4 @@ spec:
     - ReadWriteMany
   resources:
     requests:
-      storage: 500Mi
+      storage: 1000Mi

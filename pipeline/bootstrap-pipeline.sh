@@ -131,6 +131,15 @@ if [[ $rc -ne 0 ]]; then
     exit 1
 fi
 
+oc apply -f ${repo_root}/pipeline/rootsa.yaml
+oc apply -f ${repo_root}/pipeline/statefulset.yaml
+oc apply -f ${repo_root}/pipeline/pvc.yaml
+oc adm policy add-scc-to-user privileged system:serviceaccount:m4d-nick:root-sa
+
 set +x
 echo "install tekton extension is vscode and then run:
+# for a dynamically provisioned PVC that will be deleted when the pipelinerun is deleted
 tkn pipeline start build-and-deploy -w name=shared-workspace,volumeClaimTemplateFile=${repo_root}/pipeline/pvc.yaml -p deployment-name=m4d -p git-url=https://github.com/ngoracke/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params}"
+
+# for a pre-existing PVC that will be deleted when the namespace is deleted
+echo "tkn pipeline start build-and-deploy -w name=shared-workspace,claimName=source-pvc -p deployment-name=m4d -p git-url=https://github.com/ngoracke/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params}"
