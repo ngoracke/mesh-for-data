@@ -134,7 +134,7 @@ fi
 oc apply -f ${repo_root}/pipeline/rootsa.yaml
 oc apply -f ${repo_root}/pipeline/statefulset.yaml
 oc apply -f ${repo_root}/pipeline/pvc.yaml
-oc adm policy add-scc-to-user privileged system:serviceaccount:m4d-nick:root-sa
+oc adm policy add-scc-to-user privileged system:serviceaccount:${unique_prefix}:root-sa
 
 set +x
 echo "install tekton extension is vscode and then run:
