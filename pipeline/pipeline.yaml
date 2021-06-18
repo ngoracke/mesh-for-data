@@ -4,56 +4,58 @@ metadata:
   name: build-and-deploy
 spec:
   params:
-  - description: name of the deployment to be patched
-    name: deployment-name
-    type: string
   - default: wcp-ibm-streams-docker-local.artifactory.swg-devops.com
-    description: docker registry hostname
+    description: docker registry hostname.  This is where images will be pushed once built
     name: docker-hostname
     type: string
   - default: pipelines-tutorial
-    description: docker registry hostname
+    description: docker registry namespace.  This is the namespace in the docker-hostname where images will be pushed once built.  Choose something unique.  If using the local OpenShift registry, make this the same as the namespace you intend to run in.
     name: docker-namespace
     type: string
   - description: url of the git repo for the code of deployment
     name: git-url
     type: string
-  - default: pipelines-1.4
-    description: revision to be used from repo of the code for deployment
+    default: https://github.com/ngoracke/mesh-for-data.git
+  - default: pipelines
+    description: branch/revision to be used from repo of the code for deployment
     name: git-revision
     type: string
   - default: manager
-    description: image to be built from the code
+    description: image name for the manager.  Only necessary to switch this if you want to swap back and forth between alternate images
     name: MANAGER_IMAGE
     type: string
   - default: katalog-connector
-    description: image to be built from the code
+    description: image name for the katalog-connector.  Only necessary to switch this if you want to swap back and forth between alternate images
     name: KATALOG_IMAGE
     type: string
   - default: dummy-mover
-    description: image name for the dummy data mover
+    description: image name for the dummy data mover.  Only necessary to switch this if you want to swap back and forth between alternate images
     name: dummy-image
     type: string
   - default: m4d-system
-    description: namespace to deploy control plane to
+    description: namespace to deploy control plane to.  If nobody has deployed m4d on this cluster before, choose m4d-system.
     name: NAMESPACE
     type: string
   - default: "false"
-    description: deploy vault or no
+    description: deploy vault or no.  If deploying to the m4d-system namespace, make this true.
     name: deployVault
     type: string
   - default: "false"
-    description: deploy vault or no
+    description: deploy CRDs or no.  If deploying to the m4d-system namespace, make this true.
     name: deployCRD
     type: string
   - default: "false"
-    description: deploy certmanager or no
+    description: deploy certmanager or no.  If deploying to the m4d-system namespace, and bedrock is not installed, make this true.
     name: deployCertManager
     type: string
   - default: "false"
-    description: install cluster scoped helm resources
+    description: install cluster scoped helm resources.  If deploying to the m4d-system namespace, make this true
     name: clusterScoped
     type: string
+  - description: Not currently used.  Leave as-is
+    name: deployment-name
+    type: string
+    default: m4d
   tasks:
   - name: fetch-repository
     params:
