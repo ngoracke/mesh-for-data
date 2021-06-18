@@ -16,7 +16,7 @@ spec:
     name: git-url
     type: string
     default: https://github.com/ngoracke/mesh-for-data.git
-  - default: pipelines
+  - default: pipeline
     description: branch/revision to be used from repo of the code for deployment
     name: git-revision
     type: string
