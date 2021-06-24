@@ -4,13 +4,15 @@ metadata:
   name: build-and-deploy
 spec:
   params:
+  - description: docker registry namespace.  Choose something unique.  If using the local OpenShift registry, make this the same as NAMESPACE.
+    name: docker-namespace
+    type: string
+  - description: namespace to deploy control plane to.  If nobody has deployed m4d on this cluster before, choose m4d-system.
+    name: NAMESPACE
+    type: string
   - default: wcp-ibm-streams-docker-local.artifactory.swg-devops.com
     description: docker registry hostname.  This is where images will be pushed once built
     name: docker-hostname
-    type: string
-  - default: pipelines-tutorial
-    description: docker registry namespace.  This is the namespace in the docker-hostname where images will be pushed once built.  Choose something unique.  If using the local OpenShift registry, make this the same as the namespace you intend to run in.
-    name: docker-namespace
     type: string
   - description: url of the git repo for the code of deployment
     name: git-url
@@ -19,22 +21,6 @@ spec:
   - default: pipeline
     description: branch/revision to be used from repo of the code for deployment
     name: git-revision
-    type: string
-  - default: manager
-    description: image name for the manager.  Only necessary to switch this if you want to swap back and forth between alternate images
-    name: MANAGER_IMAGE
-    type: string
-  - default: katalog-connector
-    description: image name for the katalog-connector.  Only necessary to switch this if you want to swap back and forth between alternate images
-    name: KATALOG_IMAGE
-    type: string
-  - default: dummy-mover
-    description: image name for the dummy data mover.  Only necessary to switch this if you want to swap back and forth between alternate images
-    name: dummy-image
-    type: string
-  - default: m4d-system
-    description: namespace to deploy control plane to.  If nobody has deployed m4d on this cluster before, choose m4d-system.
-    name: NAMESPACE
     type: string
   - default: "false"
     description: deploy vault or no.  If deploying to the m4d-system namespace, make this true.
@@ -52,10 +38,46 @@ spec:
     description: install cluster scoped helm resources.  If deploying to the m4d-system namespace, make this true
     name: clusterScoped
     type: string
+  - default: manager
+    description: image name for the manager.  Only necessary to switch this if you want to swap back and forth between alternate images
+    name: MANAGER_IMAGE
+    type: string
+  - default: katalog-connector
+    description: image name for the katalog-connector.  Only necessary to switch this if you want to swap back and forth between alternate images
+    name: KATALOG_IMAGE
+    type: string
+  - default: dummy-mover
+    description: image name for the dummy data mover.  Only necessary to switch this if you want to swap back and forth between alternate images
+    name: dummy-image
+    type: string
   - description: Not currently used.  Leave as-is
     name: deployment-name
     type: string
     default: m4d
+  - description: Used only when restarting tasks.  Do not fill
+    name: IMAGE_DIGEST
+    type: string
+    default: "none"
+  - description: Used only when restarting tasks.  Do not fill
+    name: IMAGE_NAME
+    type: string
+    default: "none"
+  - description: Used only when restarting tasks.  Do not fill
+    name: IMAGE_ID
+    type: string
+    default: "none"
+  - description: Used only when restarting tasks.  Do not fill
+    name: COMPONENT_NAME
+    type: string
+    default: "all"
+  - description: Used only when restarting tasks.  Do not fill
+    name: INCREMENTAL_RESTART 
+    type: string
+    default: "false"
+  - description: Used only when restarting tasks.  Do not fill
+    name: INCREMENTAL_CODE_RESTART 
+    type: string
+    default: "false"
   tasks:
   - name: fetch-repository
     params:
@@ -67,18 +89,35 @@ spec:
       value: "true"
     - name: revision
       value: $(params.git-revision)
+    - name: INCREMENTAL_CODE_RESTART
+      value: $(params.INCREMENTAL_CODE_RESTART)
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: git-clone
     workspaces:
     - name: output
       workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
   - name: build-manager
     params:
     - name: target
       value: managerforimage
     - name: context
       value: manager
+    - name: docker-hostname
+      value: "$(params.docker-hostname)"
+    - name: docker-namespace
+      value: "$(params.docker-namespace)"
+    - name: INCREMENTAL_CODE_RESTART
+      value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
     - fetch-repository
     taskRef:
@@ -87,6 +126,56 @@ spec:
     workspaces:
     - name: source
       workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    # - Input: $(params.INCREMENTAL_CODE_RESTART)
+    #   Operator: notin
+    #   Values:
+    #   - "true"
+  # - name: rebuild-image
+  #   params:
+  #   - name: IMAGE
+  #     value: $(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)
+  #   - name: TLSVERIFY
+  #     value: "false"
+  #   - name: DOCKERFILE
+  #     value: $(params.rebuild-image-dockerfile)
+  #   - name: CONTEXT
+  #     value: $(params.rebuild-image-context)
+  #   - name: BUILD_EXTRA_ARGS
+  #     value: --build-arg REGISTRY=$(params.docker-hostname)/$(params.docker-namespace)
+  #   - name: HELM_PROPERTY
+  #     value: $(params.HELM_PROPERTY)
+  #   - name: docker-hostname
+  #     value: "$(params.docker-hostname)"
+  #   - name: docker-namespace
+  #     value: "$(params.docker-namespace)"
+  #   taskRef:
+  #     kind: Task
+  #     name: buildah
+  #   workspaces:
+  #   - name: source
+  #     workspace: shared-workspace
+  #   when:
+  #   - Input: $(params.IMAGE_DIGEST)
+  #     Operator: in
+  #     Values:
+  #     - "none"
+  #   - Input: $(params.INCREMENTAL_RESTART)
+  #     Operator: notin
+  #     Values:
+  #     - "true"
+  #   - Input: $(params.COMPONENT_NAME)
+  #     Operator: notin
+  #     Values:
+  #     - "all"
   - name: build-image-manager
     params:
     - name: IMAGE
@@ -99,14 +188,34 @@ spec:
       value: manager
     - name: BUILD_EXTRA_ARGS
       value: --build-arg REGISTRY=$(params.docker-hostname)/$(params.docker-namespace)
+    - name: HELM_PROPERTY
+      value: manager.image
+    - name: docker-hostname
+      value: "$(params.docker-hostname)"
+    - name: docker-namespace
+      value: "$(params.docker-namespace)"
     runAfter:
     - build-manager
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: buildah
     workspaces:
     - name: source
       workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.COMPONENT_NAME)
+      Operator: in
+      Values:
+      - "all"
+      - "manager"
   - name: build-image-dummy-mover
     params:
     - name: IMAGE
@@ -117,20 +226,46 @@ spec:
       value: "false"
     - name: BUILD_EXTRA_ARGS
       value: --build-arg REGISTRY=$(params.docker-hostname)/pipelines-tutorial
+    - name: HELM_PROPERTY
+      value: dummymover.image
+    - name: docker-hostname
+      value: "$(params.docker-hostname)"
+    - name: docker-namespace
+      value: "$(params.docker-namespace)"
     runAfter:
     - fetch-repository
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: buildah
     workspaces:
     - name: source
       workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.COMPONENT_NAME)
+      Operator: in
+      Values:
+      - "all"
+      - "dummy-mover"
   - name: build-katalog
     params:
     - name: target
       value: source-build
     - name: context
       value: connectors/katalog
+    - name: docker-hostname
+      value: "$(params.docker-hostname)"
+    - name: docker-namespace
+      value: "$(params.docker-namespace)"
+    - name: INCREMENTAL_CODE_RESTART
+      value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
     - fetch-repository
     taskRef:
@@ -139,6 +274,15 @@ spec:
     workspaces:
     - name: source
       workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
   - name: build-image-katalog
     params:
     - name: IMAGE
@@ -151,20 +295,46 @@ spec:
       value: --build-arg REGISTRY=$(params.docker-hostname)/$(params.docker-namespace)
     - name: CONTEXT
       value: connectors/katalog
+    - name: HELM_PROPERTY
+      value: katalogConnector.image
+    - name: docker-hostname
+      value: "$(params.docker-hostname)"
+    - name: docker-namespace
+      value: "$(params.docker-namespace)"
     runAfter:
     - build-katalog
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: buildah
     workspaces:
     - name: source
       workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.COMPONENT_NAME)
+      Operator: in
+      Values:
+      - "all"
+      - "connectors/katalog"
   - name: build-opa
     params:
     - name: target
       value: source-build
     - name: context
       value: connectors/opa
+    - name: docker-hostname
+      value: "$(params.docker-hostname)"
+    - name: docker-namespace
+      value: "$(params.docker-namespace)"
+    - name: INCREMENTAL_CODE_RESTART
+      value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
     - fetch-repository
     taskRef:
@@ -173,6 +343,15 @@ spec:
     workspaces:
     - name: source
       workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
   - name: build-image-opa
     params:
     - name: IMAGE
@@ -185,20 +364,46 @@ spec:
       value: --build-arg REGISTRY=$(params.docker-hostname)/$(params.docker-namespace)
     - name: CONTEXT
       value: connectors/opa
+    - name: HELM_PROPERTY
+      value: opaConnector.image
+    - name: docker-hostname
+      value: "$(params.docker-hostname)"
+    - name: docker-namespace
+      value: "$(params.docker-namespace)"
     runAfter:
     - build-opa
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: buildah
     workspaces:
     - name: source
       workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.COMPONENT_NAME)
+      Operator: in
+      Values:
+      - "all"
+      - "connectors/opa"
   - name: build-datacatalog
     params:
     - name: target
       value: source-build
     - name: context
       value: test/services/datacatalog
+    - name: docker-hostname
+      value: "$(params.docker-hostname)"
+    - name: docker-namespace
+      value: "$(params.docker-namespace)"
+    - name: INCREMENTAL_CODE_RESTART
+      value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
     - fetch-repository
     taskRef:
@@ -207,6 +412,15 @@ spec:
     workspaces:
     - name: source
       workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
   - name: build-image-datacatalog
     params:
     - name: IMAGE
@@ -219,20 +433,46 @@ spec:
       value: --build-arg REGISTRY=$(params.docker-hostname)/$(params.docker-namespace)
     - name: CONTEXT
       value: test/services/datacatalog
+    - name: HELM_PROPERTY
+      value: datacatalog.image
+    - name: docker-hostname
+      value: "$(params.docker-hostname)"
+    - name: docker-namespace
+      value: "$(params.docker-namespace)"
     runAfter:
     - build-datacatalog
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: buildah
     workspaces:
     - name: source
       workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.COMPONENT_NAME)
+      Operator: in
+      Values:
+      - "all"
+      - "test/services/datacatalog"
   - name: build-servicepolicycompiler
     params:
     - name: target
       value: source-build
     - name: context
       value: test/services/policycompiler
+    - name: docker-hostname
+      value: "$(params.docker-hostname)"
+    - name: docker-namespace
+      value: "$(params.docker-namespace)"
+    - name: INCREMENTAL_CODE_RESTART
+      value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
     - fetch-repository
     taskRef:
@@ -241,6 +481,15 @@ spec:
     workspaces:
     - name: source
       workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
   - name: build-image-serverpolicycompiler
     params:
     - name: IMAGE
@@ -253,15 +502,35 @@ spec:
       value: --build-arg REGISTRY=$(params.docker-hostname)/$(params.docker-namespace)
     - name: CONTEXT
       value: test/services/policycompiler
+    - name: HELM_PROPERTY
+      value: servicepolicycompiler.image
+    - name: docker-hostname
+      value: "$(params.docker-hostname)"
+    - name: docker-namespace
+      value: "$(params.docker-namespace)"
     runAfter:
     - build-servicepolicycompiler
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: buildah
     workspaces:
     - name: source
       workspace: shared-workspace
-  - name: upgrade-helm-from-source
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.COMPONENT_NAME)
+      Operator: in
+      Values:
+      - "all"
+      - "test/services/policycompiler"
+  - name: upgrade-helm-full
     params:
     - name: charts_dir
       value: /workspace/source/charts/m4d
@@ -284,6 +553,66 @@ spec:
     workspaces:
     - name: source
       workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.INCREMENTAL_CODE_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+  - name: upgrade-helm-partial
+    params:
+    - name: charts_dir
+      value: /workspace/source/charts/m4d
+    - name: release_name
+      value: m4d --values /workspace/source/pipeline/pullsecrets.yaml --reuse-values
+    - name: release_namespace
+      value: $(params.NAMESPACE)
+    - name: overwrite_values
+      value: $(params.IMAGE_ID)=$(params.IMAGE_NAME)@$(params.IMAGE_DIGEST)
+    - name: release_version
+      value: 0.1.0
+    taskRef:
+      kind: ClusterTask
+      name: helm-upgrade-from-source
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: notin
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: in
+      Values:
+      - "true"
+  # - name: upgrade-helm-partial-code-to-image-update
+  #   params:
+  #   - name: charts_dir
+  #     value: /workspace/source/charts/m4d
+  #   - name: release_name
+  #     value: m4d --values /workspace/source/pipeline/pullsecrets.yaml --reuse-values
+  #   - name: release_namespace
+  #     value: $(params.NAMESPACE)
+  #   - name: overwrite_values
+  #     value: $(params.IMAGE_ID)=$(params.IMAGE_NAME)@$(params.IMAGE_DIGEST)
+  #   - name: release_version
+  #     value: 0.1.0
+  #   taskRef:
+  #     kind: ClusterTask
+  #     name: helm-upgrade-from-source
+  #   workspaces:
+  #   - name: source
+  #     workspace: shared-workspace
+  #   runAfter:
+  #   - rebuild-image
   - name: upgrade-helm-crd-from-source
     params:
     - name: charts_dir
@@ -302,6 +631,18 @@ spec:
     when:
     - Input: $(params.deployCRD)
       Operator: in
+      Values:
+      - "true"
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.INCREMENTAL_CODE_RESTART)
+      Operator: notin
       Values:
       - "true"
     workspaces:
@@ -330,6 +671,18 @@ spec:
       Operator: in
       Values:
       - "true"
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.INCREMENTAL_CODE_RESTART)
+      Operator: notin
+      Values:
+      - "true"
   - name: upgrade-helm-certmgr-from-repo
     params:
     - name: helm_repo
@@ -352,6 +705,18 @@ spec:
       Operator: in
       Values:
       - "true"
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.INCREMENTAL_CODE_RESTART)
+      Operator: notin
+      Values:
+      - "true"
   - name: oc-apply-vault-roles
     params:
     - name: ARGS
@@ -368,6 +733,18 @@ spec:
       Operator: in
       Values:
       - "true"
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.INCREMENTAL_CODE_RESTART)
+      Operator: notin
+      Values:
+      - "true"
   - name: oc-install-flight-opensource
     params:
     - name: ARGS
@@ -379,7 +756,38 @@ spec:
     taskRef:
       kind: ClusterTask
       name: openshift-client
-  - name: run-integration-tests
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.INCREMENTAL_CODE_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+  - name: run-integration-tests-full-deploy
+    params:
+    - name: target
+      value: run-integration-tests
+    - name: context
+      value: manager
+    - name: flags
+      value: DOCKER_HOSTNAME=$(params.docker-hostname)/$(params.docker-namespace)
+    - name: INCREMENTAL_CODE_RESTART
+      value: $(params.INCREMENTAL_CODE_RESTART)
+    runAfter:
+    - upgrade-helm-full
+    taskRef:
+      kind: Task
+      name: make
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: run-integration-tests-partial-deploy
     params:
     - name: target
       value: run-integration-tests
@@ -388,7 +796,7 @@ spec:
     - name: flags
       value: DOCKER_HOSTNAME=$(params.docker-hostname)/$(params.docker-namespace)
     runAfter:
-    - upgrade-helm-from-source
+    - upgrade-helm-partial
     taskRef:
       kind: Task
       name: make

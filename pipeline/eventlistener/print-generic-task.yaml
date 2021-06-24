@@ -1,0 +1,38 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: print-generic
+spec:
+  params:
+    #- description: body
+    #  name: body 
+    #  type: string
+    #- description: header 
+    #  name: header 
+    #  type: string
+    - description: IMAGE_DIGEST
+      name: IMAGE_DIGEST
+      type: string
+#    - description: GENERATE_NAME
+#      name: GENERATE_NAME
+#      type: string
+    - name: IMAGE_NAME
+      type: string 
+    - name: IMAGE_ID
+      type: string
+    - description: Type of Event
+      name: event-type
+      type: string
+  steps:
+    - args:
+        - |-
+          echo "IMAGE_DIGEST: $(params.IMAGE_DIGEST)"
+          echo "IMAGE_NAME: $(params.IMAGE_NAME)"
+          echo "IMAGE_ID: $(params.IMAGE_ID)"
+          echo "Event Type: $(params.event-type)"
+      command:
+        - /bin/bash
+        - "-c"
+      image: "image-registry.openshift-image-registry.svc:5000/openshift/cli:latest"
+      name: print-generic
+      resources: {}
