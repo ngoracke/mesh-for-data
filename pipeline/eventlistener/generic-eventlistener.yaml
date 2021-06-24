@@ -1,0 +1,81 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: generic-eventlistener
+spec:
+  serviceAccountName: pipeline
+  replicas: 1
+  triggers:
+    - bindings:
+        - ref: generic-triggerbinding
+      name: print-generic
+      template:
+        ref: "print-generic-template"
+      interceptors:
+        - cel:
+            filter: header.match('Ce-Type', 'dev.knative.apiserver.resource.update')
+        - cel:
+            filter: body.metadata.generateName != ''
+        - cel:
+            filter: body.status.conditions[0].reason == "Succeeded"
+        - cel:
+            filter: body.spec.taskRef.name == "buildah"
+#---
+#apiVersion: triggers.tekton.dev/v1alpha1
+#kind: EventListener
+#metadata:
+#  name: code-rebuild-eventlistener
+#spec:
+#  serviceAccountName: pipeline
+#  replicas: 1
+#  triggers:
+    - bindings:
+        - ref: code-change-triggerbinding
+      name: code-change
+      template:
+        ref: "code-change-template"
+      interceptors:
+        - cel:
+            filter: header.match('Ce-Type', 'dev.knative.apiserver.resource.update')
+        - cel:
+            filter: body.metadata.generateName != ''
+        - cel:
+            filter: body.status.conditions[0].reason == "Succeeded"
+        - cel:
+            filter: body.spec.taskRef.name == "make"
+#---
+#apiVersion: triggers.tekton.dev/v1alpha1
+#kind: EventListener
+#metadata:
+#  name: build-image-pipeline-eventlistener
+#spec:
+#  serviceAccountName: pipeline
+#  replicas: 1
+#  triggers:
+#  triggers:
+    - bindings:
+        - ref: generic-triggerbinding
+      name: print-generic
+      template:
+        ref: "print-generic-template"
+      interceptors:
+        - cel:
+            filter: header.match('Ce-Type', 'dev.knative.apiserver.resource.update')
+        - cel:
+            filter: body.status.conditions[0].reason == "Succeeded"
+        - cel:
+            filter: body.spec.taskRef.name == "buildah"
+        - cel:
+            filter: body.metadata.labels['triggers.tekton.dev/trigger'] == "code-change"
+
+#  labels:
+#    app.kubernetes.io/managed-by: tekton-pipelines
+#    app.kubernetes.io/version: "0.1"
+#    operator.tekton.dev/provider-type: redhat
+#    tekton.dev/pipeline: build-and-deploy
+#    tekton.dev/pipelineRun: build-image-and-deploy-fbqzz
+#    tekton.dev/pipelineTask: build-image-manager
+#    tekton.dev/task: buildah
+#    triggers.tekton.dev/eventlistener: code-rebuild-eventlistener
+#    triggers.tekton.dev/trigger: code-change
+# http://el-build-image-pipeline-eventlistener:8080
