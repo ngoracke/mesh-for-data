@@ -38,6 +38,11 @@ else
 fi
 unique_prefix=$(kubectl config view --minify --output 'jsonpath={..namespace}'; echo)
 
+set +e
+# Be smarter about this - just a quick hack for typical default installs
+oc patch storageclass managed-nfs-storage -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": "true"}}}'
+set -e
+
 oc apply -f ${repo_root}/pipeline/subscription.yaml
 oc apply -f ${repo_root}/pipeline/serverless-subscription.yaml
 
