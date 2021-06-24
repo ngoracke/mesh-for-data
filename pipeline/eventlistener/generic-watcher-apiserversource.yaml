@@ -1,0 +1,38 @@
+apiVersion: sources.knative.dev/v1
+kind: ApiServerSource
+metadata:
+  name: generic-watcher
+spec:
+  mode: Resource
+  resources:
+    - apiVersion: tekton.dev/v1beta1
+      kind: TaskRun
+  serviceAccountName: generic-watcher
+  sink:
+    uri: http://el-generic-eventlistener:8080
+#---
+#apiVersion: sources.knative.dev/v1
+#kind: ApiServerSource
+#metadata:
+#  name: code-change-watcher
+#spec:
+#  mode: Resource
+#  resources:
+#    - apiVersion: tekton.dev/v1beta1
+#      kind: TaskRun
+#  serviceAccountName: generic-watcher
+#  sink:
+#    uri: http://el-code-rebuild-eventlistener:8080
+#---
+#apiVersion: sources.knative.dev/v1
+#kind: ApiServerSource
+#metadata:
+#  name: build-image-pipeline-watcher
+#spec:
+#  mode: Resource
+#  resources:
+#    - apiVersion: tekton.dev/v1beta1
+#      kind: TaskRun
+#  serviceAccountName: generic-watcher
+#  sink:
+#    uri: http://el-build-image-pipeline-eventlistener:8080

@@ -49,6 +49,20 @@ spec:
     description: Go mod caching directory path
     name: GOMODCACHE
     type: string
+  - default: ""
+    name: docker-hostname
+    type: string
+  - default: ""
+    name: docker-namespace
+    type: string
+  - default: "false"
+    name: INCREMENTAL_CODE_RESTART 
+    type: string
+  results:
+  - description: docker-namespace of the image just built
+    name: docker-namespace
+  - description: docker-hostname of the image just built
+    name: docker-hostname
   steps:
   - env:
     - name: GOOS
@@ -65,10 +79,22 @@ spec:
     name: unit-test
     resources: {}
     script: |
+      if [[ $(params.INCREMENTAL_CODE_RESTART) == "true" ]]; then
+          echo "No-op because we are just building images"
+          exit 0
+      fi
       env
       pwd
       cd $(params.context)
       $(params.env_vars) make $(params.target) $(params.flags) $(params.packages)
     workingDir: $(workspaces.source.path)
+  - image: wcp-ibm-streams-docker-local.artifactory.swg-devops.com/dev_ngoracke/suede:latest
+    name: docker-namespace-to-results
+    resources: {}
+    script: echo -n $(params.docker-namespace) > /tekton/results/docker-namespace
+  - image: wcp-ibm-streams-docker-local.artifactory.swg-devops.com/dev_ngoracke/suede:latest
+    name: docker-hostname-to-results
+    resources: {}
+    script: echo -n $(params.docker-hostname) > /tekton/results/docker-hostname
   workspaces:
   - name: source

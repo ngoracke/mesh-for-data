@@ -39,6 +39,7 @@ fi
 unique_prefix=$(kubectl config view --minify --output 'jsonpath={..namespace}'; echo)
 
 oc apply -f ${repo_root}/pipeline/subscription.yaml
+oc apply -f ${repo_root}/pipeline/serverless-subscription.yaml
 
 cat > ${TMP}/streams_csv_check_script.sh <<EOH
 #!/bin/bash
@@ -47,13 +48,25 @@ oc get -n openshift-pipelines csv | grep redhat-openshift-pipelines-operator
 oc get -n openshift-pipelines csv | grep redhat-openshift-pipelines-operator | grep Succeeded
 EOH
 chmod u+x ${TMP}/streams_csv_check_script.sh
-try_command "${TMP}/streams_csv_check_script.sh"  40 false 5
+try_command "${TMP}/streams_csv_check_script.sh"  40 true 5
+
+cat > ${TMP}/streams_csv_check_script.sh <<EOH
+#!/bin/bash
+set -x
+oc get -n openshift-operators csv | grep serverless-operator
+oc get -n openshift-operators csv | grep serverless-operator | grep Succeeded
+EOH
+chmod u+x ${TMP}/streams_csv_check_script.sh
+try_command "${TMP}/streams_csv_check_script.sh"  40 true 5
 
 oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${unique_prefix}:pipeline
 set +e
 #resource_version=$(oc get -f ${repo_root}/pipeline/make.yaml -o jsonpath='{.metadata.resourceVersion}')
 set -e
 oc apply -f ${repo_root}/pipeline/make.yaml
+oc apply -f ${repo_root}/pipeline/git-clone.yaml
+oc apply -f ${repo_root}/pipeline/buildah.yaml
+oc apply -f ${repo_root}/pipeline/knative-eventing.yaml
 
 oc patch clustertask helm-upgrade-from-repo -p '
 [{
@@ -77,12 +90,6 @@ oc apply -f ${repo_root}/pipeline/pipeline.yaml
 art="c3RybWR2b3BAdXMuaWJtLmNvbTpBS0NwNWUzb3gxa1Y0ZXJuaVIzTDNma244QlpkWVJEUHlUWTlpZTRjMTVwUTFrZjZzTWc2Vko0RGdYWWJHSFNUVW9Kakh1UFdl"
 art_u=$(echo "${art}" | base64 --decode | cut -d: -f 1)
 art_p=$(echo "${art}" | base64 --decode | cut -d: -f 2)
-stage="aWFtYXBpa2V5OjQ5dDRlQ0F4V1p6SlV4cEs5SktSYjdZNzhVbEpyanZIN2NDLU04OFBJNHpuCg=="
-stage_u=$(echo "${stage}" | base64 --decode | cut -d: -f 1)
-stage_p=$(echo "${stage}" | base64 --decode | cut -d: -f 2)
-icr="aWFtYXBpa2V5Om1jRzF6bjVLeGVSZjRQdWVGU0RETEZuLS01MmV2cGJPcVFBTzJVYkhYU0c5"
-icr_u=$(echo "${icr}" | base64 --decode | cut -d: -f 1)
-icr_p=$(echo "${icr}" | base64 --decode | cut -d: -f 2)
 
 reg_username=${art_u}
 reg_password=${art_p}
@@ -136,10 +143,36 @@ oc apply -f ${repo_root}/pipeline/statefulset.yaml
 oc apply -f ${repo_root}/pipeline/pvc.yaml
 oc adm policy add-scc-to-user privileged system:serviceaccount:${unique_prefix}:root-sa
 
+oc apply -f ${repo_root}/pipeline/eventlistener/generic-image-pipeline.yaml
+oc apply -f ${repo_root}/pipeline/eventlistener/generic-triggerbinding.yaml
+oc apply -f ${repo_root}/pipeline/eventlistener/generic-triggertemplate.yaml
+oc apply -f ${repo_root}/pipeline/eventlistener/generic-watcher-apiserversource.yaml
+oc apply -f ${repo_root}/pipeline/eventlistener/generic-watcher-role.yaml
+oc apply -f ${repo_root}/pipeline/eventlistener/generic-watcher-serviceaccount.yaml
+oc apply -f ${repo_root}/pipeline/eventlistener/print-generic-task.yaml
+
+pushd ${TMP}
+wget https://storage.googleapis.com/tekton-releases/triggers/latest/release.yaml
+sed -i.bak 's|namespace: tekton-pipelines|namespace: openshift-pipelines|g' ${TMP}/release.yaml
+cat ${TMP}/release.yaml
+wget https://storage.googleapis.com/tekton-releases/triggers/latest/interceptors.yaml
+sed -i.bak 's|namespace: tekton-pipelines|namespace: openshift-pipelines|g' ${TMP}/interceptors.yaml
+cat ${TMP}/interceptors.yaml
+popd
+
+oc apply -f ${TMP}/release.yaml
+oc apply -f ${TMP}/interceptors.yaml
+
+oc apply -f ${repo_root}/pipeline/eventlistener/generic-eventlistener.yaml
+set +e
+oc delete rolebinding generic-watcher
+set -e
+oc create rolebinding generic-watcher --clusterrole=generic-watcher --serviceaccount=${unique_prefix}:generic-watcher
+
 set +x
 echo "install tekton extension is vscode and then run:
 # for a dynamically provisioned PVC that will be deleted when the pipelinerun is deleted
-tkn pipeline start build-and-deploy -w name=shared-workspace,volumeClaimTemplateFile=${repo_root}/pipeline/pvc.yaml -p deployment-name=m4d -p git-url=https://github.com/ngoracke/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params}"
+tkn pipeline start build-and-deploy -w name=shared-workspace,volumeClaimTemplateFile=${repo_root}/pipeline/pvc.yaml -p docker-namespace=${unique_prefix} -p git-url=https://github.com/ngoracke/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params}"
 
 # for a pre-existing PVC that will be deleted when the namespace is deleted
-echo "tkn pipeline start build-and-deploy -w name=shared-workspace,claimName=source-pvc -p deployment-name=m4d -p git-url=https://github.com/ngoracke/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params}"
+echo "tkn pipeline start build-and-deploy -w name=shared-workspace,claimName=source-pvc -p docker-namespace=${unique_prefix} -p git-url=https://github.com/ngoracke/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params}"
