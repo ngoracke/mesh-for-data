@@ -22,6 +22,14 @@ spec:
     description: branch/revision to be used from repo of the code for deployment
     name: git-revision
     type: string
+  - description: url of the git repo for the code of deployment
+    name: wkc-connector-git-url
+    type: string
+    default: git@github.ibm.com:ngoracke/WKC-connector.git
+  - default: master
+    description: branch/revision to be used from repo of the code for deployment
+    name: wkc-connector-git-revision
+    type: string
   - default: "false"
     description: deploy vault or no.  If deploying to the m4d-system namespace, make this true.
     name: deployVault
@@ -79,12 +87,42 @@ spec:
     type: string
     default: "false"
   tasks:
+  #git@github.ibm.com:data-mesh-research/WKC-connector.git
+  - name: fetch-wkc-connector
+    params:
+    - name: url
+      value: $(params.wkc-connector-git-url)
+    - name: subdirectory
+      value: "WKC-connector"
+    - name: deleteExisting
+      value: "true"
+    - name: revision
+      value: $(params.wkc-connector-git-revision)
+    - name: INCREMENTAL_CODE_RESTART
+      value: $(params.INCREMENTAL_CODE_RESTART)
+    - name: sslVerify
+      value: "false"
+    taskRef:
+      kind: Task
+      name: git-clone
+    workspaces:
+    - name: output
+      workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"  
   - name: fetch-repository
     params:
     - name: url
       value: $(params.git-url)
     - name: subdirectory
-      value: ""
+      value: "mesh-for-data"
     - name: deleteExisting
       value: "true"
     - name: revision
@@ -106,12 +144,81 @@ spec:
       Operator: notin
       Values:
       - "true"
+  - name: build-wkc-connector
+    params:
+    - name: target
+      value: build
+    - name: context
+      value: WKC-connector/java
+    - name: docker-hostname
+      value: "$(params.docker-hostname)"
+    - name: docker-namespace
+      value: "$(params.docker-namespace)"
+    - name: INCREMENTAL_CODE_RESTART
+      value: $(params.INCREMENTAL_CODE_RESTART)
+    runAfter:
+    - fetch-wkc-connector
+    taskRef:
+      kind: Task
+      name: make
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+  - name: build-image-wkc-connector
+    params:
+    - name: IMAGE
+      value: $(params.docker-hostname)/$(params.docker-namespace)/wkc-connector
+    - name: TLSVERIFY
+      value: "false"
+    - name: DOCKERFILE
+      value: WKC-connector/Dockerfile.wkc_connector
+    - name: CONTEXT
+      value: WKC-connector/java
+    - name: BUILD_EXTRA_ARGS
+      value: --build-arg REGISTRY=wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial
+    - name: HELM_PROPERTY
+      value: wkcConnector.image
+    - name: docker-hostname
+      value: "$(params.docker-hostname)"
+    - name: docker-namespace
+      value: "$(params.docker-namespace)"
+    runAfter:
+    - build-wkc-connector
+    taskRef:
+      kind: Task
+      name: buildah
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.COMPONENT_NAME)
+      Operator: in
+      Values:
+      - "all"
+      - "WKC-connector/java"
   - name: build-manager
     params:
     - name: target
       value: managerforimage
     - name: context
-      value: manager
+      value: mesh-for-data/manager
     - name: docker-hostname
       value: "$(params.docker-hostname)"
     - name: docker-namespace
@@ -183,9 +290,9 @@ spec:
     - name: TLSVERIFY
       value: "false"
     - name: DOCKERFILE
-      value: manager/Dockerfile
+      value: mesh-for-data/manager/Dockerfile
     - name: CONTEXT
-      value: manager
+      value: mesh-for-data/manager
     - name: BUILD_EXTRA_ARGS
       value: --build-arg REGISTRY=$(params.docker-hostname)/$(params.docker-namespace)
     - name: HELM_PROPERTY
@@ -215,17 +322,17 @@ spec:
       Operator: in
       Values:
       - "all"
-      - "manager"
+      - "mesh-for-data/manager"
   - name: build-image-dummy-mover
     params:
     - name: IMAGE
       value: $(params.docker-hostname)/$(params.docker-namespace)/$(params.dummy-image)
     - name: DOCKERFILE
-      value: test/dummy-mover/Dockerfile.dummy-mover
+      value: mesh-for-data/test/dummy-mover/Dockerfile.dummy-mover
     - name: TLSVERIFY
       value: "false"
     - name: BUILD_EXTRA_ARGS
-      value: --build-arg REGISTRY=$(params.docker-hostname)/pipelines-tutorial
+      value: --build-arg REGISTRY=wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial
     - name: HELM_PROPERTY
       value: dummymover.image
     - name: docker-hostname
@@ -253,13 +360,13 @@ spec:
       Operator: in
       Values:
       - "all"
-      - "dummy-mover"
+      - "mesh-for-data/dummy-mover"
   - name: build-katalog
     params:
     - name: target
       value: source-build
     - name: context
-      value: connectors/katalog
+      value: mesh-for-data/connectors/katalog
     - name: docker-hostname
       value: "$(params.docker-hostname)"
     - name: docker-namespace
@@ -288,13 +395,13 @@ spec:
     - name: IMAGE
       value: $(params.docker-hostname)/$(params.docker-namespace)/katalog-connector
     - name: DOCKERFILE
-      value: connectors/katalog/Dockerfile
+      value: mesh-for-data/connectors/katalog/Dockerfile
     - name: TLSVERIFY
       value: "false"
     - name: BUILD_EXTRA_ARGS
       value: --build-arg REGISTRY=$(params.docker-hostname)/$(params.docker-namespace)
     - name: CONTEXT
-      value: connectors/katalog
+      value: mesh-for-data/connectors/katalog
     - name: HELM_PROPERTY
       value: katalogConnector.image
     - name: docker-hostname
@@ -322,13 +429,13 @@ spec:
       Operator: in
       Values:
       - "all"
-      - "connectors/katalog"
+      - "mesh-for-data/connectors/katalog"
   - name: build-opa
     params:
     - name: target
       value: source-build
     - name: context
-      value: connectors/opa
+      value: mesh-for-data/connectors/opa
     - name: docker-hostname
       value: "$(params.docker-hostname)"
     - name: docker-namespace
@@ -357,13 +464,13 @@ spec:
     - name: IMAGE
       value: $(params.docker-hostname)/$(params.docker-namespace)/opa-connector
     - name: DOCKERFILE
-      value: connectors/opa/Dockerfile
+      value: mesh-for-data/connectors/opa/Dockerfile
     - name: TLSVERIFY
       value: "false"
     - name: BUILD_EXTRA_ARGS
       value: --build-arg REGISTRY=$(params.docker-hostname)/$(params.docker-namespace)
     - name: CONTEXT
-      value: connectors/opa
+      value: mesh-for-data/connectors/opa
     - name: HELM_PROPERTY
       value: opaConnector.image
     - name: docker-hostname
@@ -391,13 +498,13 @@ spec:
       Operator: in
       Values:
       - "all"
-      - "connectors/opa"
+      - "mesh-for-data/connectors/opa"
   - name: build-datacatalog
     params:
     - name: target
       value: source-build
     - name: context
-      value: test/services/datacatalog
+      value: mesh-for-data/test/services/datacatalog
     - name: docker-hostname
       value: "$(params.docker-hostname)"
     - name: docker-namespace
@@ -426,13 +533,13 @@ spec:
     - name: IMAGE
       value: $(params.docker-hostname)/$(params.docker-namespace)/data-catalog-mock
     - name: DOCKERFILE
-      value: test/services/datacatalog/Dockerfile
+      value: mesh-for-data/test/services/datacatalog/Dockerfile
     - name: TLSVERIFY
       value: "false"
     - name: BUILD_EXTRA_ARGS
       value: --build-arg REGISTRY=$(params.docker-hostname)/$(params.docker-namespace)
     - name: CONTEXT
-      value: test/services/datacatalog
+      value: mesh-for-data/test/services/datacatalog
     - name: HELM_PROPERTY
       value: datacatalog.image
     - name: docker-hostname
@@ -460,13 +567,76 @@ spec:
       Operator: in
       Values:
       - "all"
-      - "test/services/datacatalog"
-  - name: build-servicepolicycompiler
+      - "mesh-for-data/test/services/datacatalog"
+  # - name: build-skopeo-copy-image
+  #   taskRef:
+  #     name: skopeo-copy-image
+  #   workspaces:
+  #     - name: source
+  #       workspace: artifacts
+  #   params:
+  #     - name: source-image-repository
+  #       value: "cp.stg.icr.io/cp/cpd"
+  #     - name: image-tags
+  #       value: "latest"
+  #     - name: source-image-digest
+  #       value: "$(tasks.build-image-manager.results.IMAGE_DIGEST)"
+  #     - name: target-image-repository
+  #       value: "$(params.docker-hostname)/$(params.docker-namespace)/data-catalog-mock"
+  #     - name: source-email
+  #       value: "a@b.com"
+  #     - name: target-email
+  #       value: "a@b.com"
+  #     - name: source-username
+  #       value: "your-username"
+  #     - name: target-username
+  #       value: "your-username"
+  #     - name: pipeline-debug
+  #       value: "1"
+  # - name: transfer-image-datacatalog-vulnerability-advisor
+  #   taskRef:
+  #     kind: ClusterTask
+  #     name: skopeo-copy
+  #   params:
+  #   - name: srcImageURL
+  #     value: docker://$(params.docker-hostname)/$(params.docker-namespace)/data-catalog-mock@$(tasks.build-image-datacatalog.results.IMAGE_DIGEST)
+  #   - name: destImageURL
+  #     value: docker://stg.icr.io/cp/cpd/ngoracke/data-catalog-mock@$(tasks.build-image-datacatalog.results.IMAGE_DIGEST)
+  #   - name: srcTLSverify
+  #     value: "false"
+  #   - name: destTLSverify
+  #     value: "false"
+  #   workspaces:
+  #     - name: images-url
+  #       workspace: images-url
+  # - name: vulnerability-advisor-image-datacatalog-vulnerability
+  #   taskRef:
+  #     kind: Task
+  #     name: containerize-check-va-scan
+  #   workspaces:
+  #     - name: artifacts
+  #       workspace: artifacts
+  #   runAfter:
+  #   - transfer-image-datacatalog-vulnerability-advisor
+  #   params:
+  #     - name: image-url
+  #       value: "stg.icr.io/cp/cpd/ngoracke/data-catalog-mock"
+  #     - name: image-digest
+  #       value: "$(tasks.build-image-datacatalog.results.IMAGE_DIGEST)"
+  #     - name: scan-report-file
+  #       value: 'app-image-va-report.json'
+  #     - name: ibmcloud-api-key-secret-key
+  #       value: "api-key"
+  #     - name: fail-on-scanned-issues
+  #       value: "false"
+  #     - name: pipeline-debug
+  #       value: "1"
+  - name: build-servicepolicymanager
     params:
     - name: target
       value: source-build
     - name: context
-      value: test/services/policycompiler
+      value: mesh-for-data/test/services/policymanager
     - name: docker-hostname
       value: "$(params.docker-hostname)"
     - name: docker-namespace
@@ -490,26 +660,26 @@ spec:
       Operator: notin
       Values:
       - "true"
-  - name: build-image-serverpolicycompiler
+  - name: build-image-serverpolicymanager
     params:
     - name: IMAGE
-      value: $(params.docker-hostname)/$(params.docker-namespace)/serverpolicycompiler-mock
+      value: $(params.docker-hostname)/$(params.docker-namespace)/serverpolicymanager-mock
     - name: DOCKERFILE
-      value: test/services/policycompiler/Dockerfile
+      value: mesh-for-data/test/services/policymanager/Dockerfile
     - name: TLSVERIFY
       value: "false"
     - name: BUILD_EXTRA_ARGS
       value: --build-arg REGISTRY=$(params.docker-hostname)/$(params.docker-namespace)
     - name: CONTEXT
-      value: test/services/policycompiler
+      value: mesh-for-data/test/services/policymanager
     - name: HELM_PROPERTY
-      value: servicepolicycompiler.image
+      value: servicepolicymanager.image
     - name: docker-hostname
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
     runAfter:
-    - build-servicepolicycompiler
+    - build-servicepolicymanager
     taskRef:
       kind: Task
       name: buildah
@@ -529,13 +699,14 @@ spec:
       Operator: in
       Values:
       - "all"
-      - "test/services/policycompiler"
+      - "mesh-for-data/test/services/policymanager"
   - name: upgrade-helm-full
     params:
     - name: charts_dir
-      value: /workspace/source/charts/m4d
+      value: /workspace/source/mesh-for-data/charts/m4d
     - name: release_name
-      value: m4d --values /workspace/source/pipeline/pullsecrets.yaml
+      value: m4d
+      # --values /workspace/source/pipeline/pullsecrets.yaml
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
@@ -569,9 +740,10 @@ spec:
   - name: upgrade-helm-partial
     params:
     - name: charts_dir
-      value: /workspace/source/charts/m4d
+      value: /workspace/source/mesh-for-data/charts/m4d
     - name: release_name
-      value: m4d --values /workspace/source/pipeline/pullsecrets.yaml --reuse-values
+      value: m4d --reuse-values
+      # --values /workspace/source/pipeline/pullsecrets.yaml --reuse-values
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
@@ -581,6 +753,70 @@ spec:
     taskRef:
       kind: ClusterTask
       name: helm-upgrade-from-source
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: notin
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: in
+      Values:
+      - "true"
+  - name: upgrade-wkc-connector-helm-full
+    params:
+    - name: charts_dir
+      value: /workspace/source/WKC-connector/charts/wkc-connector
+    - name: release_name
+      value: wkc-connector
+      # --values /workspace/source/pipeline/pullsecrets.yaml
+    - name: release_namespace
+      value: $(params.NAMESPACE)
+    - name: overwrite_values
+      value: clusterScoped=$(params.clusterScoped),global.imagePullSecrets=,wkcConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/wkc-connector@$(tasks.build-image-wkc-connector.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),wkcConnector.vault.address=http://vault.m4d-system:8200
+    - name: release_version
+      value: 0.1.0
+    runAfter:
+    - build-image-wkc-connector
+    taskRef:
+      kind: ClusterTask
+      name: helm-upgrade-from-source
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.INCREMENTAL_CODE_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+  - name: upgrade-wkc-connector-helm-partial
+    params:
+    - name: charts_dir
+      value: /workspace/source/WKC-connector/charts/wkc-connector
+    - name: release_name
+      value: wkc-connector --reuse-values
+      # --values /workspace/source/pipeline/pullsecrets.yaml --reuse-values
+    - name: release_namespace
+      value: $(params.NAMESPACE)
+    - name: overwrite_values
+      value: $(params.IMAGE_ID)=$(params.IMAGE_NAME)@$(params.IMAGE_DIGEST)
+    - name: release_version
+      value: 0.1.0
+    taskRef:
+      kind: ClusterTask
+      name: helm-upgrade-from-source
+    runAfter:
+      - build-image-wkc-connector
     workspaces:
     - name: source
       workspace: shared-workspace
@@ -616,7 +852,7 @@ spec:
   - name: upgrade-helm-crd-from-source
     params:
     - name: charts_dir
-      value: /workspace/source/charts/m4d-crd
+      value: /workspace/source/mesh-for-data/charts/m4d-crd
     - name: release_name
       value: m4d-crd
     - name: release_namespace
@@ -774,13 +1010,14 @@ spec:
     - name: target
       value: run-integration-tests
     - name: context
-      value: manager
+      value: mesh-for-data/manager
     - name: flags
       value: DOCKER_HOSTNAME=$(params.docker-hostname)/$(params.docker-namespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
     - upgrade-helm-full
+    - upgrade-wkc-connector-helm-full
     taskRef:
       kind: Task
       name: make
@@ -792,7 +1029,7 @@ spec:
     - name: target
       value: run-integration-tests
     - name: context
-      value: manager
+      value: mesh-for-data/manager
     - name: flags
       value: DOCKER_HOSTNAME=$(params.docker-hostname)/$(params.docker-namespace)
     runAfter:
@@ -805,3 +1042,5 @@ spec:
       workspace: shared-workspace
   workspaces:
   - name: shared-workspace
+  - name: artifacts
+  - name: images-url
