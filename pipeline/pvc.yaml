@@ -8,3 +8,14 @@ spec:
   resources:
     requests:
       storage: 1000Mi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: artifacts-pvc 
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 500Mi
