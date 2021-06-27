@@ -30,6 +30,11 @@ else
     oc get project m4d-system
     rc=$?
 fi
+if [[ ! -z $2 ]]; then
+    ssh_key=$2
+else
+    ssh_key=${HOME}/.ssh/id_rsa
+fi
 set -e
 if [[ $rc -ne 0 ]]; then
     oc new-project ${1:-m4d-system}
@@ -65,6 +70,8 @@ chmod u+x ${TMP}/streams_csv_check_script.sh
 try_command "${TMP}/streams_csv_check_script.sh"  40 true 5
 
 oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${unique_prefix}:pipeline
+oc adm policy add-role-to-group system:image-puller system:serviceaccounts:${unique_prefix} --namespace ${unique_prefix}
+
 set +e
 #resource_version=$(oc get -f ${repo_root}/pipeline/make.yaml -o jsonpath='{.metadata.resourceVersion}')
 set -e
@@ -92,27 +99,31 @@ oc delete -f ${repo_root}/pipeline/pipeline.yaml
 set -e
 oc apply -f ${repo_root}/pipeline/pipeline.yaml
 
-art="c3RybWR2b3BAdXMuaWJtLmNvbTpBS0NwNWUzb3gxa1Y0ZXJuaVIzTDNma244QlpkWVJEUHlUWTlpZTRjMTVwUTFrZjZzTWc2Vko0RGdYWWJHSFNUVW9Kakh1UFdl"
-art_u=$(echo "${art}" | base64 --decode | cut -d: -f 1)
-art_p=$(echo "${art}" | base64 --decode | cut -d: -f 2)
-
-reg_username=${art_u}
-reg_password=${art_p}
-auth=${art}
-
-image_repo="wcp-ibm-streams-docker-local.artifactory.swg-devops.com"
-cat > ${TMP}/secret.yaml <<EOH
-{"auths":{"${image_source_repo:-$image_repo}":{"username":"${reg_username}","password":"${reg_password}","auth":"${auth}"}}}
-EOH
+image_source_repo="wcp-ibm-streams-docker-local.artifactory.swg-devops.com"
+image_repo="image-registry.openshift-image-registry.svc:5000"
 
 set +e
 oc delete secret -n ${unique_prefix} regcred --wait
 oc delete secret -n ${unique_prefix} regcred-test --wait
 oc delete secret -n ${unique_prefix} sourceregcred --wait
 set -e
-oc create secret generic -n ${unique_prefix} regcred --from-file=.dockerconfigjson=${TMP}/secret.yaml --type=kubernetes.io/dockerconfigjson
-oc create secret generic -n ${unique_prefix} regcred-test --from-file=.dockerconfigjson=${TMP}/secret.yaml --type=kubernetes.io/dockerconfigjson
-oc create secret generic -n ${unique_prefix} sourceregcred --from-file=.dockerconfigjson=${TMP}/secret.yaml --type=kubernetes.io/dockerconfigjson
+set +x
+echo "If this step fails:
+
+1. login to one of the openshift clusters here: https://github.ibm.com/IBM-Streams/infra-streams#for-openshift-4x
+2. oc get secret -n openshift-config pull-secret -o yaml > /tmp/secret.yaml
+3. login to your target cluster again
+4. oc create -f /tmp/secret.yaml
+5. re-run bootstrap.sh
+"
+set -x
+ 
+oc get secret -n openshift-config pull-secret -o yaml > ${TMP}/secret.yaml
+cp ${TMP}/secret.yaml ${TMP}/secret.yaml.orig
+sed -i.bak "s|namespace: openshift-config|namespace: ${unique_prefix}|g" ${TMP}/secret.yaml
+sed -i.bak "s|name: pull-secret|name: regcred|g" ${TMP}/secret.yaml
+cat ${TMP}/secret.yaml
+oc apply -f ${TMP}/secret.yaml
 
 oc secrets link pipeline regcred --for=mount
 oc secrets link builder regcred --for=mount
@@ -174,10 +185,25 @@ oc delete rolebinding generic-watcher
 set -e
 oc create rolebinding generic-watcher --clusterrole=generic-watcher --serviceaccount=${unique_prefix}:generic-watcher
 
+set +e
+oc delete secret git-ssh-key
+set -e
+cat ~/.ssh/known_hosts | base64 > ${TMP}/known_hosts
 set +x
-echo "install tekton extension is vscode and then run:
-# for a dynamically provisioned PVC that will be deleted when the pipelinerun is deleted
-tkn pipeline start build-and-deploy -w name=shared-workspace,volumeClaimTemplateFile=${repo_root}/pipeline/pvc.yaml -p docker-namespace=${unique_prefix} -p git-url=https://github.com/ngoracke/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params}"
+echo "If this step fails, make the second positional arg the path to an ssh key authenticated with Github Enterprise
 
+ex: bash -x bootstrap.sh m4d-system /path/to/private/ssh/key
+"
+set -x
+oc create secret generic git-ssh-key --from-file=ssh-privatekey=${ssh_key} --type=kubernetes.io/ssh-auth
+oc annotate secret git-ssh-key --overwrite 'tekton.dev/git-0'='github.ibm.com'
+oc secrets link pipeline git-ssh-key --for=mount
+
+set +x
+#echo "install tekton extension is vscode and then run:
+# for a dynamically provisioned PVC that will be deleted when the pipelinerun is deleted
+#tkn pipeline start build-and-deploy -w name=shared-workspace,volumeClaimTemplateFile=${repo_root}/pipeline/pvc.yaml -p docker-namespace=${unique_prefix} -p git-url=https://github.com/ngoracke/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params}"
+
+echo "
 # for a pre-existing PVC that will be deleted when the namespace is deleted
-echo "tkn pipeline start build-and-deploy -w name=shared-workspace,claimName=source-pvc -p docker-namespace=${unique_prefix} -p git-url=https://github.com/ngoracke/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params}"
+tkn pipeline start build-and-deploy -w name=images-url,emptyDir="" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=image-registry.openshift-image-registry.svc:5000 -p docker-namespace=${unique_prefix} -p git-url=https://github.com/ngoracke/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params}"
