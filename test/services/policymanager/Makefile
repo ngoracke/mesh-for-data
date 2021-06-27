@@ -11,5 +11,5 @@ docker-build:
 	rm serverpolicymanager
 
 .PHONY: source-build
-source-build
+source-build:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -o serverpolicymanager serverpolicymanager.go
