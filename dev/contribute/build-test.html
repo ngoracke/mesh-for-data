@@ -16,7 +16,7 @@
     
     
       
-        <title>About - Mesh for Data</title>
+        <title>Build and Test - Mesh for Data</title>
       
     
     
@@ -67,7 +67,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#contribute" class="md-skip">
+        <a href="#build-and-test" class="md-skip">
           Skip to content
         </a>
       
@@ -96,7 +96,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              About
+              Build and Test
             
           </span>
         </div>
@@ -684,21 +684,11 @@
             
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="index.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="index.html" class="md-nav__link">
         About
       </a>
-      
     </li>
   
 
@@ -718,11 +708,105 @@
             
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="build-test.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Build and Test
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="build-test.html" class="md-nav__link md-nav__link--active">
         Build and Test
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#build-the-project-images" class="md-nav__link">
+    Build the project images
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-unit-tests" class="md-nav__link">
+    Run unit tests
+  </a>
+  
+    <nav class="md-nav" aria-label="Run unit tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#environment-variables-description" class="md-nav__link">
+    Environment variables description
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-integration-tests" class="md-nav__link">
+    Running integration tests
+  </a>
+  
+    <nav class="md-nav" aria-label="Running integration tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#running-in-one-step" class="md-nav__link">
+    Running in one step
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-step-by-step" class="md-nav__link">
+    Running step by step
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-in-a-multi-cluster-environment" class="md-nav__link">
+    Building in a multi cluster environment
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -866,6 +950,75 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#build-the-project-images" class="md-nav__link">
+    Build the project images
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-unit-tests" class="md-nav__link">
+    Run unit tests
+  </a>
+  
+    <nav class="md-nav" aria-label="Run unit tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#environment-variables-description" class="md-nav__link">
+    Environment variables description
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-integration-tests" class="md-nav__link">
+    Running integration tests
+  </a>
+  
+    <nav class="md-nav" aria-label="Running integration tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#running-in-one-step" class="md-nav__link">
+    Running in one step
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-step-by-step" class="md-nav__link">
+    Running step by step
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-in-a-multi-cluster-environment" class="md-nav__link">
+    Building in a multi cluster environment
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -876,14 +1029,111 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/mesh-for-data/mesh-for-data/edit/master/site/docs/contribute/index.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/mesh-for-data/mesh-for-data/edit/master/site/docs/contribute/build-test.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
-                <h1 id="contribute">Contribute</h1>
-<p>Mesh for Data is open for contributions and welcomes anyone who wishes to contribute and take part in our journey towards success. This section contains information and guidelines to help you contribute more easily to the project. We would love for you to get involved <img alt="❤" class="twemoji" src="https://twemoji.maxcdn.com/v/latest/svg/2764.svg" title=":heart:" /></p>
-<p>Join our community in <a href="https://github.com/mesh-for-data/mesh-for-data/discussions">GitHub Discussions</a></p>
+                <h1 id="build-and-test">Build and Test</h1>
+<h2 id="build-the-project-images">Build the project images</h2>
+<div class="highlight"><pre><span></span><code>make docker-build
+</code></pre></div>
+<h2 id="run-unit-tests">Run unit tests</h2>
+<div class="highlight"><pre><span></span><code>make <span class="nb">test</span>
+</code></pre></div>
+<p>Some tests for controllers are written in a fashion that they can be run on a simulated environment using 
+<a href="https://pkg.go.dev/github.com/kubernetes-sigs/controller-runtime/pkg/envtest">envtest</a> or on an already existing
+Kubernetes cluster (or local kind cluster). The default is to use envtest. In order to run the tests in a local cluster
+the following environment variables can be set:
+<div class="highlight"><pre><span></span><code><span class="nv">NO_SIMULATED_PROGRESS</span><span class="o">=</span><span class="nb">true</span> <span class="nv">USE_EXISTING_CLUSTER</span><span class="o">=</span><span class="nb">true</span> make -C manager <span class="nb">test</span>
+</code></pre></div></p>
+<p>Please be aware that the controller is running locally in this case! If a controller is already deployed onto the
+cluster then the tests can be run with the command below. This will ensure that the tests are only creating CRDs on 
+the cluster and checking their status:
+<div class="highlight"><pre><span></span><code><span class="nv">USE_EXISTING_CONTROLLER</span><span class="o">=</span><span class="nb">true</span> <span class="nv">NO_SIMULATED_PROGRESS</span><span class="o">=</span><span class="nb">true</span> <span class="nv">USE_EXISTING_CLUSTER</span><span class="o">=</span><span class="nb">true</span> make -C manager <span class="nb">test</span>
+</code></pre></div></p>
+<h3 id="environment-variables-description">Environment variables description</h3>
+<table>
+<thead>
+<tr>
+<th>Environment variable</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>USE_EXISTING_CLUSTER</td>
+<td>false</td>
+<td>This variable controls if an existing K8s cluster should be used or not. If not envtest will spin up an artificial environment that includes a local etcd setup.</td>
+</tr>
+<tr>
+<td>NO_SIMULATED_PROGRESS</td>
+<td>false</td>
+<td>This variable can be used by tests that can manually simulate progress of e.g. jobs or pods. e.g. the simulated test environment from testEnv does not progress pods etc while when testing against an external Kubernetes cluster this will actually run pods.</td>
+</tr>
+<tr>
+<td>USE_EXISTING_CONTROLLER</td>
+<td>false</td>
+<td>This variable controls if a controller should be set up and run by this test suite or if an external one should be used. E.g. in integration tests running against an existing setup a controller is already existing in the Kubernetes cluster and should not be started by the test as two controllers competing may influence the test.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="running-integration-tests">Running integration tests</h2>
+<h3 id="running-in-one-step">Running in one step</h3>
+<p>With the following you will then setup a kind cluster with the local registry,
+build and push current docker images and finally run the integration
+tests on it:</p>
+<div class="highlight"><pre><span></span><code>make run-integration-tests
+</code></pre></div>
+<h3 id="running-step-by-step">Running step by step</h3>
+<p>It is also possible to call the commands step by step, which sometimes is
+useful if you want to only repeat a specific step which failed without having
+to rerun  the entire sequence</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># use the local kind registry</span>
+<span class="nb">export</span> <span class="nv">DOCKER_HOSTNAME</span><span class="o">=</span>kind-registry:5000
+<span class="nb">export</span> <span class="nv">DOCKER_NAMESPACE</span><span class="o">=</span>m4d-system
+
+<span class="c1"># build a local kind cluser</span>
+make kind
+
+<span class="c1"># deploy the the cluster 3rd party such as cert-manager and vault</span>
+make cluster-prepare
+
+<span class="c1"># build all docker images and push them to the local registry</span>
+make docker
+
+<span class="c1"># build the mock/test docker images and push them to local registry</span>
+make -C test/services docker-build docker-push
+
+<span class="c1"># wait until cluster-prepare setup really completed</span>
+make cluster-prepare-wait
+
+<span class="c1"># deploy the m4d CRDs to the kind cluster</span>
+make -C manager deploy-crd
+
+<span class="c1"># deploy m4d manager to the kind cluster</span>
+make -C manager deploy_it
+
+<span class="c1"># wait until manager is ready</span>
+make -C manager wait_for_manager
+
+<span class="c1"># configure Vault</span>
+make configure-vault
+
+<span class="c1"># build and push helm charts to the local registry</span>
+make helm
+
+<span class="c1"># actually run the integration tests</span>
+make -C manager run-integration-tests
+</code></pre></div>
+<h2 id="building-in-a-multi-cluster-environment">Building in a multi cluster environment</h2>
+<p>As Mesh for Data can run in a multi-cluster environment there is also a test environment
+that can be used that simulates this scenario. Using kind one can spin up two separate kubernetes
+clusters with differnt contexts and develop and test in these. </p>
+<p>Two kind clusters that share the same kind-registry can be set up using:
+<div class="highlight"><pre><span></span><code>make kind-setup-multi
+</code></pre></div></p>
                 
               
               
@@ -903,7 +1153,7 @@
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="../reference/katalog.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Katalog" rel="prev">
+        <a href="environment.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Development Environment" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -912,20 +1162,20 @@
               <span class="md-footer__direction">
                 Previous
               </span>
-              Katalog
+              Development Environment
             </div>
           </div>
         </a>
       
       
         
-        <a href="environment.html" class="md-footer__link md-footer__link--next" aria-label="Next: Development Environment" rel="next">
+        <a href="flow.html" class="md-footer__link md-footer__link--next" aria-label="Next: GitHub Workflow" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Development Environment
+              GitHub Workflow
             </div>
           </div>
           <div class="md-footer__button md-icon">
