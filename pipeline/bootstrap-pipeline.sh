@@ -179,6 +179,11 @@ popd
 oc apply -f ${TMP}/release.yaml
 oc apply -f ${TMP}/interceptors.yaml
 
+set +x
+echo "If this step fails, run again - knative related pods may be restarting and unable to process the webhook"
+
+"
+set -x
 oc apply -f ${repo_root}/pipeline/eventlistener/generic-eventlistener.yaml
 set +e
 oc delete rolebinding generic-watcher
