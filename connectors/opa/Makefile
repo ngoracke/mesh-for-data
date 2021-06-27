@@ -14,7 +14,6 @@ docker-build:
 	docker build . -t $(IMG)
 	rm opa-connector
 
-<<<<<<< HEAD
 .PHONY: deploy
 deploy:
 	helm install fybrik-opa $(ROOT_DIR)/charts/fybrik \
