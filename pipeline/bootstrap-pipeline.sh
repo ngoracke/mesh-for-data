@@ -180,7 +180,7 @@ oc apply -f ${TMP}/release.yaml
 oc apply -f ${TMP}/interceptors.yaml
 
 set +x
-echo "If this step fails, run again - knative related pods may be restarting and unable to process the webhook"
+echo "If this step fails, run again - knative related pods may be restarting and unable to process the webhook
 
 "
 set -x
