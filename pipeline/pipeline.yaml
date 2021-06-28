@@ -898,7 +898,7 @@ spec:
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
-      value: server.dev.enabled=true,injector.enabled=false,global.openshift=true
+      value: server.dev.enabled=true,injector.enabled=false,global.openshift=true,server.image.repository=wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/vault
     taskRef:
       kind: ClusterTask
       name: helm-upgrade-from-repo
