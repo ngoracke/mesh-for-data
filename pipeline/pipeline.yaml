@@ -717,6 +717,7 @@ spec:
     - build-image-manager
     - build-image-katalog
     - build-image-opa
+    # don't need to wait on this
     - build-image-datacatalog
     taskRef:
       kind: ClusterTask
