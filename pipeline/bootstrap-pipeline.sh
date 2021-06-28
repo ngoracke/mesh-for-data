@@ -188,7 +188,7 @@ oc apply -f ${repo_root}/pipeline/eventlistener/generic-eventlistener.yaml
 set +e
 oc delete rolebinding generic-watcher
 set -e
-oc create rolebinding generic-watcher --clusterrole=generic-watcher --serviceaccount=${unique_prefix}:generic-watcher
+oc create rolebinding generic-watcher --role=generic-watcher --serviceaccount=${unique_prefix}:generic-watcher
 
 set +e
 oc delete secret git-ssh-key
