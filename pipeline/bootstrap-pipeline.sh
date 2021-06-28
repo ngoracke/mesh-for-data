@@ -2,6 +2,7 @@
 set -e
 set +e
 
+helper_text=""
 realpath() {
     [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
 }
@@ -13,6 +14,7 @@ repo_root=$(realpath $(dirname $(realpath $0)))/..
 function cleanup {
     if [[ ! -z ${TMP} ]]; then
         rm -rf ${TMP}
+        echo ${helper_text}
 #        echo "Deleted temp working directory ${TMP}"
     fi
 }
@@ -108,7 +110,7 @@ oc delete secret -n ${unique_prefix} regcred-test --wait
 oc delete secret -n ${unique_prefix} sourceregcred --wait
 set -e
 set +x
-echo "If this step fails:
+helper_text="If this step fails:
 
 1. login to one of the openshift clusters here: https://github.ibm.com/IBM-Streams/infra-streams#for-openshift-4x
 2. oc get secret -n openshift-config pull-secret -o yaml > /tmp/secret.yaml
@@ -119,6 +121,7 @@ echo "If this step fails:
 set -x
  
 oc get secret -n openshift-config pull-secret -o yaml > ${TMP}/secret.yaml
+helper_text=""
 cp ${TMP}/secret.yaml ${TMP}/secret.yaml.orig
 sed -i.bak "s|namespace: openshift-config|namespace: ${unique_prefix}|g" ${TMP}/secret.yaml
 sed -i.bak "s|name: pull-secret|name: regcred|g" ${TMP}/secret.yaml
@@ -150,7 +153,7 @@ rc=$?
 set -e
 if [[ $rc -ne 0 ]]; then
     set +x
-    echo "please install into m4d-system first - currently vault can only be installed in one namespace, and needs to go in m4d-system"
+    helper_text="please install into m4d-system first - currently vault can only be installed in one namespace, and needs to go in m4d-system"
     exit 1
 fi
 
@@ -180,11 +183,11 @@ oc apply -f ${TMP}/release.yaml
 oc apply -f ${TMP}/interceptors.yaml
 
 set +x
-echo "If this step fails, run again - knative related pods may be restarting and unable to process the webhook
-
+helper_text="If this step fails, run again - knative related pods may be restarting and unable to process the webhook
 "
 set -x
 oc apply -f ${repo_root}/pipeline/eventlistener/generic-eventlistener.yaml
+helper_text=""
 set +e
 oc delete rolebinding generic-watcher
 set -e
@@ -195,12 +198,13 @@ oc delete secret git-ssh-key
 set -e
 cat ~/.ssh/known_hosts | base64 > ${TMP}/known_hosts
 set +x
-echo "If this step fails, make the second positional arg the path to an ssh key authenticated with Github Enterprise
+helper_text="If this step fails, make the second positional arg the path to an ssh key authenticated with Github Enterprise
 
 ex: bash -x bootstrap.sh m4d-system /path/to/private/ssh/key
 "
 set -x
 oc create secret generic git-ssh-key --from-file=ssh-privatekey=${ssh_key} --type=kubernetes.io/ssh-auth
+helper_text=""
 oc annotate secret git-ssh-key --overwrite 'tekton.dev/git-0'='github.ibm.com'
 oc secrets link pipeline git-ssh-key --for=mount
 
