@@ -34,6 +34,18 @@ spec:
     description: deploy vault or no.  If deploying to the m4d-system namespace, make this true.
     name: deployVault
     type: string
+  - default: 'cluster.name="AmsterdamCluster",cluster.zone="Netherlands",cluster.region="Netherlands",cluster.vaultAuthPath="kubernetes",coordinator.catalog="WKC",coordinator.catalogConnectorURL="wkc-connector:50090"'
+    description: values to pass to helm install of mesh-for-data charts
+    type: string
+    name: mesh-for-data-values
+  - default: "/workspace/source/vault-plugin-secrets-wkc-reader/helm-deployment/vault-single-cluster/vault-rbac.yaml"
+    description: roles to create when deploying vault
+    name: vaultRoles
+    type: string
+  - default: "/workspace/source/vault-plugin-secrets-wkc-reader/helm-deployment/vault-single-cluster/values.yaml"
+    description: values file for use when helm deploying vault
+    name: vaultValues
+    type: string
   - default: "false"
     description: deploy CRDs or no.  If deploying to the m4d-system namespace, make this true.
     name: deployCRD
@@ -88,6 +100,35 @@ spec:
     default: "false"
   tasks:
   #git@github.ibm.com:data-mesh-research/WKC-connector.git
+  - name: fetch-vault-plugin-secrets-wkc-reader
+    params:
+    - name: url
+      value: git@github.ibm.com:data-mesh-research/vault-plugin-secrets-wkc-reader.git
+    - name: subdirectory
+      value: "vault-plugin-secrets-wkc-reader"
+    - name: deleteExisting
+      value: "true"
+    - name: revision
+      value: master
+    - name: INCREMENTAL_CODE_RESTART
+      value: $(params.INCREMENTAL_CODE_RESTART)
+    - name: sslVerify
+      value: "false"
+    taskRef:
+      kind: Task
+      name: git-clone
+    workspaces:
+    - name: output
+      workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
   - name: fetch-wkc-connector
     params:
     - name: url
@@ -710,7 +751,7 @@ spec:
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
-      value: clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),opaConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),vault.address=http://vault.m4d-system:8200
+      value: clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),opaConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),vault.address=http://vault.m4d-system:8200,$(params.mesh-for-data-values)
     - name: release_version
       value: 0.1.0
     runAfter:
@@ -888,8 +929,10 @@ spec:
     - name: helm_repo
       value: https://helm.releases.hashicorp.com
     - name: chart_name
-      value: hashicorp/vault --values https://raw.githubusercontent.com/mesh-for-data/mesh-for-data/v0.1.0/third_party/vault/vault-single-cluster/values.yaml
+      value: hashicorp/vault --values $(params.vaultValues)
         --create-namespace
+      # old values 
+      # --values https://raw.githubusercontent.com/mesh-for-data/mesh-for-data/v0.1.0/third_party/vault/vault-single-cluster/values.yaml
     - name: release_version
       value: 0.9.1
     - name: release_name
@@ -898,9 +941,14 @@ spec:
       value: $(params.NAMESPACE)
     - name: overwrite_values
       value: server.dev.enabled=true,injector.enabled=false,global.openshift=true,server.image.repository=wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/vault
+    runAfter:
+    - fetch-vault-plugin-secrets-wkc-reader
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: helm-upgrade-from-repo
+    workspaces:
+    - name: source
+      workspace: shared-workspace
     when:
     - Input: $(params.deployVault)
       Operator: in
@@ -935,6 +983,9 @@ spec:
     taskRef:
       kind: ClusterTask
       name: helm-upgrade-from-repo
+    workspaces:
+    - name: source
+      workspace: shared-workspace
     when:
     - Input: $(params.deployCertManager)
       Operator: in
@@ -956,13 +1007,18 @@ spec:
     params:
     - name: ARGS
       value:
-      - apply -f https://raw.githubusercontent.com/mesh-for-data/mesh-for-data/v0.1.0/third_party/vault/vault-single-cluster/vault-rbac.yaml
+      - apply -f $(params.vaultRoles)
         -n $(params.NAMESPACE)
+      # old rbac file
+      # -f https://raw.githubusercontent.com/mesh-for-data/mesh-for-data/v0.1.0/third_party/vault/vault-single-cluster/vault-rbac.yaml
     runAfter:
     - upgrade-helm-vault-from-repo
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: openshift-client
+    workspaces:
+    - name: source
+      workspace: shared-workspace
     when:
     - Input: $(params.deployVault)
       Operator: in

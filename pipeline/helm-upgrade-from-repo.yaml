@@ -50,3 +50,5 @@ spec:
       helm repo update
       echo installing helm chart...
       helm upgrade --wait --install --namespace "$(inputs.params.release_namespace)" $(inputs.params.release_name) $(inputs.params.chart_name) --debug --set "$(inputs.params.overwrite_values)"
+  workspaces:
+  - name: source
