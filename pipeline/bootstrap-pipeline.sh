@@ -74,6 +74,9 @@ try_command "${TMP}/streams_csv_check_script.sh"  40 true 5
 oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${unique_prefix}:pipeline
 oc adm policy add-role-to-group system:image-puller system:serviceaccounts:${unique_prefix} --namespace ${unique_prefix}
 
+# Temporary hack pending a better solution
+oc adm policy add-scc-to-user anyuid system:serviceaccount:m4d-system:opa-connector
+
 set +e
 #resource_version=$(oc get -f ${repo_root}/pipeline/make.yaml -o jsonpath='{.metadata.resourceVersion}')
 set -e
