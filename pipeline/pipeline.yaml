@@ -815,8 +815,6 @@ spec:
     taskRef:
       kind: ClusterTask
       name: helm-upgrade-from-source
-    runAfter:
-      - build-image-wkc-connector
     workspaces:
     - name: source
       workspace: shared-workspace
