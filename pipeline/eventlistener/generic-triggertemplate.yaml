@@ -45,6 +45,11 @@ spec:
           - name: shared-workspace
             persistentVolumeClaim:
               claimName: source-pvc
+          - name: images-url
+            emptyDir: {}
+          - name: artifacts
+            persistentVolumeClaim:
+              claimName: artifacts-pvc
         pipelineRef:
           name: build-and-deploy
     - apiVersion: tekton.dev/v1beta1
@@ -107,5 +112,10 @@ spec:
           - name: shared-workspace
             persistentVolumeClaim:
               claimName: source-pvc
+          - name: images-url
+            emptyDir: {}
+          - name: artifacts
+            persistentVolumeClaim:
+              claimName: artifacts-pvc
         pipelineRef:
           name: build-and-deploy
