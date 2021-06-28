@@ -84,6 +84,8 @@ oc apply -f ${repo_root}/pipeline/make.yaml
 oc apply -f ${repo_root}/pipeline/git-clone.yaml
 oc apply -f ${repo_root}/pipeline/buildah.yaml
 oc apply -f ${repo_root}/pipeline/knative-eventing.yaml
+oc apply -f ${repo_root}/pipeline/helm-upgrade-from-repo.yaml
+oc apply -f ${repo_root}/pipeline/openshift-client.yaml
 
 oc patch clustertask helm-upgrade-from-repo -p '
 [{
@@ -210,6 +212,27 @@ oc create secret generic git-ssh-key --from-file=ssh-privatekey=${ssh_key} --typ
 helper_text=""
 oc annotate secret git-ssh-key --overwrite 'tekton.dev/git-0'='github.ibm.com'
 oc secrets link pipeline git-ssh-key --for=mount
+
+cat > ${TMP}/wkc-credentials.yaml <<EOH
+apiVersion: v1
+kind: Secret
+metadata:
+  name: wkc-credentials
+  namespace: ${unique_prefix} 
+type: kubernetes.io/Opaque
+stringData:
+  CP4D_USERNAME: admin 
+  CP4D_PASSWORD: password
+  CP4D_SERVER_URL: https://cpd-tooling-2q21-cpd.apps.cpstreamsx6.cp.fyre.ibm.com
+EOH
+cat ${TMP}/wkc-credentials.yaml
+oc apply -f ${TMP}/wkc-credentials.yaml
+
+#set +e
+#oc -n ${unique_prefix} delete configmap sample-policy
+#set -e
+#oc -n ${unique_prefix} create configmap sample-policy --from-file=sample-policy.rego
+#oc -n ${unique_prefix} label configmap sample-policy openpolicyagent.org/policy=rego
 
 set +x
 #echo "install tekton extension is vscode and then run:
