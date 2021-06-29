@@ -185,6 +185,19 @@ spec:
       Operator: notin
       Values:
       - "true"
+  # - name: remove-creds
+  #   params:
+  #   - name: ARGS
+  #     value:
+  #     - delete secret git-ssh-key --ignore-not-found=true
+  #       -n $(params.NAMESPACE)
+  #   taskRef:
+  #     kind: Task
+  #     name: openshift-client
+  #   runAfter:
+  #   - fetch-repository
+  #   - fetch-vault-plugin-secrets-wkc-reader
+  #   - fetch-wkc-connector
   - name: build-wkc-connector
     params:
     - name: target
@@ -1092,6 +1105,19 @@ spec:
     taskRef:
       kind: Task
       name: make
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  finally:
+  - name: finally-remove-creds
+    params:
+    - name: ARGS
+      value:
+      - delete secret git-ssh-key --ignore-not-found=true
+        -n $(params.NAMESPACE)
+    taskRef:
+      kind: Task
+      name: openshift-client
     workspaces:
     - name: source
       workspace: shared-workspace
