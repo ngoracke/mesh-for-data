@@ -19,11 +19,6 @@ spec:
     description: The OpenShift CLI arguments to run
     name: ARGS
     type: array
-  resources:
-    inputs:
-    - name: source
-      optional: true
-      type: git
   steps:
   - args:
     - $(params.ARGS)
