@@ -86,9 +86,10 @@ spec:
     name: push
     resources: {}
     script: |
+      unique_id=$(echo $(params.IMAGE) | sed 's/.*\///')
       buildah --storage-driver=$(params.STORAGE_DRIVER) push \
         $(params.PUSH_EXTRA_ARGS) --tls-verify=$(params.TLSVERIFY) \
-        --digestfile $(workspaces.source.path)/image-digest $(params.IMAGE) \
+        --digestfile $(workspaces.source.path)/image-digest-${unique_id} $(params.IMAGE) \
         docker://$(params.IMAGE)
     securityContext:
       privileged: true
@@ -99,7 +100,9 @@ spec:
   - image: $(params.BUILDER_IMAGE)
     name: digest-to-results
     resources: {}
-    script: cat $(workspaces.source.path)/image-digest | tee /tekton/results/IMAGE_DIGEST
+    script: |
+      unique_id=$(echo $(params.IMAGE) | sed 's/.*\///')
+      cat $(workspaces.source.path)/image-digest-${unique_id} | tee /tekton/results/IMAGE_DIGEST
   - image: $(params.BUILDER_IMAGE)
     name: helm-property-to-results
     resources: {}
