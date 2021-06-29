@@ -77,10 +77,17 @@ spec:
       #!/bin/sh
       set -eu -o pipefail
 
-      if [[ $(params.INCREMENTAL_CODE_RESTART) == "true" ]]; then
+      if [[ "$(params.INCREMENTAL_CODE_RESTART)" == "true" ]]; then
           echo "No-op because we are just building images"
           echo -n "incrementalrebuild" > $(results.commit.path)
           echo -n "incrementalrebuild" > $(results.url.path)
+          exit 0
+      fi
+
+      if [[ "$(params.url)" == "" ]]; then
+          echo "No-op because no git-url specified."
+          echo -n "nogiturl" > $(results.commit.path)
+          echo -n "nogiturl" > $(results.url.path)
           exit 0
       fi
 

@@ -1086,6 +1086,8 @@ spec:
     runAfter:
     - upgrade-helm-full
     - upgrade-wkc-connector-helm-full
+    - build-image-datacatalog
+    - build-image-serverpolicymanager
     taskRef:
       kind: Task
       name: make
