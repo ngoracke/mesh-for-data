@@ -75,7 +75,8 @@ oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${uni
 oc adm policy add-role-to-group system:image-puller system:serviceaccounts:${unique_prefix} --namespace ${unique_prefix}
 
 # Temporary hack pending a better solution
-oc adm policy add-scc-to-user anyuid system:serviceaccount:m4d-system:opa-connector
+oc adm policy add-scc-to-user anyuid system:serviceaccount:${unique_prefix}:opa-connector
+oc adm policy add-scc-to-user anyuid system:serviceaccount:${unique_prefix}:manager
 
 set +e
 #resource_version=$(oc get -f ${repo_root}/pipeline/make.yaml -o jsonpath='{.metadata.resourceVersion}')
@@ -233,6 +234,14 @@ oc apply -f ${TMP}/wkc-credentials.yaml
 #set -e
 #oc -n ${unique_prefix} create configmap sample-policy --from-file=sample-policy.rego
 #oc -n ${unique_prefix} label configmap sample-policy openpolicyagent.org/policy=rego
+
+if [[ ${unique_prefix} != "m4d-system" ]]; then
+    set +e
+    oc delete secrets vault-credentials -n ${unique_prefix}
+    set -e
+    oc get secrets vault-credentials -n m4d-system -o jsonpath={.data.VAULT_TOKEN} | base64 --decode > ${TMP}/token.txt
+    oc create secret generic vault-credentials --from-file=VAULT_TOKEN=${TMP}/token.txt -n ${unique_prefix}
+fi
 
 set +x
 #echo "install tekton extension is vscode and then run:
