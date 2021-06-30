@@ -69,7 +69,7 @@ oc get -n openshift-operators csv | grep serverless-operator
 oc get -n openshift-operators csv | grep serverless-operator | grep Succeeded
 EOH
 chmod u+x ${TMP}/streams_csv_check_script.sh
-try_command "${TMP}/streams_csv_check_script.sh"  40 true 5
+try_command "${TMP}/streams_csv_check_script.sh"  40 false 5
 
 oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${unique_prefix}:pipeline
 oc adm policy add-role-to-group system:image-puller system:serviceaccounts:${unique_prefix} --namespace ${unique_prefix}
