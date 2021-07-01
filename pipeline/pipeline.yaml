@@ -17,7 +17,7 @@ spec:
   - description: url of the git repo for the code of deployment
     name: git-url
     type: string
-    default: https://github.com/ngoracke/mesh-for-data.git
+    default: git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git
   - default: pipeline
     description: branch/revision to be used from repo of the code for deployment
     name: git-revision
