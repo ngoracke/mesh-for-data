@@ -9,6 +9,8 @@ setup:
     REPO=$(jq -r '.services[] | select(.toolchain_binding.name=="app-repo") | .parameters.repo_name' /toolchain/toolchain.json)
     curl -u ":$GH_TOKEN" https://github.ibm.com/api/v3/repos/$OWNER/$REPO/branches/master/protection -XPUT -d '{"required_pull_request_reviews":{"dismiss_stale_reviews":true},"required_status_checks":{"strict":true,"contexts":["tekton/code-branch-protection","tekton/code-unit-tests","tekton/code-cis-check","tekton/code-vulnerability-scan","tekton/code-detect-secrets"]},"enforce_admins":null,"restrictions":null}'
     #npm ci
+    env
+    ls $WORKSPACE
     kubectl get po -o wide
 test:
   abort_on_failure: false
