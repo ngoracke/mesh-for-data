@@ -67,6 +67,8 @@ spec:
     name: docker-hostname
   - description: image name of the image just built
     name: IMAGE
+  - description: full image (name+digest)
+    name: FULL_IMAGE
   steps:
   - image: $(params.BUILDER_IMAGE)
     name: build
@@ -119,6 +121,12 @@ spec:
     name: image-to-results
     resources: {}
     script: echo -n $(params.IMAGE) > /tekton/results/IMAGE
+  - image: $(params.BUILDER_IMAGE)
+    name: full-image-to-results
+    script: |
+      unique_id=$(echo $(params.IMAGE) | sed 's/.*\///')
+      digest=$(cat $(workspaces.source.path)/image-digest-${unique_id})
+      echo -n $(params.IMAGE)@${digest} > /tekton/results/FULL_IMAGE
   volumes:
   - emptyDir: {}
     name: varlibcontainers

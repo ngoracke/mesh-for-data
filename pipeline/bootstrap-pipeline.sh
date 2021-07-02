@@ -5,6 +5,7 @@ set +e
 run_tkn=${run_tkn:-0}
 GH_TOKEN=${GH_TOKEN}
 git_user=${git_user}
+image_repo="${image_repo:-image-registry.openshift-image-registry.svc:5000}"
 
 helper_text=""
 realpath() {
@@ -119,7 +120,6 @@ set -e
 oc apply -f ${repo_root}/pipeline/pipeline.yaml
 
 image_source_repo="wcp-ibm-streams-docker-local.artifactory.swg-devops.com"
-image_repo="image-registry.openshift-image-registry.svc:5000"
 
 set +e
 oc delete secret -n ${unique_prefix} regcred --wait
@@ -284,4 +284,14 @@ tkn pipeline start build-and-deploy -w name=images-url,emptyDir="" -w name=artif
 if [[ ${run_tkn} -eq 1 ]]; then
     set -x
     tkn pipeline start build-and-deploy -w name=images-url,emptyDir="" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=image-registry.openshift-image-registry.svc:5000 -p docker-namespace=${unique_prefix} -p git-url=git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params}
+
+    cat > ${TMP}/streams_csv_check_script.sh <<EOH
+#!/bin/bash
+set -x
+tkn pipelinerun list --no-headers
+tkn pipelinerun list --no-headers | grep -e "Failed" -e "Succeeded"
+EOH
+    chmod u+x ${TMP}/streams_csv_check_script.sh
+    try_command "${TMP}/streams_csv_check_script.sh"  40 false 30 
+    tkn pipelinerun list --no-headers | grep -e "Failed" -e "Succeeded"
 fi
