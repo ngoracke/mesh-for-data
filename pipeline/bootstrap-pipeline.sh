@@ -1,6 +1,10 @@
 #!/bin/bash
-set -e
+set -ex
 set +e
+
+run_tkn=${run_tkn:-0}
+GH_TOKEN=${GH_TOKEN}
+git-user=${git-user}
 
 helper_text=""
 realpath() {
@@ -81,12 +85,19 @@ oc adm policy add-scc-to-user anyuid system:serviceaccount:${unique_prefix}:mana
 set +e
 #resource_version=$(oc get -f ${repo_root}/pipeline/make.yaml -o jsonpath='{.metadata.resourceVersion}')
 set -e
+set +x
+helper_text="If this step fails, tekton related pods may be restarting or initializing:
+
+1. Please rerun in a minute or so
+"
+set -x
 oc apply -f ${repo_root}/pipeline/make.yaml
 oc apply -f ${repo_root}/pipeline/git-clone.yaml
 oc apply -f ${repo_root}/pipeline/buildah.yaml
 oc apply -f ${repo_root}/pipeline/knative-eventing.yaml
 oc apply -f ${repo_root}/pipeline/helm-upgrade-from-repo.yaml
 oc apply -f ${repo_root}/pipeline/openshift-client.yaml
+helper_text=""
 
 oc patch clustertask helm-upgrade-from-repo -p '
 [{
@@ -201,19 +212,37 @@ oc create rolebinding generic-watcher --role=generic-watcher --serviceaccount=${
 
 set +e
 oc delete secret git-ssh-key
+oc delete secret git-token
 set -e
-cat ~/.ssh/known_hosts | base64 > ${TMP}/known_hosts
-set +x
-helper_text="If this step fails, make the second positional arg the path to an ssh key authenticated with Github Enterprise
 
-ex: bash -x bootstrap.sh m4d-system /path/to/private/ssh/key
-"
-set -x
-oc create secret generic git-ssh-key --from-file=ssh-privatekey=${ssh_key} --type=kubernetes.io/ssh-auth
-helper_text=""
-oc annotate secret git-ssh-key --overwrite 'tekton.dev/git-0'='github.ibm.com'
-oc secrets link pipeline git-ssh-key --for=mount
-
+if [[ -z ${GH_TOKEN} ]]; then
+    cat ~/.ssh/known_hosts | base64 > ${TMP}/known_hosts
+    set +x
+    helper_text="If this step fails, make the second positional arg the path to an ssh key authenticated with Github Enterprise
+    
+    ex: bash -x bootstrap.sh m4d-system /path/to/private/ssh/key
+    "
+    set -x
+    oc create secret generic git-ssh-key --from-file=ssh-privatekey=${ssh_key} --type=kubernetes.io/ssh-auth
+    helper_text=""
+    oc annotate secret git-ssh-key --overwrite 'tekton.dev/git-0'='github.ibm.com'
+    oc secrets link pipeline git-ssh-key --for=mount
+else
+    cat > ${TMP}/git-token.yaml <<EOH
+apiVersion: v1
+kind: Secret
+metadata:
+  name: git-token
+  annotations:
+    tekton.dev/git-0: https://github.ibm.com # Described below
+type: kubernetes.io/basic-auth
+stringData:
+  username: ${git-user}
+  password: ${GH_TOKEN}
+EOH
+    oc apply -f ${TMP}/git-token.yaml
+    oc secrets link pipeline git-token --for=mount
+fi
 cat > ${TMP}/wkc-credentials.yaml <<EOH
 apiVersion: v1
 kind: Secret
@@ -251,3 +280,8 @@ set +x
 echo "
 # for a pre-existing PVC that will be deleted when the namespace is deleted
 tkn pipeline start build-and-deploy -w name=images-url,emptyDir="" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=image-registry.openshift-image-registry.svc:5000 -p docker-namespace=${unique_prefix} -p git-url=git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params}"
+
+if [[ ${run_tkn} -eq 1 ]]; then
+    set -x
+    tkn pipeline start build-and-deploy -w name=images-url,emptyDir="" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=image-registry.openshift-image-registry.svc:5000 -p docker-namespace=${unique_prefix} -p git-url=git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params}"
+fi
