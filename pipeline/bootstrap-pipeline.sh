@@ -4,7 +4,7 @@ set +e
 
 run_tkn=${run_tkn:-0}
 GH_TOKEN=${GH_TOKEN}
-git-user=${git-user}
+git_user=${git_user}
 
 helper_text=""
 realpath() {
@@ -237,7 +237,7 @@ metadata:
     tekton.dev/git-0: https://github.ibm.com # Described below
 type: kubernetes.io/basic-auth
 stringData:
-  username: ${git-user}
+  username: ${git_user}
   password: ${GH_TOKEN}
 EOH
     oc apply -f ${TMP}/git-token.yaml
