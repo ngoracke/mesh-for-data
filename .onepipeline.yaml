@@ -33,6 +33,7 @@ containerize:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
     !/usr/bin/env bash
+    set -x
     if [[ "$PIPELINE_DEBUG" == 1 ]]; then
       trap env EXIT
       env
@@ -43,7 +44,8 @@ containerize:
     env
     ls $WORKSPACE
     oc login $(get_env openshift_cluster) -u $(get_env admin_user) -p $(get_env admin_pw) --insecure-skip-tls-verify=true
-    run_tkn=$(get_env run_tkn) GH_TOKEN=$(cat "$WORKSPACE/git-token") git-user=$(get_env git-user) bash -x pipeline/bootstrap-pipeline.sh m4d-ci
+    oc new-project m4d-ci
+    run_tkn=$(get_env run_tkn) GH_TOKEN=$(cat "$WORKSPACE/git-token") git-user=$(get_env git-user) bash -x ${WORKSPACE}/mesh-for-data/pipeline/bootstrap-pipeline.sh m4d-ci
     kubectl get po -o wide
 deploy:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
