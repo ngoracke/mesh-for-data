@@ -11,6 +11,7 @@ setup:
     #npm ci
     env
     ls $WORKSPACE
+    oc login ${openshift_cluster} -u ${admin_user} -p ${admin_pw} --insecure-skip-tls-verify=true
     kubectl get po -o wide
 test:
   abort_on_failure: false
@@ -20,6 +21,10 @@ test:
     #cd ../"$(load_repo app-repo path)"
     #npm ci
     #npm test
+    env
+    ls $WORKSPACE
+    oc login ${openshift_cluster} -u ${admin_user} -p ${admin_pw} --insecure-skip-tls-verify=true
+    kubectl get po -o wide
     kubectl get po -o wide
 containerize:
   dind: true
@@ -33,6 +38,10 @@ containerize:
     fi
     #source scripts/build_setup.sh
     #source scripts/build.sh
+    env
+    ls $WORKSPACE
+    oc login ${openshift_cluster} -u ${admin_user} -p ${admin_pw} --insecure-skip-tls-verify=true
+    kubectl get po -o wide
     kubectl get po -o wide
 deploy:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
@@ -45,6 +54,10 @@ deploy:
     fi
     #source scripts/deploy_setup.sh
     #source scripts/deploy.sh
+    env
+    ls $WORKSPACE
+    oc login ${openshift_cluster} -u ${admin_user} -p ${admin_pw} --insecure-skip-tls-verify=true
+    kubectl get po -o wide
     kubectl get po -o wide
 acceptance-test:
   abort_on_failure: false
@@ -55,6 +68,10 @@ acceptance-test:
     #npm ci
     #export APP_URL=$(cat ../app-url)
     #npm run acceptance-test
+    env
+    ls $WORKSPACE
+    oc login ${openshift_cluster} -u ${admin_user} -p ${admin_pw} --insecure-skip-tls-verify=true
+    kubectl get po -o wide
     kubectl get po -o wide
 release:
   abort_on_failure: false
@@ -62,4 +79,8 @@ release:
   script: |
     #!/usr/bin/env bash
     #source scripts/release.sh
+    env
+    ls $WORKSPACE
+    oc login ${openshift_cluster} -u ${admin_user} -p ${admin_pw} --insecure-skip-tls-verify=true
+    kubectl get po -o wide
     kubectl get po -o wide
