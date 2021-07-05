@@ -2,7 +2,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ template "m4d.fullname" . }}-motion-crb
+  name: {{ .Release.Namespace }}-{{ template "m4d.fullname" . }}-motion-crb
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
