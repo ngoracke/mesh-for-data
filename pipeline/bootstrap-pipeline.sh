@@ -258,6 +258,7 @@ EOH
 cat ${TMP}/wkc-credentials.yaml
 oc apply -f ${TMP}/wkc-credentials.yaml
 
+extra_params="${extra_params} -p wkcConnectorServerUrl=https://cpd-tooling-2q21-cpd.apps.cpstreamsx6.cp.fyre.ibm.com"
 #set +e
 #oc -n ${unique_prefix} delete configmap sample-policy
 #set -e
