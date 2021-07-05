@@ -16,7 +16,8 @@ setup:
     oc project m4d-ci
     oc delete pipelinerun --all
     kubectl get po -o wide
-    echo "$(get_env one-pipeline-dockerconfigjson)"
+    echo "$(get_env one-pipeline-dockerconfigjson)" > /tmp/secret.yaml
+    kubectl create secret -n m4d-ci generic orig-regcred --from-file=.dockerconfigjson=/tmp/secret.yaml --type=kubernetes.io/dockerconfigjson
 test:
   abort_on_failure: false
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
