@@ -49,9 +49,21 @@ containerize:
     env
     ls $WORKSPACE
     oc login $(get_env openshift_cluster) -u $(get_env admin_user) -p $(get_env admin_pw) --insecure-skip-tls-verify=true
+    set +e
     oc new-project m4d-ci
+    oc delete pipelinerun --all --wait
+    set -e
     run_tkn=$(get_env run_tkn) GH_TOKEN=$(cat "$WORKSPACE/git-token") git_user=$(get_env git-user) image_repo=$(get_env push_registry) bash -x ${WORKSPACE}/mesh-for-data/pipeline/bootstrap-pipeline.sh m4d-ci
     kubectl get po -o wide
+    . ${WORKSPACE}/mesh-for-data/pipeline/common_functions.sh
+    cat > ${TMP}/streams_csv_check_script.sh <<EOH
+#!/bin/bash
+set -x
+oc get pipelinerun --no-headers
+oc get pipelinerun --no-headers | grep -e Failed -e Succeeded
+EOH
+    chmod u+x ${TMP}/streams_csv_check_script.sh
+    try_command "${TMP}/streams_csv_check_script.sh"  40 true 5
     pipelinerun=$(oc get pipelinerun --no-headers | cut -d' ' -f1)
     oc get pipelinerun $pipelinerun -o yaml > /tmp/details
     images=$(yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value: | cut -d' ' -f6)
