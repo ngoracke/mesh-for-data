@@ -55,8 +55,14 @@ containerize:
     pipelinerun=$(oc get pipelinerun --no-headers | cut -d' ' -f1)
     oc get pipelinerun $pipelinerun -o yaml > /tmp/details
     images=$(yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value: | cut -d' ' -f6)
-    for i in $images do: save_artifact service type=image name="$(echo $i | cut -d'@' -f1)" digest="$(echo $i | cut -d'@' -f2)" tags="latest"; done
-    for i in $images do: save_artifact service_debug type=image name="$(echo $i | cut -d'@' -f1)" digest="$(echo $i | cut -d'@' -f2)"; done 
+    for i in $images
+    do
+        save_artifact service type=image name="$(echo $i | cut -d'@' -f1)" digest="$(echo $i | cut -d'@' -f2)" tags="latest"
+    done
+    for i in $images
+    do
+        save_artifact service_debug type=image name="$(echo $i | cut -d'@' -f1)" digest="$(echo $i | cut -d'@' -f2)"
+    done 
 deploy:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
