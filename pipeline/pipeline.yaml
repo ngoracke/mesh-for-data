@@ -830,7 +830,7 @@ spec:
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
-      value: clusterScoped=$(params.clusterScoped),global.imagePullSecrets=,wkcConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/wkc-connector@$(tasks.build-image-wkc-connector.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),wkcConnector.vault.address=http://vault.m4d-system:8200
+      value: clusterScoped=$(params.clusterScoped),global.imagePullSecrets=,wkcConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/wkc-connector@$(tasks.build-image-wkc-connector.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://vault.m4d-system:8200,wkcConnector.vault.address=http://vault.m4d-system:8200
     - name: release_version
       value: 0.1.0
     runAfter:
