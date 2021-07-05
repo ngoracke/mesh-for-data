@@ -58,6 +58,10 @@ spec:
     description: install cluster scoped helm resources.  If deploying to the m4d-system namespace, make this true
     name: clusterScoped
     type: string
+  - default: "https://cpd-tooling-2q21-cpd.apps.cpstreamsx6.cp.fyre.ibm.com"
+    description: cpd url
+    name: wkcConnectorServerUrl 
+    type: string
   - default: manager
     description: image name for the manager.  Only necessary to switch this if you want to swap back and forth between alternate images
     name: MANAGER_IMAGE
@@ -764,7 +768,7 @@ spec:
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
-      value: clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),opaConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),vault.address=http://vault.m4d-system:8200,$(params.mesh-for-data-values)
+      value: clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),opaConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://vault.m4d-system:8200,vault.address=http://vault.m4d-system:8200,$(params.mesh-for-data-values)
     - name: release_version
       value: 0.1.0
     runAfter:
@@ -830,7 +834,7 @@ spec:
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
-      value: clusterScoped=$(params.clusterScoped),global.imagePullSecrets=,wkcConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/wkc-connector@$(tasks.build-image-wkc-connector.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://vault.m4d-system:8200,wkcConnector.vault.address=http://vault.m4d-system:8200
+      value: clusterScoped=$(params.clusterScoped),global.imagePullSecrets=,wkcConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/wkc-connector@$(tasks.build-image-wkc-connector.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://vault.m4d-system:8200,wkcConnector.vault.address=http://vault.m4d-system:8200,wkcConnector.serverURL=$(params.wkcConnectorServerUrl)
     - name: release_version
       value: 0.1.0
     runAfter:
