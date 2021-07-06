@@ -308,6 +308,12 @@ spec:
     value: git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git
   - name: wkcConnectorServerUrl
     value: https://cpd-tooling-2q21-cpd.apps.cpstreamsx6.cp.fyre.ibm.com
+  - name: git-url
+    value: https://github.ibm.com:IBM-Data-Fabric/mesh-for-data.git
+  - name: wkc-connector-git-url
+    value: https://github.ibm.com:ngoracke/WKC-connector.git
+  - name: vault-plugin-secrets-wkc-reader-url 
+    value: https://github.ibm.com:data-mesh-research/vault-plugin-secrets-wkc-reader.git
   pipelineRef:
     name: build-and-deploy
   serviceAccountName: pipeline
