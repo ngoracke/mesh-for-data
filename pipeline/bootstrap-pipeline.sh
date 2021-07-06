@@ -284,8 +284,47 @@ tkn pipeline start build-and-deploy -w name=images-url,emptyDir="" -w name=artif
 
 if [[ ${run_tkn} -eq 1 ]]; then
     set -x
-    tkn pipeline start build-and-deploy -w name=images-url,emptyDir="" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=image-registry.openshift-image-registry.svc:5000 -p docker-namespace=${unique_prefix} -p git-url=git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params}
+    tkn pipeline start build-and-deploy -w name=images-url,emptyDir="" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=image-registry.openshift-image-registry.svc:5000 -p docker-namespace=${unique_prefix} -p git-url=git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params} --dry-run > ${TMP}/pipelinerun.yaml
 
+#    cat > ${TMP}/pipelinerun.yaml <<EOH
+#apiVersion: tekton.dev/v1beta1
+#kind: PipelineRun
+#metadata:
+#  labels:
+#    tekton.dev/pipeline: build-and-deploy
+#  name: build-and-deploy-run
+#  namespace: ${unique_prefix} 
+#spec:
+#  params:
+#  - name: NAMESPACE
+#    value: ${unique_prefix} 
+#  - name: docker-hostname
+#    value: image-registry.openshift-image-registry.svc:5000
+#  - name: docker-namespace
+#    value: ${unique_prefix} 
+#  - name: git-revision
+#    value: pipeline
+#  - name: git-url
+#    value: git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git
+#  - name: wkcConnectorServerUrl
+#    value: https://cpd-tooling-2q21-cpd.apps.cpstreamsx6.cp.fyre.ibm.com
+#  pipelineRef:
+#    name: build-and-deploy
+#  serviceAccountName: pipeline
+#  timeout: 1h0m0s
+#  workspaces:
+#  - emptyDir: {}
+#    name: images-url
+#  - name: artifacts
+#    persistentVolumeClaim:
+#      claimName: artifacts-pvc
+#  - name: shared-workspace
+#    persistentVolumeClaim:
+#      claimName: source-pvc
+#EOH
+    cat ${TMP}/pipelinerun.yaml
+    oc apply -f ${TMP}/pipelinerun.yaml
+ 
     cat > ${TMP}/streams_csv_check_script.sh <<EOH
 #!/bin/bash
 set -x
