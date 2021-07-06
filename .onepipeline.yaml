@@ -53,9 +53,9 @@ containerize:
     oc new-project m4d-ci
     oc delete pipelinerun --all --wait
     set -e
-    run_tkn=$(get_env run_tkn) GH_TOKEN=$(cat "$WORKSPACE/git-token") git_user=$(get_env git-user) image_repo=$(get_env push_registry) bash -x ${WORKSPACE}/mesh-for-data/pipeline/bootstrap-pipeline.sh m4d-ci
+    run_tkn=$(get_env run_tkn) GH_TOKEN=$(cat "$WORKSPACE/git-token") git_user=$(get_env git-user) image_repo=$(get_env push_registry) bash -x pipeline/bootstrap-pipeline.sh m4d-ci
     kubectl get po -o wide
-    . ${WORKSPACE}/mesh-for-data/pipeline/common_functions.sh
+    . pipeline/common_functions.sh
     cat > ${TMP}/streams_csv_check_script.sh <<EOH
     #!/bin/bash
     set -x
