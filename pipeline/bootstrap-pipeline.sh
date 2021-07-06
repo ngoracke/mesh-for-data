@@ -237,8 +237,8 @@ metadata:
     tekton.dev/git-0: https://github.ibm.com # Described below
 type: kubernetes.io/basic-auth
 stringData:
-  username: ${GH_TOKEN}
-  password:
+  username: ${git_user}
+  password: ${GH_TOKEN}
 EOH
     oc apply -f ${TMP}/git-token.yaml
     oc secrets link pipeline git-token --for=mount
