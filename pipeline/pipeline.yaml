@@ -26,6 +26,10 @@ spec:
     name: wkc-connector-git-url
     type: string
     default: git@github.ibm.com:ngoracke/WKC-connector.git
+  - description: url of the git repo for the code of deployment
+    name: vault-plugin-secrets-wkc-reader-url
+    type: string
+    default: git@github.ibm.com:data-mesh-research/vault-plugin-secrets-wkc-reader.git
   - default: master
     description: branch/revision to be used from repo of the code for deployment
     name: wkc-connector-git-revision
@@ -107,7 +111,7 @@ spec:
   - name: fetch-vault-plugin-secrets-wkc-reader
     params:
     - name: url
-      value: git@github.ibm.com:data-mesh-research/vault-plugin-secrets-wkc-reader.git
+      value: $(params.vault-plugin-secrets-wkc-reader-url)
     - name: subdirectory
       value: "vault-plugin-secrets-wkc-reader"
     - name: deleteExisting
