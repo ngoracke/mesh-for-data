@@ -37,7 +37,7 @@ containerize:
   dind: true
   image: wcp-ibm-streams-docker-local.artifactory.swg-devops.com/elvis_build/suede:latest
   script: |
-    !/usr/bin/env bash
+    #!/bin/bash
     set -x
     if [[ "$PIPELINE_DEBUG" == 1 ]]; then
       trap env EXIT
