@@ -253,12 +253,12 @@ type: kubernetes.io/Opaque
 stringData:
   CP4D_USERNAME: admin 
   CP4D_PASSWORD: password
-  CP4D_SERVER_URL: https://cpd-tooling-2q21-cpd.apps.cpstreamsx6.cp.fyre.ibm.com
+  CP4D_SERVER_URL: https://cpd-tooling-2q21-cpd.apps.cpstreamsx3.cp.fyre.ibm.com
 EOH
 cat ${TMP}/wkc-credentials.yaml
 oc apply -f ${TMP}/wkc-credentials.yaml
 
-extra_params="${extra_params} -p wkcConnectorServerUrl=https://cpd-tooling-2q21-cpd.apps.cpstreamsx6.cp.fyre.ibm.com"
+extra_params="${extra_params} -p wkcConnectorServerUrl=https://cpd-tooling-2q21-cpd.apps.cpstreamsx3.cp.fyre.ibm.com"
 #set +e
 #oc -n ${unique_prefix} delete configmap sample-policy
 #set -e
@@ -307,7 +307,7 @@ spec:
   - name: git-url
     value: git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git
   - name: wkcConnectorServerUrl
-    value: https://cpd-tooling-2q21-cpd.apps.cpstreamsx6.cp.fyre.ibm.com
+    value: https://cpd-tooling-2q21-cpd.apps.cpstreamsx3.cp.fyre.ibm.com
   - name: git-url
     value: https://github.ibm.com/IBM-Data-Fabric/mesh-for-data.git
   - name: wkc-connector-git-url
