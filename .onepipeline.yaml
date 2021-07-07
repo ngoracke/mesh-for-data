@@ -67,6 +67,10 @@ containerize:
     pipelinerun=$(oc get pipelinerun --no-headers | cut -d' ' -f1)
     oc get pipelinerun $pipelinerun -o yaml > /tmp/details
     cat /tmp/details
+    yq r /tmp/details 'status.taskRuns[*].status.taskResults'
+    yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1
+    yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value:
+    yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value: | cut -d' ' -f6
     images=$(yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value: | cut -d' ' -f6)
     for i in $images
     do
