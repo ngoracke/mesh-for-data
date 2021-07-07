@@ -66,6 +66,7 @@ containerize:
     try_command "${TMP}/streams_csv_check_script.sh"  40 true 5
     pipelinerun=$(oc get pipelinerun --no-headers | cut -d' ' -f1)
     oc get pipelinerun $pipelinerun -o yaml > /tmp/details
+    cat /tmp/details
     images=$(yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value: | cut -d' ' -f6)
     for i in $images
     do
