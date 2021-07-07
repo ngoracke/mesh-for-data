@@ -1057,7 +1057,7 @@ spec:
       Operator: notin
       Values:
       - "true"
-  - name: oc-install-flight-opensource
+  - name: oc-install-flight-opensource-crds-absent
     params:
     - name: ARGS
       value:
@@ -1069,6 +1069,36 @@ spec:
       kind: ClusterTask
       name: openshift-client
     when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.INCREMENTAL_CODE_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+  - name: oc-install-flight-opensource-crds-present
+    params:
+    - name: ARGS
+      value:
+      - apply -f https://github.com/mesh-for-data/arrow-flight-module/releases/latest/download/module.yaml
+        -n $(params.NAMESPACE)
+    taskRef:
+      kind: ClusterTask
+      name: openshift-client
+    when:
+    - Input: $(params.deployCRD)
+      Operator: in
+      Values:
+      - "false"
+    - Input: $(params.NAMESPACE)
+      Operator: in
+      Values:
+      - "m4d-system"
     - Input: $(params.IMAGE_DIGEST)
       Operator: in
       Values:
