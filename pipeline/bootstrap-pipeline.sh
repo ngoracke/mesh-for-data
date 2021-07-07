@@ -156,12 +156,13 @@ set +e
 oc get crd | grep "m4dapplications.app.m4d.ibm.com"
 rc=$?
 if [[ $rc -ne 0 ]]; then
-    extra_params="${extra_params} deployCRD='true'"
+    extra_params="${extra_params} -p deployCRD='true'"
 fi
 
-oc get crd | grep "cert-manager"
+oc get crd | grep "certmanager"
+rc=$?
 if [[ $rc -ne 0 ]]; then
-    extra_params="${extra_params} deployCertManager='true'"
+    extra_params="${extra_params} -p deployCertManager='true'"
 fi
 
 set +e
