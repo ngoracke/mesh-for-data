@@ -70,16 +70,15 @@ containerize:
     yq r /tmp/details 'status.taskRuns[*].status.taskResults'
     yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1
     yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value:
-    yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value: | cut -d' ' -f6
-    images=$(yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value: | cut -d' ' -f6)
+    yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value: | cut -d':' -f2
+    images=$(yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value: | cut -d':' -f2)
     for i in $images
     do
-        save_artifact service type=image name="$(echo $i | cut -d'@' -f1)" digest="$(echo $i | cut -d'@' -f2)" tags="latest"
+        external_route_image=$(echo $i | sed "s|image-registry.openshift-image-registry.svc:5000|default-route-openshift-image-registry.apps.cpstreamsx3.cp.fyre.ibm.com|g")
+        podman pull ${external_route_image}
+        save_artifact service type=image name="$(echo ${external_route_image} | cut -d'@' -f1)" digest="$(echo $i | cut -d'@' -f2)" tags="latest"
+        save_artifact service_debug type=image name="$(echo ${external_route_image} | cut -d'@' -f1)" digest="$(echo $i | cut -d'@' -f2)"
     done
-    for i in $images
-    do
-        save_artifact service_debug type=image name="$(echo $i | cut -d'@' -f1)" digest="$(echo $i | cut -d'@' -f2)"
-    done 
 deploy:
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
   script: |
