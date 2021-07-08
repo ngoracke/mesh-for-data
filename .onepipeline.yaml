@@ -67,16 +67,40 @@ containerize:
     try_command "${TMP}/streams_csv_check_script.sh"  40 true 5
     pipelinerun=$(oc get pipelinerun --no-headers | cut -d' ' -f1)
     oc get pipelinerun $pipelinerun -o yaml > /tmp/details
-    cat /tmp/details
-    yq r /tmp/details 'status.taskRuns[*].status.taskResults'
-    yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1
-    yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value:
-    yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value: | cut -d':' -f2-
+    #cat /tmp/details
+    #yq r /tmp/details 'status.taskRuns[*].status.taskResults'
+    #yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1
+    #yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value:
+    #yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value: | cut -d':' -f2-
+    docker login -u $(oc whoami) -p $(oc whoami -t)
+
+    ICR_REGISTRY_NAMESPACE="$(cat /config/registry-namespace)"
+    ICR_REGISTRY_REGION="$(get-icr-region "$(cat /config/registry-region)")"
+
+    docker login -u iamapikey --password-stdin "$ICR_REGISTRY_REGION.icr.io" < /config/api-key
+  
+    # Create the namespace if needed to ensure the push will be can be successfull
+    echo "Checking registry namespace: ${ICR_REGISTRY_NAMESPACE}"
+    IBM_LOGIN_REGISTRY_REGION=$(cat /config/registry-region | awk -F: '{print $3}')
+    ibmcloud login --apikey @/config/api-key -r "$IBM_LOGIN_REGISTRY_REGION"
+    NS=$( ibmcloud cr namespaces | sed 's/ *$//' | grep -x "${ICR_REGISTRY_NAMESPACE}" ||: )
+    if [ -z "${NS}" ]; then
+        echo "Registry namespace ${ICR_REGISTRY_NAMESPACE} not found"
+        ibmcloud cr namespace-add "${ICR_REGISTRY_NAMESPACE}"
+        echo "Registry namespace ${ICR_REGISTRY_NAMESPACE} created."
+    else
+        echo "Registry namespace ${ICR_REGISTRY_NAMESPACE} found."
+    fi
+
+    cat ~/.docker/config.json 
+    #IMAGE="$ICR_REGISTRY_REGION.icr.io/$ICR_REGISTRY_NAMESPACE/$IMAGE_NAME:$IMAGE_TAG"
+    #skopeo copy --all --authfile ~/.docker/config.json --dest-tls-verify=false --src-tls-verify=false docker://${in} docker://${out}
     images=$(yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value: | cut -d':' -f2-)
     for i in $images
     do
         external_route_image=$(echo $i | sed "s|image-registry.openshift-image-registry.svc:5000|default-route-openshift-image-registry.apps.cpstreamsx3.cp.fyre.ibm.com|g")
-        podman pull ${external_route_image}
+        icr_route_image=$(echo $i | sed "s|image-registry.openshift-image-registry.svc:5000/${unique_prefix}|$ICR_REGISTRY_REGION.icr.io/$ICR_REGISTRY_NAMESPACE|g")
+        skopeo copy --all --authfile ~/.docker/config.json --dest-tls-verify=false --src-tls-verify=false docker://${external_route_image} docker://${icr_route_image}
         save_artifact service type=image name="$(echo ${external_route_image} | cut -d'@' -f1)" digest="$(echo $i | cut -d'@' -f2)" tags="latest"
         save_artifact service_debug type=image name="$(echo ${external_route_image} | cut -d'@' -f1)" digest="$(echo $i | cut -d'@' -f2)"
     done
