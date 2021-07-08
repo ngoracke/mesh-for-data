@@ -51,6 +51,10 @@ spec:
     name: vaultValues
     type: string
   - default: "false"
+    description: Skip Integration Tests
+    name: skipTests
+    type: string
+  - default: "false"
     description: deploy CRDs or no.  If deploying to the m4d-system namespace, make this true.
     name: deployCRD
     type: string
@@ -1126,6 +1130,11 @@ spec:
     - upgrade-wkc-connector-helm-full
     - build-image-datacatalog
     - build-image-serverpolicymanager
+    when:
+    - Input: $(params.skipTests)
+      Operator: notin
+      Values:
+      - "true"
     taskRef:
       kind: Task
       name: make
@@ -1142,6 +1151,11 @@ spec:
       value: DOCKER_HOSTNAME=$(params.docker-hostname)/$(params.docker-namespace)
     runAfter:
     - upgrade-helm-partial
+    when:
+    - Input: $(params.skipTests)
+      Operator: notin
+      Values:
+      - "true"
     taskRef:
       kind: Task
       name: make
