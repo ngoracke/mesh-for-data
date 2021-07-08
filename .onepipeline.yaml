@@ -14,7 +14,7 @@ setup:
     ls $WORKSPACE
     oc login $(get_env openshift_cluster) -u $(get_env admin_user) -p $(get_env admin_pw) --insecure-skip-tls-verify=true
     oc project m4d-ci
-    oc delete pipelinerun --all
+    #oc delete pipelinerun --all
     kubectl get po -o wide
     echo "secret=$(get_env one-pipeline-dockerconfigjson)" > /tmp/secret.yaml
     cat /tmp/secret.yaml
