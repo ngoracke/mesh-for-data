@@ -70,8 +70,8 @@ containerize:
     yq r /tmp/details 'status.taskRuns[*].status.taskResults'
     yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1
     yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value:
-    yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value: | cut -d':' -f2
-    images=$(yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value: | cut -d':' -f2)
+    yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value: | cut -d':' -f2-
+    images=$(yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value: | cut -d':' -f2-)
     for i in $images
     do
         external_route_image=$(echo $i | sed "s|image-registry.openshift-image-registry.svc:5000|default-route-openshift-image-registry.apps.cpstreamsx3.cp.fyre.ibm.com|g")
