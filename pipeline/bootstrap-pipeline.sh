@@ -3,6 +3,7 @@ set -ex
 set +e
 
 run_tkn=${run_tkn:-0}
+skip_tests=${skip_tests:-false}
 GH_TOKEN=${GH_TOKEN}
 git_user=${git_user}
 image_repo="${image_repo:-image-registry.openshift-image-registry.svc:5000}"
@@ -281,7 +282,7 @@ set +x
 
 echo "
 # for a pre-existing PVC that will be deleted when the namespace is deleted
-tkn pipeline start build-and-deploy -w name=images-url,emptyDir="" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=image-registry.openshift-image-registry.svc:5000 -p docker-namespace=${unique_prefix} -p git-url=git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params}"
+tkn pipeline start build-and-deploy -w name=images-url,emptyDir="" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=image-registry.openshift-image-registry.svc:5000 -p docker-namespace=${unique_prefix} -p git-url=git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} ${extra_params}"
 
 if [[ ${run_tkn} -eq 1 ]]; then
     set -x
@@ -315,6 +316,8 @@ spec:
     value: https://github.ibm.com/ngoracke/WKC-connector.git
   - name: vault-plugin-secrets-wkc-reader-url 
     value: https://github.ibm.com/data-mesh-research/vault-plugin-secrets-wkc-reader.git
+  - name: skipTests
+    value: ${skip_tests}
   pipelineRef:
     name: build-and-deploy
   serviceAccountName: pipeline
