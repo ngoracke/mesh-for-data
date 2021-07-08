@@ -35,7 +35,7 @@ test:
     kubectl get po -o wide
 containerize:
   dind: true
-  image: wcp-ibm-streams-docker-local.artifactory.swg-devops.com/elvis_build/suede:latest
+  image: wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/compliance-baseimage-with-tkn:2.26.1
   script: |
     #!/bin/bash
     set -x
