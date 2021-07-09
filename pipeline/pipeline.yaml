@@ -110,6 +110,10 @@ spec:
     name: INCREMENTAL_CODE_RESTART 
     type: string
     default: "false"
+  - description: Transfer images to icr
+    name: transfer-images-to-icr
+    type: string
+    default: "false"
   tasks:
   #git@github.ibm.com:data-mesh-research/WKC-connector.git
   - name: fetch-vault-plugin-secrets-wkc-reader
@@ -279,6 +283,28 @@ spec:
       Values:
       - "all"
       - "WKC-connector/java"
+  - name: transfer-image-wkc-connector-vulnerability-advisor
+    retries: 3
+    taskRef:
+      kind: ClusterTask
+      name: skopeo-copy
+    params:
+    - name: srcImageURL
+      value: docker://$(params.docker-hostname)/$(params.docker-namespace)/wkc-connector@$(tasks.build-image-wkc-connector.results.IMAGE_DIGEST)
+    - name: destImageURL
+      value: docker://us.icr.io/ngoracke/wkc-connector@$(tasks.build-image-wkc-connector.results.IMAGE_DIGEST)
+    - name: srcTLSverify
+      value: "false"
+    - name: destTLSverify
+      value: "false"
+    when:
+    - Input: $(params.transfer-images-to-icr)
+      Operator: in
+      Values:
+      - "true"
+    workspaces:
+      - name: images-url
+        workspace: images-url
   - name: build-manager
     params:
     - name: target
@@ -389,6 +415,28 @@ spec:
       Values:
       - "all"
       - "mesh-for-data/manager"
+  - name: transfer-image-manager-vulnerability-advisor
+    retries: 3
+    taskRef:
+      kind: ClusterTask
+      name: skopeo-copy
+    params:
+    - name: srcImageURL
+      value: docker://$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST)
+    - name: destImageURL
+      value: docker://us.icr.io/ngoracke/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST)
+    - name: srcTLSverify
+      value: "false"
+    - name: destTLSverify
+      value: "false"
+    when:
+    - Input: $(params.transfer-images-to-icr)
+      Operator: in
+      Values:
+      - "true"
+    workspaces:
+      - name: images-url
+        workspace: images-url
   - name: build-image-dummy-mover
     params:
     - name: IMAGE
@@ -427,6 +475,28 @@ spec:
       Values:
       - "all"
       - "mesh-for-data/dummy-mover"
+  - name: transfer-image-dummy-mover-vulnerability-advisor
+    retries: 3
+    taskRef:
+      kind: ClusterTask
+      name: skopeo-copy
+    params:
+    - name: srcImageURL
+      value: docker://$(params.docker-hostname)/$(params.docker-namespace)/$(params.dummy-image)@$(tasks.build-image-dummy-mover.results.IMAGE_DIGEST)
+    - name: destImageURL
+      value: docker://us.icr.io/ngoracke/$(params.dummy-image)@$(tasks.build-image-dummy-mover.results.IMAGE_DIGEST)
+    - name: srcTLSverify
+      value: "false"
+    - name: destTLSverify
+      value: "false"
+    when:
+    - Input: $(params.transfer-images-to-icr)
+      Operator: in
+      Values:
+      - "true"
+    workspaces:
+      - name: images-url
+        workspace: images-url
   - name: build-katalog
     params:
     - name: target
@@ -496,6 +566,28 @@ spec:
       Values:
       - "all"
       - "mesh-for-data/connectors/katalog"
+  - name: transfer-image-katalog-connector-vulnerability-advisor
+    retries: 3
+    taskRef:
+      kind: ClusterTask
+      name: skopeo-copy
+    params:
+    - name: srcImageURL
+      value: docker://$(params.docker-hostname)/$(params.docker-namespace)/katalog-connector@$(tasks.build-image-katalog.results.IMAGE_DIGEST)
+    - name: destImageURL
+      value: docker://us.icr.io/ngoracke/katalog-connector@$(tasks.build-image-katalog.results.IMAGE_DIGEST)
+    - name: srcTLSverify
+      value: "false"
+    - name: destTLSverify
+      value: "false"
+    when:
+    - Input: $(params.transfer-images-to-icr)
+      Operator: in
+      Values:
+      - "true"
+    workspaces:
+      - name: images-url
+        workspace: images-url
   - name: build-opa
     params:
     - name: target
@@ -565,6 +657,28 @@ spec:
       Values:
       - "all"
       - "mesh-for-data/connectors/opa"
+  - name: transfer-image-opa-connector-vulnerability-advisor
+    retries: 3
+    taskRef:
+      kind: ClusterTask
+      name: skopeo-copy
+    params:
+    - name: srcImageURL
+      value: docker://$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST)
+    - name: destImageURL
+      value: docker://us.icr.io/ngoracke/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST)
+    - name: srcTLSverify
+      value: "false"
+    - name: destTLSverify
+      value: "false"
+    when:
+    - Input: $(params.transfer-images-to-icr)
+      Operator: in
+      Values:
+      - "true"
+    workspaces:
+      - name: images-url
+        workspace: images-url
   - name: build-datacatalog
     params:
     - name: target
@@ -634,7 +748,7 @@ spec:
       Values:
       - "all"
       - "mesh-for-data/test/services/datacatalog"
-  # - name: build-skopeo-copy-image
+  # - name: skopeo-copy-image-data-catalog-mock
   #   taskRef:
   #     name: skopeo-copy-image
   #   workspaces:
@@ -642,7 +756,7 @@ spec:
   #       workspace: artifacts
   #   params:
   #     - name: source-image-repository
-  #       value: "cp.stg.icr.io/cp/cpd"
+  #       value: "cp.stg.icr.io/cp/cpd/scan"
   #     - name: image-tags
   #       value: "latest"
   #     - name: source-image-digest
@@ -659,22 +773,28 @@ spec:
   #       value: "your-username"
   #     - name: pipeline-debug
   #       value: "1"
-  # - name: transfer-image-datacatalog-vulnerability-advisor
-  #   taskRef:
-  #     kind: ClusterTask
-  #     name: skopeo-copy
-  #   params:
-  #   - name: srcImageURL
-  #     value: docker://$(params.docker-hostname)/$(params.docker-namespace)/data-catalog-mock@$(tasks.build-image-datacatalog.results.IMAGE_DIGEST)
-  #   - name: destImageURL
-  #     value: docker://stg.icr.io/cp/cpd/ngoracke/data-catalog-mock@$(tasks.build-image-datacatalog.results.IMAGE_DIGEST)
-  #   - name: srcTLSverify
-  #     value: "false"
-  #   - name: destTLSverify
-  #     value: "false"
-  #   workspaces:
-  #     - name: images-url
-  #       workspace: images-url
+  - name: transfer-image-datacatalog-vulnerability-advisor
+    retries: 3
+    taskRef:
+      kind: ClusterTask
+      name: skopeo-copy
+    params:
+    - name: srcImageURL
+      value: docker://$(params.docker-hostname)/$(params.docker-namespace)/data-catalog-mock@$(tasks.build-image-datacatalog.results.IMAGE_DIGEST)
+    - name: destImageURL
+      value: docker://us.icr.io/ngoracke/data-catalog-mock@$(tasks.build-image-datacatalog.results.IMAGE_DIGEST)
+    - name: srcTLSverify
+      value: "false"
+    - name: destTLSverify
+      value: "false"
+    when:
+    - Input: $(params.transfer-images-to-icr)
+      Operator: in
+      Values:
+      - "true"
+    workspaces:
+      - name: images-url
+        workspace: images-url
   # - name: vulnerability-advisor-image-datacatalog-vulnerability
   #   taskRef:
   #     kind: Task
@@ -766,6 +886,28 @@ spec:
       Values:
       - "all"
       - "mesh-for-data/test/services/policymanager"
+  - name: transfer-image-serverpolicymanager-vulnerability-advisor
+    retries: 3
+    taskRef:
+      kind: ClusterTask
+      name: skopeo-copy
+    params:
+    - name: srcImageURL
+      value: docker://$(params.docker-hostname)/$(params.docker-namespace)/serverpolicymanager-mock@$(tasks.build-image-serverpolicymanager.results.IMAGE_DIGEST)
+    - name: destImageURL
+      value: docker://us.icr.io/ngoracke/serverpolicymanager-mock@$(tasks.build-image-serverpolicymanager.results.IMAGE_DIGEST)
+    - name: srcTLSverify
+      value: "false"
+    - name: destTLSverify
+      value: "false"
+    when:
+    - Input: $(params.transfer-images-to-icr)
+      Operator: in
+      Values:
+      - "true"
+    workspaces:
+      - name: images-url
+        workspace: images-url
   - name: upgrade-helm-full
     params:
     - name: charts_dir
