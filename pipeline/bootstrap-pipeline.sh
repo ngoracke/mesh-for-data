@@ -275,6 +275,15 @@ extra_params="${extra_params} -p wkcConnectorServerUrl=https://cpd-tooling-2q21-
 #    oc create secret generic vault-credentials --from-file=VAULT_TOKEN=${TMP}/token.txt -n ${unique_prefix}
 #fi
 
+set +e
+oc get secret us-south-creds
+rc=$?
+transfer_images_to_icr=false
+if [[ $rc -eq 0 ]]; then
+    transfer_images_to_icr=true
+fi
+
+set -e
 set +x
 #echo "install tekton extension is vscode and then run:
 # for a dynamically provisioned PVC that will be deleted when the pipelinerun is deleted
@@ -282,7 +291,7 @@ set +x
 
 echo "
 # for a pre-existing PVC that will be deleted when the namespace is deleted
-tkn pipeline start build-and-deploy -w name=images-url,emptyDir="" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=image-registry.openshift-image-registry.svc:5000 -p docker-namespace=${unique_prefix} -p git-url=git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} ${extra_params}"
+tkn pipeline start build-and-deploy -w name=images-url,emptyDir="" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=image-registry.openshift-image-registry.svc:5000 -p docker-namespace=${unique_prefix} -p git-url=git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} -p transfer-images-to-icr=${transfer_images_to_icr} ${extra_params}"
 
 if [[ ${run_tkn} -eq 1 ]]; then
     set -x
@@ -318,6 +327,8 @@ spec:
     value: https://github.ibm.com/data-mesh-research/vault-plugin-secrets-wkc-reader.git
   - name: skipTests
     value: ${skip_tests}
+  - name: transfer-images-to-icr
+    value: ${transfer_images_to_icr}
   pipelineRef:
     name: build-and-deploy
   serviceAccountName: pipeline
