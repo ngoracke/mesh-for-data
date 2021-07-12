@@ -1,12 +1,12 @@
-{{- if .Values.worker.enabled }}
+{{- if include "m4d.isEnabled" (tuple .Values.manager.enabled (or .Values.coordinator.enabled .Values.worker.enabled)) }}
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
-  name: streamtransfer-rb
+  name: {{ template "m4d.fullname" . }}-admin-rb
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: streamtransfer-editor
+  name: {{ template "m4d.fullname" . }}-admin-r
 subjects:
 - kind: ServiceAccount
   name: {{ .Values.manager.serviceAccount.name | default "default" }}
