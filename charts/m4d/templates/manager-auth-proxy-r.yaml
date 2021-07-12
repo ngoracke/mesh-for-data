@@ -13,4 +13,3 @@ rules:
   - subjectaccessreviews
   verbs: ["create"]
 {{- end }}
-{{- end }}
