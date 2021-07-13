@@ -5,6 +5,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
@@ -25,12 +26,12 @@ var _ = Describe("FybrikApplication Controller", func() {
 	Context("FybrikApplication", func() {
 		BeforeEach(func() {
 			// Add any setup steps that needs to be executed before each test
-                        module := &app.M4DModule{}
-                        Expect(readObjectFromFile("../../testdata/e2e/module-read.yaml", module)).ToNot(HaveOccurred())
-                        application := &app.M4DApplication{}
-                        Expect(readObjectFromFile("../../testdata/e2e/m4dapplication.yaml", application)).ToNot(HaveOccurred())
-                        _ = k8sClient.Delete(context.Background(), application)
-                        _ = k8sClient.Delete(context.Background(), module)
+			module := &app.M4DModule{}
+			Expect(readObjectFromFile("../../testdata/e2e/module-read.yaml", module)).ToNot(HaveOccurred())
+			application := &app.M4DApplication{}
+			Expect(readObjectFromFile("../../testdata/e2e/m4dapplication.yaml", application)).ToNot(HaveOccurred())
+			_ = k8sClient.Delete(context.Background(), application)
+			_ = k8sClient.Delete(context.Background(), module)
 		})
 
 		AfterEach(func() {
@@ -69,6 +70,12 @@ var _ = Describe("FybrikApplication Controller", func() {
 			}
 		})
 		It("Test end-to-end for FybrikApplication", func() {
+			connector := os.Getenv("USE_WKC_CONTROLLER")
+			if len(connector) > 0 && connector == "true" {
+				fmt.Printf("%v\n", "got here")
+				return
+			}
+			fmt.Printf("connector value %v\n", connector)
 			module := &app.FybrikModule{}
 			Expect(readObjectFromFile("../../testdata/e2e/module-read.yaml", module)).ToNot(HaveOccurred())
 			moduleKey := client.ObjectKeyFromObject(module)
@@ -84,10 +91,10 @@ var _ = Describe("FybrikApplication Controller", func() {
 			defer func() {
 				application := &apiv1alpha1.FybrikApplication{ObjectMeta: metav1.ObjectMeta{Namespace: applicationKey.Namespace, Name: applicationKey.Name}}
 				_ = k8sClient.Get(context.Background(), applicationKey, application)
-				_ = k8sClient.Delete(context.Background(), application)
+				//_ = k8sClient.Delete(context.Background(), application)
 				module := &apiv1alpha1.FybrikApplication{ObjectMeta: metav1.ObjectMeta{Namespace: moduleKey.Namespace, Name: moduleKey.Name}}
 				_ = k8sClient.Get(context.Background(), moduleKey, module)
-				_ = k8sClient.Delete(context.Background(), module)
+				//_ = k8sClient.Delete(context.Background(), module)
 			}()
 
 			By("Expecting application to be created")
