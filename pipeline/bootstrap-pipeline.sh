@@ -43,6 +43,8 @@ if [[ ! -z $2 ]]; then
 else
     ssh_key=${HOME}/.ssh/id_rsa
 fi
+set +e
+oc new-project m4d-blueprints
 set -e
 if [[ $rc -ne 0 ]]; then
     oc new-project ${1:-m4d-system}
