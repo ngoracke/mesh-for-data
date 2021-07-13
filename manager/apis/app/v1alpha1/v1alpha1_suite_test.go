@@ -4,6 +4,7 @@
 package v1alpha1
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -19,8 +20,14 @@ var cfg *rest.Config
 var c client.Client
 
 func TestMain(m *testing.M) {
+	path, errz := os.Getwd()
+	if errz != nil {
+		fmt.Println(errz)
+	}
+	fmt.Println("path is")
+	fmt.Println(path)
 	t := &envtest.Environment{
-		CRDDirectoryPaths:     []string{filepath.Join("..", "..", "..", "..", "charts", "m4d-crd", "templates")},
+		CRDDirectoryPaths:     []string{filepath.Join(path, "..", "..", "..", "..", "charts", "m4d-crd", "templates")},
 		ErrorIfCRDPathMissing: true,
 	}
 

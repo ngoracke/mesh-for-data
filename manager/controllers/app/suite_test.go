@@ -5,6 +5,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -54,10 +55,16 @@ func TestAPIs(t *testing.T) {
 var _ = BeforeSuite(func(done Done) {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
+	path, errz := os.Getwd()
+	if errz != nil {
+		fmt.Println(errz)
+	}
+	fmt.Println("path is")
+	fmt.Println(path)
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
 		CRDDirectoryPaths: []string{
-			filepath.Join("..", "..", "..", "charts", "m4d-crd", "templates"),
+			filepath.Join(path, "..", "..", "..", "charts", "m4d-crd", "templates"),
 		},
 		ErrorIfCRDPathMissing: true,
 	}

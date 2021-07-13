@@ -5,6 +5,8 @@ package app
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"time"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -23,18 +25,24 @@ var _ = Describe("M4DApplication Controller", func() {
 	Context("M4DApplication", func() {
 		BeforeEach(func() {
 			// Add any setup steps that needs to be executed before each test
-                        module := &app.M4DModule{}
-                        Expect(readObjectFromFile("../../testdata/e2e/module-read.yaml", module)).ToNot(HaveOccurred())
-                        application := &app.M4DApplication{}
-                        Expect(readObjectFromFile("../../testdata/e2e/m4dapplication.yaml", application)).ToNot(HaveOccurred())
-                        _ = k8sClient.Delete(context.Background(), application)
-                        _ = k8sClient.Delete(context.Background(), module)
+			module := &app.M4DModule{}
+			Expect(readObjectFromFile("../../testdata/e2e/module-read.yaml", module)).ToNot(HaveOccurred())
+			application := &app.M4DApplication{}
+			Expect(readObjectFromFile("../../testdata/e2e/m4dapplication.yaml", application)).ToNot(HaveOccurred())
+			_ = k8sClient.Delete(context.Background(), application)
+			_ = k8sClient.Delete(context.Background(), module)
 		})
 
 		AfterEach(func() {
 			// Add any teardown steps that needs to be executed after each test
 		})
 		It("Test end-to-end for M4DApplication", func() {
+			connector := os.Getenv("USE_WKC_CONTROLLER")
+			if len(connector) > 0 && connector == "true" {
+				fmt.Printf("%v\n", "got here")
+				return
+			}
+			fmt.Printf("connector value %v\n", connector)
 			module := &app.M4DModule{}
 			Expect(readObjectFromFile("../../testdata/e2e/module-read.yaml", module)).ToNot(HaveOccurred())
 			moduleKey := client.ObjectKeyFromObject(module)
@@ -50,10 +58,10 @@ var _ = Describe("M4DApplication Controller", func() {
 			defer func() {
 				application := &apiv1alpha1.M4DApplication{ObjectMeta: metav1.ObjectMeta{Namespace: applicationKey.Namespace, Name: applicationKey.Name}}
 				_ = k8sClient.Get(context.Background(), applicationKey, application)
-				_ = k8sClient.Delete(context.Background(), application)
+				//_ = k8sClient.Delete(context.Background(), application)
 				module := &apiv1alpha1.M4DApplication{ObjectMeta: metav1.ObjectMeta{Namespace: moduleKey.Namespace, Name: moduleKey.Name}}
 				_ = k8sClient.Get(context.Background(), moduleKey, module)
-				_ = k8sClient.Delete(context.Background(), module)
+				//_ = k8sClient.Delete(context.Background(), module)
 			}()
 
 			By("Expecting application to be created")
