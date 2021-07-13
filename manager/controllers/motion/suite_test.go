@@ -5,6 +5,7 @@ package motion
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -68,8 +69,14 @@ var _ = BeforeSuite(func(done Done) {
 	if os.Getenv("NO_SIMULATED_PROGRESS") == "true" {
 		noSimulatedProgress = true
 	}
+	path, errz := os.Getwd()
+	if errz != nil {
+		fmt.Println(errz)
+	}
+	fmt.Println("path is")
+	fmt.Println(path)
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths:     []string{filepath.Join("..", "..", "..", "charts", "fybrik-crd", "templates")},
+		CRDDirectoryPaths:     []string{filepath.Join(path, "..", "..", "..", "charts", "fybrik-crd", "templates")},
 		ErrorIfCRDPathMissing: true,
 		//AttachControlPlaneOutput: true,
 	}

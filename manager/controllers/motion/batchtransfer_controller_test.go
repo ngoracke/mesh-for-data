@@ -5,7 +5,7 @@ package motion
 
 import (
 	"context"
-        "fmt"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"time"
@@ -24,7 +24,7 @@ import (
 var _ = Describe("BatchTransfer Controller", func() {
 
 	const timeout = time.Second * 30
-	const interval = time.Millisecond * 100
+	const interval = time.Millisecond * 300
 	const batchtransferName = "batchtransfer-sample"
 	const batchtransferNameSpace = "fybrik-blueprints"
 
@@ -40,6 +40,7 @@ var _ = Describe("BatchTransfer Controller", func() {
 			_ = k8sClient.Update(context.Background(), f)
 			time.Sleep(interval)
 			_ = k8sClient.Delete(context.Background(), f)
+			time.Sleep(interval * 10)
 		}
 	})
 
@@ -58,7 +59,7 @@ var _ = Describe("BatchTransfer Controller", func() {
 			if len(registry) > 0 && registry != "ghcr.io" {
 				batchTransfer.Spec.Image = registry + "/dummy-mover:latest"
 			}
-                        fmt.Printf("%v\n", registry)
+			fmt.Printf("%v\n", registry)
 			key := client.ObjectKeyFromObject(batchTransfer)
 
 			// Create BatchTransfer
