@@ -1,4 +1,5 @@
 {{- if .Values.worker.enabled }}
+{{- if .Values.clusterScoped }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -6,10 +7,11 @@ metadata:
   namespace: fybrik-blueprints
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: Role
+  kind: ClusterRole
   name: streamtransfer-editor
 subjects:
 - kind: ServiceAccount
   name: {{ .Values.manager.serviceAccount.name | default "default" }}
   namespace: {{ .Release.Namespace }}
+{{- end }}
 {{- end }}
