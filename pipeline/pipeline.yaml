@@ -918,7 +918,7 @@ spec:
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
-      value: manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),opaConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://vault.m4d-system:8200,vault.address=http://vault.m4d-system:8200,$(params.mesh-for-data-values)
+      value: clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),opaConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://vault.m4d-system:8200,vault.address=http://vault.m4d-system:8200,$(params.mesh-for-data-values)
     - name: release_version
       value: 0.1.0
     runAfter:
