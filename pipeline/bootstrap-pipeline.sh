@@ -152,20 +152,28 @@ oc secrets link pipeline regcred --for=mount
 oc secrets link builder regcred --for=mount
 oc secrets link pipeline regcred --for=pull
 
+cluster_scoped="false"
+deploy_vault="false"
 if [[ "${unique_prefix}" == "m4d-system" ]]; then
     extra_params='-p clusterScoped="true" -p deployVault="true"'
+    cluster_scoped="true"
+    deploy_vault="true"
 fi
 set +e
 oc get crd | grep "m4dapplications.app.m4d.ibm.com"
 rc=$?
+deploy_crd="false"
 if [[ $rc -ne 0 ]]; then
     extra_params="${extra_params} -p deployCRD='true'"
+    deploy_crd="true"
 fi
 
 oc get crd | grep "certmanager"
 rc=$?
+deploy_cert_manager="false"
 if [[ $rc -ne 0 ]]; then
     extra_params="${extra_params} -p deployCertManager='true'"
+    deploy_cert_manager="true"
 fi
 
 set +e
@@ -331,6 +339,12 @@ spec:
     value: ${skip_tests}
   - name: transfer-images-to-icr
     value: ${transfer_images_to_icr}
+  - name: clusterScoped
+    value: "${cluster_scoped}"
+  - name: deployVault
+    value: "${deploy_vault}"
+  - name: deployCRD
+    value: "${deploy_crd}"
   pipelineRef:
     name: build-and-deploy
   serviceAccountName: pipeline
