@@ -106,8 +106,6 @@ deploy:
       env
       set -x
     fi
-    #source scripts/deploy_setup.sh
-    #source scripts/deploy.sh
     env
     ls $WORKSPACE
     oc login $(get_env openshift_cluster) -u $(get_env admin_user) -p $(get_env admin_pw) --insecure-skip-tls-verify=true
@@ -115,17 +113,14 @@ deploy:
     kubectl get po -o wide
 acceptance-test:
   abort_on_failure: false
-  image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
+  image: wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/compliance-baseimage-with-tkn:2.26.1
   script: |
-    #!/usr/bin/env bash
-    #source /root/.nvm/nvm.sh
-    #npm ci
-    #export APP_URL=$(cat ../app-url)
-    #npm run acceptance-test
     env
     ls $WORKSPACE
     oc login $(get_env openshift_cluster) -u $(get_env admin_user) -p $(get_env admin_pw) --insecure-skip-tls-verify=true
-    kubectl get po -o wide
+    oc project m4d-system
+    # go get github.com/tebeka/go2xunit
+    for i in $(oc get po --no-headers | grep run-integr | cut -d' ' -f1); do oc logs $i -c step-unit-test > $i.logs ; cat $i.logs | ~/go/bin/go2xunit > $i.xml; save_artifact acceptance-test $i.logs; save_artifact acceptance-test $.xml; done
 release:
   abort_on_failure: false
   image: wcp-compliance-automation-team-docker-local.artifactory.swg-devops.com/ibm-compliance-automation:1.2.4@sha256:dc98cc52c0caede42149c08727147520e30e81fee543b8dd5939b45d06baa142
