@@ -12,7 +12,7 @@
       
       
       <link rel="icon" href="../static/logo.svg">
-      <meta name="generator" content="mkdocs-1.2.1, mkdocs-material-7.1.9">
+      <meta name="generator" content="mkdocs-1.2.1, mkdocs-material-7.1.10">
     
     
       
@@ -20,7 +20,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ca7ac06f.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.1fe995fd.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.f1a3b89f.min.css">
@@ -1147,13 +1147,14 @@
 <h3 id="credential-management">Credential management</h3>
 <p>Modules that access or write data need credentials in order to access the data store. The credentials are retrieved from <a href="https://www.vaultproject.io/">HashiCorp Vault</a>. The parameters to <a href="https://www.vaultproject.io/api-docs/auth/kubernetes#login">login</a> to vault and to <a href="https://www.vaultproject.io/api/secret/kv/kv-v1#read-secret">read secret</a> are passed as part of the <a href="../reference/crds.html#blueprintspecflowstepsindexarguments">arguments</a> to the module Helm chart.</p>
 <p>An example for Vault Login API call which uses the Vault parameters is as follows:</p>
-<div class="highlight"><pre><span></span><code>$ curl -v --request POST &lt;address&gt;/&lt;authPath&gt; -H &quot;Content-Type: application/json&quot; --data &#39;{&quot;jwt&quot;: &lt;module service account token&gt;, &quot;role&quot;: &lt;role&gt;}&#39;
+<div class="highlight"><pre><span></span><code>$ curl -v -X POST &lt;address&gt;/&lt;authPath&gt; -H &quot;Content-Type: application/json&quot; --data &#39;{&quot;jwt&quot;: &lt;module service account token&gt;, &quot;role&quot;: &lt;role&gt;}&#39;
 </code></pre></div>
 <p>An example for Vault Read Secret API call which uses the Vault parameters is as follows:</p>
-<div class="highlight"><pre><span></span><code>$ curl --header &quot;X-Vault-Token: ...&quot; https://&lt;address&gt;/&lt;secretPath&gt;
+<div class="highlight"><pre><span></span><code>$ curl --header &quot;X-Vault-Token: ...&quot; -X GET https://&lt;address&gt;/&lt;secretPath&gt;
 </code></pre></div>
 <h2 id="module-helm-chart">Module Helm Chart</h2>
 <p>For any module chosen by the control plane to be part of the data path, the control plane needs to be able to install/remove/upgrade an instance of the module. Mesh for Data uses <a href="https://helm.sh/docs/intro/using_helm/">Helm</a> to provide this functionality. Follow the Helm <a href="https://helm.sh/docs/chart_template_guide/getting_started/">getting started</a> guide if you are unfamiliar with Helm. Note that Helm 3.3 or above is required.</p>
+<p>The names of the Kubernetes resources deployed by the module helm chart must contain the release name to avoid resource conflicts. A Kubernetes <code>service</code> resource which is used to access the module must have a name equal to the release name (this service name is also used in the optional <a href="../reference/crds.html#m4dmodulespeccapabilitiesapiendpoint"><code>spec.capabilites.api.endpoint.hostname</code></a> field).</p>
 <p>Because the chart is installed by the control plane, the input <code>values</code> to the chart must match the relevant type of <a href="../reference/crds.html#blueprintspecflowstepsindexarguments">arguments</a>. </p>
 <!-- TODO: expand this when we support setting values in the M4DModule YAML: https://github.com/mesh-for-data/mesh-for-data/pull/42 -->
 
@@ -1268,7 +1269,7 @@ a module that does not perform any transformation on the data may omit the <code
 <h3 id="full-examples">Full Examples</h3>
 <p>The following are examples of YAMLs from fully implemented modules:</p>
 <ul>
-<li>An example YAML for a module that <a href="https://github.com/mesh-for-data/mesh-for-data/blob/master/manager/testdata/e2e/module-implicit-copy-db2wh-to-s3.yaml">copies from db2 to s3</a> and includes transformation actions </li>
+<li>An example YAML for a module that <a href="https://github.com/mesh-for-data/mesh-for-data/blob/master/manager/testdata/unittests/copy-db2-parquet.yaml">copies from db2 to s3</a> and includes transformation actions</li>
 <li>And an example <a href="https://github.com/mesh-for-data/arrow-flight-module/blob/master/module.yaml">arrow flight read module</a> YAML, also with transformation support</li>
 </ul>
 <h2 id="test">Test</h2>
@@ -1354,7 +1355,7 @@ a module that does not perform any transformation on the data may omit the <code
     <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../assets/javascripts/workers/search.477d984a.min.js", "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.82b56eb2.min.js"></script>
+      <script src="../assets/javascripts/bundle.ddd52ceb.min.js"></script>
       
     
   </body>
