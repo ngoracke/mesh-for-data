@@ -12,6 +12,8 @@ spec:
       description: IMAGE_NAME
     - name: IMAGE_ID
       description: IMAGE_ID
+    - name: docker-hostname
+      description: docker-hostname
     - name: docker-namespace
       description: docker-namespace
     - name: NAMESPACE
@@ -35,6 +37,8 @@ spec:
             value: $(tt.params.IMAGE_ID)
           - name: INCREMENTAL_RESTART
             value: "true"
+          - name: docker-hostname
+            value: $(tt.params.docker-hostname)
           - name: docker-namespace
             value: $(tt.params.docker-namespace)
           - name: NAMESPACE
@@ -81,6 +85,8 @@ spec:
       name: COMPONENT_NAME
 #    - description: GENERATE_NAME
 #      name: GENERATE_NAME
+    - name: docker-hostname
+      description: docker-hostname
     - name: docker-namespace
       description: docker-namespace
     - name: NAMESPACE
@@ -100,6 +106,8 @@ spec:
 #            value: $(tt.params.GENERATE_NAME)
           - name: INCREMENTAL_CODE_RESTART
             value: "true"
+          - name: docker-hostname
+            value: $(tt.params.docker-hostname)
           - name: docker-namespace
             value: $(tt.params.docker-namespace)
           - name: NAMESPACE
