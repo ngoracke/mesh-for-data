@@ -239,6 +239,7 @@ if [[ -z ${GH_TOKEN} ]]; then
     helper_text=""
     oc annotate secret git-ssh-key --overwrite 'tekton.dev/git-0'='github.ibm.com'
     oc secrets link pipeline git-ssh-key --for=mount
+    extra_params="${extra_params} -p git-url=git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git -p wkc-connector-git-url=git@github.ibm.com:ngoracke/WKC-connector.git -p vault-plugin-secrets-wkc-reader-url=git@github.ibm.com:data-mesh-research/vault-plugin-secrets-wkc-reader.git"
 else
     cat > ${TMP}/git-token.yaml <<EOH
 apiVersion: v1
@@ -254,6 +255,7 @@ stringData:
 EOH
     oc apply -f ${TMP}/git-token.yaml
     oc secrets link pipeline git-token --for=mount
+    extra_params="${extra_params} -p git-url=https://github.ibm.com/IBM-Data-Fabric/mesh-for-data.git -p wkc-connector-git-url=https://github.ibm.com/ngoracke/WKC-connector.git -p vault-plugin-secrets-wkc-reader-url=https://github.ibm.com/data-mesh-research/vault-plugin-secrets-wkc-reader.git"
 fi
 cat > ${TMP}/wkc-credentials.yaml <<EOH
 apiVersion: v1
@@ -297,11 +299,11 @@ set -e
 set +x
 #echo "install tekton extension is vscode and then run:
 # for a dynamically provisioned PVC that will be deleted when the pipelinerun is deleted
-#tkn pipeline start build-and-deploy -w name=shared-workspace,volumeClaimTemplateFile=${repo_root}/pipeline/pvc.yaml -p docker-namespace=${unique_prefix} -p git-url=https://github.com/ngoracke/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params}"
+#tkn pipeline start build-and-deploy -w name=shared-workspace,volumeClaimTemplateFile=${repo_root}/pipeline/pvc.yaml -p docker-namespace=${unique_prefix} -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params}"
 
 echo "
 # for a pre-existing PVC that will be deleted when the namespace is deleted
-tkn pipeline start build-and-deploy -w name=images-url,emptyDir="" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=image-registry.openshift-image-registry.svc:5000 -p docker-namespace=${unique_prefix} -p git-url=git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} -p transfer-images-to-icr=${transfer_images_to_icr} ${extra_params}"
+tkn pipeline start build-and-deploy -w name=images-url,emptyDir="" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=image-registry.openshift-image-registry.svc:5000 -p docker-namespace=${unique_prefix} -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} -p transfer-images-to-icr=${transfer_images_to_icr} ${extra_params} -p git-revision=pipeline"
 
 if [[ ${run_tkn} -eq 1 ]]; then
     set -x
@@ -325,8 +327,6 @@ spec:
     value: ${unique_prefix} 
   - name: git-revision
     value: pipeline
-  - name: git-url
-    value: git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git
   - name: wkcConnectorServerUrl
     value: https://cpd-tooling-2q21-cpd.apps.cpstreamsx3.cp.fyre.ibm.com
   - name: git-url
