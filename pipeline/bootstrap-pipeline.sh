@@ -239,6 +239,9 @@ if [[ -z ${GH_TOKEN} ]]; then
     helper_text=""
     oc annotate secret git-ssh-key --overwrite 'tekton.dev/git-0'='github.ibm.com'
     oc secrets link pipeline git-ssh-key --for=mount
+    set +e
+    oc secrets unlink pipeline git-token
+    set -e
     extra_params="${extra_params} -p git-url=git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git -p wkc-connector-git-url=git@github.ibm.com:ngoracke/WKC-connector.git -p vault-plugin-secrets-wkc-reader-url=git@github.ibm.com:data-mesh-research/vault-plugin-secrets-wkc-reader.git"
 else
     cat > ${TMP}/git-token.yaml <<EOH
@@ -255,6 +258,9 @@ stringData:
 EOH
     oc apply -f ${TMP}/git-token.yaml
     oc secrets link pipeline git-token --for=mount
+    set +e
+    oc secrets unlink pipeline git-ssh-key
+    set -e
     extra_params="${extra_params} -p git-url=https://github.ibm.com/IBM-Data-Fabric/mesh-for-data.git -p wkc-connector-git-url=https://github.ibm.com/ngoracke/WKC-connector.git -p vault-plugin-secrets-wkc-reader-url=https://github.ibm.com/data-mesh-research/vault-plugin-secrets-wkc-reader.git"
 fi
 cat > ${TMP}/wkc-credentials.yaml <<EOH
