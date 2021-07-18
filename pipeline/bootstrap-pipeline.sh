@@ -72,7 +72,7 @@ cat > ${TMP}/streams_csv_check_script.sh <<EOH
 #!/bin/bash
 set -x
 oc get -n openshift-operators csv | grep serverless-operator
-oc get -n openshift-operators csv | grep serverless-operator | grep Succeeded
+oc get -n openshift-operators csv | grep serverless-operator | grep -e Succeeded -e Replacing
 EOH
 chmod u+x ${TMP}/streams_csv_check_script.sh
 try_command "${TMP}/streams_csv_check_script.sh"  40 false 5
