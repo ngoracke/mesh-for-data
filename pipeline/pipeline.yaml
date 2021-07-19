@@ -1308,6 +1308,48 @@ spec:
     workspaces:
     - name: source
       workspace: shared-workspace
+  - name: run-unit-tests-full-deploy
+    params:
+    - name: target
+      value: test
+    - name: context
+      value: mesh-for-data
+    - name: INCREMENTAL_CODE_RESTART
+      value: $(params.INCREMENTAL_CODE_RESTART)
+    runAfter:
+    - upgrade-helm-full
+    - upgrade-wkc-connector-helm-full
+    when:
+    - Input: $(params.skipTests)
+      Operator: notin
+      Values:
+      - "true"
+    taskRef:
+      kind: Task
+      name: make
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: run-unit-tests-partial-deploy
+    params:
+    - name: target
+      value: test
+    - name: context
+      value: mesh-for-data
+    runAfter:
+    - upgrade-helm-partial
+    - upgrade-wkc-connector-helm-partial
+    when:
+    - Input: $(params.skipTests)
+      Operator: notin
+      Values:
+      - "true"
+    taskRef:
+      kind: Task
+      name: make
+    workspaces:
+    - name: source
+      workspace: shared-workspace
   finally:
   - name: finally-remove-creds
     params:
