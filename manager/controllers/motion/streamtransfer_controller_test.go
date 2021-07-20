@@ -9,12 +9,12 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	motionv1 "github.com/mesh-for-data/mesh-for-data/manager/apis/motion/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	apps "k8s.io/api/apps/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 )
@@ -52,6 +52,12 @@ var _ = Describe("StreamTransfer Controller", func() {
 			streamTransfer := &motionv1.StreamTransfer{}
 			err = yaml.Unmarshal(streamTransferYAML, streamTransfer)
 			Expect(err).ToNot(HaveOccurred())
+
+			//registry := os.Getenv("DOCKER_HOSTNAME")
+			//if len(registry) > 0 {
+			//	streamTransfer.Spec.Image = registry + "/dummy-mover:latest"
+			//}
+			//fmt.Printf("%v\n", registry)
 
 			key := client.ObjectKeyFromObject(streamTransfer)
 

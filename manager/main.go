@@ -5,6 +5,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -34,6 +35,7 @@ import (
 	"github.com/mesh-for-data/mesh-for-data/pkg/helm"
 	kapps "k8s.io/api/apps/v1"
 	kbatch "k8s.io/api/batch/v1"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 )
 
 var (
@@ -49,17 +51,49 @@ func init() {
 	_ = kapps.AddToScheme(scheme)
 }
 
+func getWatchNamespace() (string, error) {
+	// WatchNamespaceEnvVar is the constant for env variable WATCH_NAMESPACE
+	// which specifies the Namespace to watch.
+	// An empty value means the operator is running with cluster scope.
+	var watchNamespaceEnvVar = "WATCH_NAMESPACE"
+
+	ns, found := os.LookupEnv(watchNamespaceEnvVar)
+	if !found {
+		return "", fmt.Errorf("%s must be set", watchNamespaceEnvVar)
+	}
+	return ns, nil
+}
+
 func run(namespace string, metricsAddr string, enableLeaderElection bool,
 	enableApplicationController, enableBlueprintController, enablePlotterController, enableMotionController bool) int {
-	setupLog.Info("creating manager")
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	setupLog.Info("creating manager law5")
+
+	watchNamespace, err := getWatchNamespace()
+	if err != nil {
+		setupLog.Error(err, "unable to get WatchNamespace environment variable; the manager will watch and manage resources in all namespaces")
+	}
+
+	if strings.Contains(watchNamespace, ",") {
+		setupLog.Info("List of namespaces: " + watchNamespace)
+	} else {
+		setupLog.Info("Watch namespace list is empty, watching all namespaces.")
+	}
+
+	options := ctrl.Options{
 		Scheme:             scheme,
-		Namespace:          namespace,
+		Namespace:          watchNamespace, // namespaced-scope when the value is not an empty string
 		MetricsBindAddress: metricsAddr,
 		LeaderElection:     enableLeaderElection,
 		LeaderElectionID:   "m4d-operator-leader-election",
 		Port:               9443,
-	})
+	}
+
+	if strings.Contains(watchNamespace, ",") {
+		setupLog.Info("manager set up with multiple namespaces", "namespaces", watchNamespace)
+		options.NewCache = cache.MultiNamespacedCacheBuilder(strings.Split(watchNamespace, ","))
+	}
+
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), options)
 
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -196,6 +230,8 @@ func main() {
 	}
 
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
+
+	setupLog.Info("starting law debug")
 
 	os.Exit(run(namespace, metricsAddr, enableLeaderElection,
 		enableApplicationController, enableBlueprintController, enablePlotterController, enableMotionController))

@@ -99,3 +99,28 @@ certmanager.k8s.io/v1alpha1
 cert-manager.io/v1alpha2
 {{- end -}}
 {{- end -}}
+
+
+
+{{/*
+Set watch namespace 
+*/}}
+{{- define "m4d.setWatchNamespace" -}}
+{{- $manager := .Values.manager | default dict -}}
+{{- if $manager.watchNamespaces }}
+- name: WATCH_NAMESPACE
+  value: {{ $manager.watchNamespaces }}
+{{- else if .Values.clusterScoped }}
+- name: WATCH_NAMESPACE
+  value: ""
+{{- else if empty .Values.blueprintNamespace }}
+- name: WATCH_NAMESPACE
+  value: {{ .Release.Namespace }} 
+{{- else if not ( eq .Release.Namespace .Values.blueprintNamespace )  }}
+- name: WATCH_NAMESPACE
+  value: {{ printf "%s%s%s" .Release.Namespace "," .Values.blueprintNamespace }}
+{{- else }}
+- name: WATCH_NAMESPACE
+  value: {{ .Release.Namespace }} 
+{{- end -}}
+{{- end -}}
