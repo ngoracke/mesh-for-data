@@ -4,7 +4,6 @@ metadata:
   name: generic-eventlistener
 spec:
   serviceAccountName: pipeline
-  replicas: 1
   triggers:
     - bindings:
         - ref: generic-triggerbinding
