@@ -88,6 +88,9 @@ spec:
 
             {{- include "m4d.setWatchNamespace" . | indent 12 }}   
 
+            - name: BLUEPRINT_NAMESPACE
+              value: {{ . .Values.blueprintNamespace | default "m4d-blueprints" }}
+
             {{- if .Values.manager.extraEnvs }}
             {{- toYaml .Values.manager.extraEnvs | nindent 12 }}
             {{- end }}

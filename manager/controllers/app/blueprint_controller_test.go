@@ -4,6 +4,8 @@ package app
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"time"
 
 	app "github.com/mesh-for-data/mesh-for-data/manager/apis/app/v1alpha1"
@@ -57,6 +59,14 @@ func deployBlueprint(namespace string, shouldSucceed bool) {
 
 var _ = Describe("Blueprint Controller Real Env", func() {
 	Context("Blueprint", func() {
+
+		blueprintNamespace := "m4d-blueprints"
+		blueprintNSEV := os.Getenv("BLUEPRINT_NAMESPACE")
+		if len(blueprintNSEV) > 0 {
+			blueprintNamespace = blueprintNSEV
+		}
+		fmt.Printf("blueprint namespace %v\n", blueprintNamespace)
+
 		BeforeEach(func() {
 			// Add any setup steps that needs to be executed before each test
 			const interval = time.Millisecond * 100
@@ -64,7 +74,7 @@ var _ = Describe("Blueprint Controller Real Env", func() {
 			Expect(readObjectFromFile("../../testdata/blueprint-read.yaml", blueprint)).ToNot(HaveOccurred())
 			blueprint.SetNamespace("default")
 			_ = k8sClient.Delete(context.Background(), blueprint)
-			blueprint.SetNamespace("m4d-blueprints")
+			blueprint.SetNamespace(blueprintNamespace)
 			_ = k8sClient.Delete(context.Background(), blueprint)
 			time.Sleep(interval)
 		})
@@ -73,12 +83,12 @@ var _ = Describe("Blueprint Controller Real Env", func() {
 			// Add any teardown steps that needs to be executed after each test
 		})
 
-		// Blueprints are successfully reconciled when deployed to m4d-blueprints only
+		// Blueprints are successfully reconciled when deployed to blueprintNamespace only
 		It("Test Blueprint Deploy to Correct Namespace", func() {
-			deployBlueprint("m4d-blueprints", true)
+			deployBlueprint(blueprintNamespace, true)
 		})
 
-		// Blueprints not deployed to m4d-blueprints should not be successfully reconciled due to the filter preventing
+		// Blueprints not deployed to blueprintNamespace should not be successfully reconciled due to the filter preventing
 		// reconcile from being called.
 		It("Test Blueprint Deploy to Bad Namespace", func() {
 			deployBlueprint("default", false)

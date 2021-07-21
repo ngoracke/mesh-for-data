@@ -26,10 +26,17 @@ var _ = Describe("BatchTransfer Controller", func() {
 	const timeout = time.Second * 30
 	const interval = time.Millisecond * 300
 	const batchtransferName = "batchtransfer-sample"
-	const batchtransferNameSpace = "m4d-blueprints"
+
+	batchtransferNameSpace := "m4d-blueprints"
+	blueprintNSEV := os.Getenv("BLUEPRINT_NAMESPACE")
+	if len(blueprintNSEV) > 0 {
+		batchtransferNameSpace = blueprintNSEV
+	}
+	fmt.Printf("batchtransfer namespace %v\n", batchtransferNameSpace)
 
 	BeforeEach(func() {
 		// Add any setup steps that needs to be executed before each test
+
 		f := &motionv1.BatchTransfer{}
 		key := client.ObjectKey{
 			Namespace: batchtransferNameSpace,
@@ -55,6 +62,11 @@ var _ = Describe("BatchTransfer Controller", func() {
 			batchTransfer := &motionv1.BatchTransfer{}
 			err = yaml.Unmarshal(batchTransferYAML, batchTransfer)
 			Expect(err).ToNot(HaveOccurred())
+
+			batchTransfer.Namespace = batchtransferNameSpace
+
+			fmt.Printf("template namespace %v\n", batchTransfer.Namespace)
+
 			registry := os.Getenv("DOCKER_HOSTNAME")
 			if len(registry) > 0 && registry != "ghcr.io" {
 				batchTransfer.Spec.Image = registry + "/dummy-mover:latest"

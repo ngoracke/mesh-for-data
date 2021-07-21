@@ -5,7 +5,9 @@ package motion
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
+	"os"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -24,11 +26,18 @@ var _ = Describe("StreamTransfer Controller", func() {
 	const timeout = time.Second * 30
 	const interval = time.Millisecond * 100
 	const streamtransferName = "streamtransfer-sample"
-	const streamtransferNameSpace = "m4d-blueprints"
+
+	streamtransferNameSpace := "m4d-blueprints"
+	blueprintNSEV := os.Getenv("BLUEPRINT_NAMESPACE")
+	if len(blueprintNSEV) > 0 {
+		streamtransferNameSpace = blueprintNSEV
+	}
+	fmt.Printf("streamtransfer namespace %v\n", streamtransferNameSpace)
 
 	BeforeEach(func() {
 		// Add any setup steps that needs to be executed before each test
 		f := &motionv1.StreamTransfer{}
+
 		key := client.ObjectKey{
 			Namespace: streamtransferNameSpace,
 			Name:      streamtransferName,
@@ -52,6 +61,9 @@ var _ = Describe("StreamTransfer Controller", func() {
 			streamTransfer := &motionv1.StreamTransfer{}
 			err = yaml.Unmarshal(streamTransferYAML, streamTransfer)
 			Expect(err).ToNot(HaveOccurred())
+
+			streamTransfer.Namespace = streamtransferNameSpace
+			fmt.Printf("template namespace %v\n", streamTransfer.Namespace)
 
 			//registry := os.Getenv("DOCKER_HOSTNAME")
 			//if len(registry) > 0 {

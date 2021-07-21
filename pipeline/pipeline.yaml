@@ -10,6 +10,9 @@ spec:
   - description: namespace to deploy control plane to.  If nobody has deployed m4d on this cluster before, choose m4d-system.
     name: NAMESPACE
     type: string
+  - description: namespace to deploy blueprints to. Name will be derived from control plane namespace.  If control plane namespace is set to m4d-system; this will default to m4d-blueprints.
+    name: blueprintNamespace
+    type: string    
   - default: wcp-ibm-streams-docker-local.artifactory.swg-devops.com
     description: docker registry hostname.  This is where images will be pushed once built
     name: docker-hostname
@@ -918,7 +921,7 @@ spec:
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
-      value: clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),opaConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://vault.m4d-system:8200,vault.address=http://vault.m4d-system:8200,$(params.mesh-for-data-values)
+      value: blueprintNamespace=$(params.blueprintNamespace),clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),opaConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://vault.m4d-system:8200,vault.address=http://vault.m4d-system:8200,$(params.mesh-for-data-values)
     - name: release_version
       value: 0.1.0
     runAfter:
@@ -1264,9 +1267,10 @@ spec:
     - name: context
       value: mesh-for-data/manager
     - name: flags
-      value: DOCKER_HOSTNAME=$(params.docker-hostname)/$(params.docker-namespace)
+      value: DOCKER_HOSTNAME=$(params.docker-hostname)/$(params.docker-namespace) BLUEPRINT_NAMESPACE=$(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
+
     runAfter:
     - upgrade-helm-full
     - upgrade-wkc-connector-helm-full
@@ -1290,7 +1294,8 @@ spec:
     - name: context
       value: mesh-for-data/manager
     - name: flags
-      value: DOCKER_HOSTNAME=$(params.docker-hostname)/$(params.docker-namespace)
+      value: DOCKER_HOSTNAME=$(params.docker-hostname)/$(params.docker-namespace) BLUEPRINT_NAMESPACE=$(params.blueprintNamespace)
+      
     runAfter:
     - upgrade-helm-partial
     when:

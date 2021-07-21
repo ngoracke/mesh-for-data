@@ -6,6 +6,7 @@ run_tkn=${run_tkn:-0}
 skip_tests=${skip_tests:-false}
 GH_TOKEN=${GH_TOKEN}
 git_user=${git_user}
+cluster_scoped=${cluster_scoped:-false}
 image_repo="${image_repo:-image-registry.openshift-image-registry.svc:5000}"
 
 helper_text=""
@@ -50,6 +51,11 @@ else
     oc project ${1:-m4d-system} 
 fi
 unique_prefix=$(kubectl config view --minify --output 'jsonpath={..namespace}'; echo)
+if [[ "${unique_prefix}" == "m4d-system" ]]; then
+  blueprint_namespace="m4d-blueprints"
+else
+  blueprint_namespace="${unique_prefix}-blueprints"
+fi
 
 set +e
 # Be smarter about this - just a quick hack for typical default installs
@@ -80,7 +86,7 @@ try_command "${TMP}/streams_csv_check_script.sh"  40 false 5
 oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${unique_prefix}:pipeline
 oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${unique_prefix}:root-sa
 oc adm policy add-role-to-group system:image-puller system:serviceaccounts:${unique_prefix} --namespace ${unique_prefix}
-oc adm policy add-role-to-group system:image-puller system:serviceaccounts:m4d-blueprints --namespace ${unique_prefix}
+oc adm policy add-role-to-group system:image-puller system:serviceaccounts:${blueprint_namespace} --namespace ${unique_prefix}
 oc adm policy add-role-to-user system:image-puller system:serviceaccount:${unique_prefix}:wkc-connector --namespace ${unique_prefix}
 # Temporary hack pending a better solution
 oc adm policy add-scc-to-user anyuid system:serviceaccount:${unique_prefix}:opa-connector
@@ -152,11 +158,10 @@ oc secrets link pipeline regcred --for=mount
 oc secrets link builder regcred --for=mount
 oc secrets link pipeline regcred --for=pull
 
-cluster_scoped="false"
+extra_params="-p clusterScoped=${cluster_scoped}"
 deploy_vault="false"
 if [[ "${unique_prefix}" == "m4d-system" ]]; then
-    extra_params='-p clusterScoped="true" -p deployVault="true"'
-    cluster_scoped="true"
+    extra_params='-p deployVault="true"'
     deploy_vault="true"
 fi
 set +e
@@ -301,7 +306,7 @@ set +x
 
 echo "
 # for a pre-existing PVC that will be deleted when the namespace is deleted
-tkn pipeline start build-and-deploy -w name=images-url,emptyDir="" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=image-registry.openshift-image-registry.svc:5000 -p docker-namespace=${unique_prefix} -p git-url=git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} -p transfer-images-to-icr=${transfer_images_to_icr} ${extra_params}"
+tkn pipeline start build-and-deploy -w name=images-url,emptyDir="" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p blueprintNamespace=${blueprint_namespace} -p docker-hostname=image-registry.openshift-image-registry.svc:5000 -p docker-namespace=${unique_prefix} -p git-url=git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} -p transfer-images-to-icr=${transfer_images_to_icr} ${extra_params}"
 
 if [[ ${run_tkn} -eq 1 ]]; then
     set -x
@@ -318,7 +323,9 @@ metadata:
 spec:
   params:
   - name: NAMESPACE
-    value: ${unique_prefix} 
+    value: ${unique_prefix}
+  - name: blueprintNamespace
+    value: ${blueprint_namespace}     
   - name: docker-hostname
     value: image-registry.openshift-image-registry.svc:5000
   - name: docker-namespace

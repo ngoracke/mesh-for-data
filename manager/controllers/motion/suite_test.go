@@ -113,10 +113,17 @@ var _ = BeforeSuite(func(done Done) {
 			Expect(err).ToNot(HaveOccurred())
 		}()
 
+		blueprintNamespace := "m4d-blueprints"
+		blueprintNSEV := os.Getenv("BLUEPRINT_NAMESPACE")
+		if len(blueprintNSEV) > 0 {
+			blueprintNamespace = blueprintNSEV
+		}
+		fmt.Printf("blueprint namespace %v\n", blueprintNamespace)
+
 		k8sClient = mgr.GetClient()
 		err = k8sClient.Create(context.Background(), &v1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "m4d-blueprints",
+				Name: blueprintNamespace,
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
