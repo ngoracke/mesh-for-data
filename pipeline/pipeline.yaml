@@ -14,6 +14,10 @@ spec:
     description: docker registry hostname.  This is where images will be pushed once built
     name: docker-hostname
     type: string
+  - default: ngoracke
+    description: namespace in us.icr.io where images will be pushed for VA scan
+    name: va-scan-namespace
+    type: string
   - description: url of the git repo for the code of deployment
     name: git-url
     type: string
@@ -292,7 +296,7 @@ spec:
     - name: srcImageURL
       value: docker://$(params.docker-hostname)/$(params.docker-namespace)/wkc-connector@$(tasks.build-image-wkc-connector.results.IMAGE_DIGEST)
     - name: destImageURL
-      value: docker://us.icr.io/ngoracke/wkc-connector@$(tasks.build-image-wkc-connector.results.IMAGE_DIGEST)
+      value: docker://us.icr.io/$(params.va-scan-namespace)/wkc-connector@$(tasks.build-image-wkc-connector.results.IMAGE_DIGEST)
     - name: srcTLSverify
       value: "false"
     - name: destTLSverify
@@ -424,7 +428,7 @@ spec:
     - name: srcImageURL
       value: docker://$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST)
     - name: destImageURL
-      value: docker://us.icr.io/ngoracke/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST)
+      value: docker://us.icr.io/$(params.va-scan-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST)
     - name: srcTLSverify
       value: "false"
     - name: destTLSverify
@@ -484,7 +488,7 @@ spec:
     - name: srcImageURL
       value: docker://$(params.docker-hostname)/$(params.docker-namespace)/$(params.dummy-image)@$(tasks.build-image-dummy-mover.results.IMAGE_DIGEST)
     - name: destImageURL
-      value: docker://us.icr.io/ngoracke/$(params.dummy-image)@$(tasks.build-image-dummy-mover.results.IMAGE_DIGEST)
+      value: docker://us.icr.io/$(params.va-scan-namespace)/$(params.dummy-image)@$(tasks.build-image-dummy-mover.results.IMAGE_DIGEST)
     - name: srcTLSverify
       value: "false"
     - name: destTLSverify
@@ -575,7 +579,7 @@ spec:
     - name: srcImageURL
       value: docker://$(params.docker-hostname)/$(params.docker-namespace)/katalog-connector@$(tasks.build-image-katalog.results.IMAGE_DIGEST)
     - name: destImageURL
-      value: docker://us.icr.io/ngoracke/katalog-connector@$(tasks.build-image-katalog.results.IMAGE_DIGEST)
+      value: docker://us.icr.io/$(params.va-scan-namespace)/katalog-connector@$(tasks.build-image-katalog.results.IMAGE_DIGEST)
     - name: srcTLSverify
       value: "false"
     - name: destTLSverify
@@ -666,7 +670,7 @@ spec:
     - name: srcImageURL
       value: docker://$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST)
     - name: destImageURL
-      value: docker://us.icr.io/ngoracke/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST)
+      value: docker://us.icr.io/$(params.va-scan-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST)
     - name: srcTLSverify
       value: "false"
     - name: destTLSverify
@@ -782,7 +786,7 @@ spec:
     - name: srcImageURL
       value: docker://$(params.docker-hostname)/$(params.docker-namespace)/data-catalog-mock@$(tasks.build-image-datacatalog.results.IMAGE_DIGEST)
     - name: destImageURL
-      value: docker://us.icr.io/ngoracke/data-catalog-mock@$(tasks.build-image-datacatalog.results.IMAGE_DIGEST)
+      value: docker://us.icr.io/$(params.va-scan-namespace)/data-catalog-mock@$(tasks.build-image-datacatalog.results.IMAGE_DIGEST)
     - name: srcTLSverify
       value: "false"
     - name: destTLSverify
@@ -895,7 +899,7 @@ spec:
     - name: srcImageURL
       value: docker://$(params.docker-hostname)/$(params.docker-namespace)/serverpolicymanager-mock@$(tasks.build-image-serverpolicymanager.results.IMAGE_DIGEST)
     - name: destImageURL
-      value: docker://us.icr.io/ngoracke/serverpolicymanager-mock@$(tasks.build-image-serverpolicymanager.results.IMAGE_DIGEST)
+      value: docker://us.icr.io/$(params.va-scan-namespace)/serverpolicymanager-mock@$(tasks.build-image-serverpolicymanager.results.IMAGE_DIGEST)
     - name: srcTLSverify
       value: "false"
     - name: destTLSverify
@@ -1293,6 +1297,48 @@ spec:
       value: DOCKER_HOSTNAME=$(params.docker-hostname)/$(params.docker-namespace)
     runAfter:
     - upgrade-helm-partial
+    when:
+    - Input: $(params.skipTests)
+      Operator: notin
+      Values:
+      - "true"
+    taskRef:
+      kind: Task
+      name: make
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: run-unit-tests-full-deploy
+    params:
+    - name: target
+      value: test
+    - name: context
+      value: mesh-for-data
+    - name: INCREMENTAL_CODE_RESTART
+      value: $(params.INCREMENTAL_CODE_RESTART)
+    runAfter:
+    - upgrade-helm-full
+    - upgrade-wkc-connector-helm-full
+    when:
+    - Input: $(params.skipTests)
+      Operator: notin
+      Values:
+      - "true"
+    taskRef:
+      kind: Task
+      name: make
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: run-unit-tests-partial-deploy
+    params:
+    - name: target
+      value: test
+    - name: context
+      value: mesh-for-data
+    runAfter:
+    - upgrade-helm-partial
+    - upgrade-wkc-connector-helm-partial
     when:
     - Input: $(params.skipTests)
       Operator: notin

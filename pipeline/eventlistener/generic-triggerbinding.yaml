@@ -10,6 +10,8 @@ spec:
 #      value: $(body.metadata.generateName)
     - name: IMAGE_NAME
       value: $(body.spec.params[?(@.name=='IMAGE')].value)
+    - name: docker-hostname
+      value: $(body.spec.params[?(@.name=='docker-hostname')].value)
     - name: docker-namespace
       value: $(body.spec.params[?(@.name=='docker-namespace')].value)
     - name: NAMESPACE
@@ -29,6 +31,8 @@ spec:
 #      value: $(body.metadata.generateName)
     - name: COMPONENT_NAME
       value: $(body.spec.params[?(@.name=='context')].value)
+    - name: docker-hostname
+      value: $(body.spec.params[?(@.name=='docker-hostname')].value)
     - name: docker-namespace
       value: $(body.spec.params[?(@.name=='docker-namespace')].value)
     - name: NAMESPACE
