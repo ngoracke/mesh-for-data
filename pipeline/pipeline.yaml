@@ -920,7 +920,7 @@ spec:
     - name: charts_dir
       value: /workspace/source/mesh-for-data/charts/m4d
     - name: release_name
-      value: m4d
+      value: m4d --timeout 360
       # --values /workspace/source/pipeline/pullsecrets.yaml
     - name: release_namespace
       value: $(params.NAMESPACE)
@@ -932,8 +932,6 @@ spec:
     - build-image-manager
     - build-image-katalog
     - build-image-opa
-    # Currently manager will not start if connector isn't up
-    - upgrade-wkc-connector-helm-full
     # don't need to wait on this
     - build-image-datacatalog
     taskRef:
