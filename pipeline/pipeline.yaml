@@ -932,6 +932,8 @@ spec:
     - build-image-manager
     - build-image-katalog
     - build-image-opa
+    # Currently manager will not start if connector isn't up
+    - upgrade-wkc-connector-helm-full
     # don't need to wait on this
     - build-image-datacatalog
     taskRef:
