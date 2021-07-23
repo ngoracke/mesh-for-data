@@ -231,6 +231,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
@@ -268,6 +270,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     runAfter:
     - build-wkc-connector
     taskRef:
@@ -322,6 +326,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
@@ -400,6 +406,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     runAfter:
     - build-manager
     taskRef:
@@ -460,6 +468,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     runAfter:
     - fetch-repository
     taskRef:
@@ -514,6 +524,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
@@ -551,6 +563,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     runAfter:
     - build-katalog
     taskRef:
@@ -605,6 +619,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
@@ -642,6 +658,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     runAfter:
     - build-opa
     taskRef:
@@ -696,6 +714,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
@@ -733,6 +753,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     runAfter:
     - build-datacatalog
     taskRef:
@@ -834,6 +856,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
@@ -871,6 +895,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     runAfter:
     - build-servicepolicymanager
     taskRef:
