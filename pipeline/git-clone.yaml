@@ -70,7 +70,8 @@ spec:
   - description: The precise URL that was fetched by this Task
     name: url
   steps:
-  - image: registry.redhat.io/openshift-pipelines-tech-preview/pipelines-git-init-rhel8@sha256:7e18e13a94c9c82e369274984500401e27684d3565393cf6ed2bad55f2d751bc
+  - image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.21.0
+#registry.redhat.io/openshift-pipelines-tech-preview/pipelines-git-init-rhel8@sha256:7e18e13a94c9c82e369274984500401e27684d3565393cf6ed2bad55f2d751bc
     name: clone
     resources: {}
     script: |
