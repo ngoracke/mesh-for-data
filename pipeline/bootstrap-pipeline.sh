@@ -7,6 +7,7 @@ skip_tests=${skip_tests:-false}
 GH_TOKEN=${GH_TOKEN}
 ARTIFACTORY_APIKEY=${ARTIFACTORY_APIKEY}
 git_user=${git_user}
+github=${github:-github.ibm.com}
 image_source_repo_username=${image_source_repo_username}
 image_repo="${image_repo:-image-registry.openshift-image-registry.svc:5000}"
 dockerhub_hostname="${dockerhub_hostname:-wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial}"
@@ -32,6 +33,18 @@ if [[ -z "$TMP" ]]; then
     trap cleanup EXIT
 fi
 
+extra_params=''
+is_external="false"
+is_internal="false"
+if [[ "${github}" == "github.com" ]]; then
+    is_external="true"
+    build_image="docker.io/yakinikku/suede_compile"
+    extra_params="-p build_image ${build_image}"
+else
+    is_internal="true"
+    build_image="wcp-ibm-streams-docker-local.artifactory.swg-devops.com/elvis_build/suede_compile:latest"
+    extra_params="-p build_image ${build_image}"
+fi
 is_openshift="false"
 is_kubernetes="false"
 client=kubectl
@@ -361,7 +374,7 @@ if [[ -z ${GH_TOKEN} ]]; then
     set -x
     oc create secret generic git-ssh-key --from-file=ssh-privatekey=${ssh_key} --type=kubernetes.io/ssh-auth
     helper_text=""
-    oc annotate secret git-ssh-key --overwrite 'tekton.dev/git-0'='github.ibm.com'
+    oc annotate secret git-ssh-key --overwrite 'tekton.dev/git-0'="${github}"
     if [[ ${is_openshift} == "true" ]]; then
         oc secrets link pipeline git-ssh-key --for=mount
         set +e
@@ -374,7 +387,7 @@ if [[ -z ${GH_TOKEN} ]]; then
 #        oc get sa default -o yaml | grep -A3 "secrets:" | awk '/git-token/ { print NR }' 
     fi
     set -e
-    extra_params="${extra_params} -p git-url=git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git -p wkc-connector-git-url=git@github.ibm.com:ngoracke/WKC-connector.git -p vault-plugin-secrets-wkc-reader-url=git@github.ibm.com:data-mesh-research/vault-plugin-secrets-wkc-reader.git"
+    extra_params="${extra_params} -p git-url=git@${github}:IBM-Data-Fabric/mesh-for-data.git -p wkc-connector-git-url=git@${github}:ngoracke/WKC-connector.git -p vault-plugin-secrets-wkc-reader-url=git@${github}:data-mesh-research/vault-plugin-secrets-wkc-reader.git"
 else
     cat > ${TMP}/git-token.yaml <<EOH
 apiVersion: v1
@@ -382,7 +395,7 @@ kind: Secret
 metadata:
   name: git-token
   annotations:
-    tekton.dev/git-0: https://github.ibm.com # Described below
+    tekton.dev/git-0: https://${github} # Described below
 type: kubernetes.io/basic-auth
 stringData:
   username: ${git_user}
@@ -398,7 +411,7 @@ EOH
         set +e
     fi
     set -e
-    extra_params="${extra_params} -p git-url=https://github.ibm.com/IBM-Data-Fabric/mesh-for-data.git -p wkc-connector-git-url=https://github.ibm.com/ngoracke/WKC-connector.git -p vault-plugin-secrets-wkc-reader-url=https://github.ibm.com/data-mesh-research/vault-plugin-secrets-wkc-reader.git"
+    extra_params="${extra_params} -p git-url=https://${github}/IBM-Data-Fabric/mesh-for-data.git -p wkc-connector-git-url=https://${github}/ngoracke/WKC-connector.git -p vault-plugin-secrets-wkc-reader-url=https://${github}/data-mesh-research/vault-plugin-secrets-wkc-reader.git"
 fi
 cat > ${TMP}/wkc-credentials.yaml <<EOH
 apiVersion: v1
@@ -450,7 +463,7 @@ tkn pipeline start build-and-deploy -w name=images-url,emptyDir="" -w name=artif
 
 if [[ ${run_tkn} -eq 1 ]]; then
     set -x
-    #tkn pipeline start build-and-deploy -w name=images-url,emptyDir="" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=image-registry.openshift-image-registry.svc:5000 -p docker-namespace=${unique_prefix} -p git-url=git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params} --dry-run > ${TMP}/pipelinerun.yaml
+    #tkn pipeline start build-and-deploy -w name=images-url,emptyDir="" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=image-registry.openshift-image-registry.svc:5000 -p docker-namespace=${unique_prefix} -p git-url=git@${github}:IBM-Data-Fabric/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params} --dry-run > ${TMP}/pipelinerun.yaml
 
     cat > ${TMP}/pipelinerun.yaml <<EOH
 apiVersion: tekton.dev/v1beta1
@@ -475,11 +488,11 @@ spec:
   - name: wkcConnectorServerUrl
     value: https://cpd-tooling-2q21-cpd.apps.cpstreamsx3.cp.fyre.ibm.com
   - name: git-url
-    value: https://github.ibm.com/IBM-Data-Fabric/mesh-for-data.git
+    value: https://${github}/IBM-Data-Fabric/mesh-for-data.git
   - name: wkc-connector-git-url
-    value: https://github.ibm.com/ngoracke/WKC-connector.git
+    value: https://${github}/ngoracke/WKC-connector.git
   - name: vault-plugin-secrets-wkc-reader-url 
-    value: https://github.ibm.com/data-mesh-research/vault-plugin-secrets-wkc-reader.git
+    value: https://${github}/data-mesh-research/vault-plugin-secrets-wkc-reader.git
   - name: skipTests
     value: ${skip_tests}
   - name: transfer-images-to-icr
@@ -490,6 +503,8 @@ spec:
     value: "${deploy_vault}"
   - name: deployCRD
     value: "${deploy_crd}"
+  - name: build_image
+    value: "${build_image}"
   pipelineRef:
     name: build-and-deploy
   serviceAccountName: pipeline

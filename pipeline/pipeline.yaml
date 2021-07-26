@@ -58,6 +58,10 @@ spec:
     description: values file for use when helm deploying vault
     name: vaultValues
     type: string
+  - default: "wcp-ibm-streams-docker-local.artifactory.swg-devops.com/elvis_build/suede_compile:latest"
+    desription: image to use for build
+    name: build_image
+    type: string
   - default: "false"
     description: Skip Integration Tests
     name: skipTests
@@ -228,6 +232,8 @@ spec:
       value: build
     - name: context
       value: WKC-connector/java
+    - name: image
+      value: $(params.build_image)
     - name: docker-hostname
       value: "$(params.docker-hostname)"
     - name: docker-namespace
@@ -319,6 +325,8 @@ spec:
       value: managerforimage
     - name: context
       value: mesh-for-data/manager
+    - name: image
+      value: $(params.build_image)
     - name: docker-hostname
       value: "$(params.docker-hostname)"
     - name: docker-namespace
@@ -511,6 +519,8 @@ spec:
       value: source-build
     - name: context
       value: mesh-for-data/connectors/katalog
+    - name: image
+      value: $(params.build_image)
     - name: docker-hostname
       value: "$(params.docker-hostname)"
     - name: docker-namespace
@@ -602,6 +612,8 @@ spec:
       value: source-build
     - name: context
       value: mesh-for-data/connectors/opa
+    - name: image
+      value: $(params.build_image)
     - name: docker-hostname
       value: "$(params.docker-hostname)"
     - name: docker-namespace
@@ -693,6 +705,8 @@ spec:
       value: source-build
     - name: context
       value: mesh-for-data/test/services/datacatalog
+    - name: image
+      value: $(params.build_image)
     - name: docker-hostname
       value: "$(params.docker-hostname)"
     - name: docker-namespace
@@ -831,6 +845,8 @@ spec:
       value: source-build
     - name: context
       value: mesh-for-data/test/services/policymanager
+    - name: image
+      value: $(params.build_image)
     - name: docker-hostname
       value: "$(params.docker-hostname)"
     - name: docker-namespace
@@ -1274,6 +1290,8 @@ spec:
       value: run-integration-tests
     - name: context
       value: mesh-for-data/manager
+    - name: image
+      value: $(params.build_image)
     - name: flags
       value: DOCKER_HOSTNAME=$(params.docker-hostname)/$(params.docker-namespace)
     - name: INCREMENTAL_CODE_RESTART
@@ -1300,6 +1318,8 @@ spec:
       value: run-integration-tests
     - name: context
       value: mesh-for-data/manager
+    - name: image
+      value: $(params.build_image)
     - name: flags
       value: DOCKER_HOSTNAME=$(params.docker-hostname)/$(params.docker-namespace)
     runAfter:
@@ -1321,6 +1341,8 @@ spec:
       value: test
     - name: context
       value: mesh-for-data
+    - name: image
+      value: $(params.build_image)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
@@ -1343,6 +1365,8 @@ spec:
       value: test
     - name: context
       value: mesh-for-data
+    - name: image
+      value: $(params.build_image)
     runAfter:
     - upgrade-helm-partial
     - upgrade-wkc-connector-helm-partial
