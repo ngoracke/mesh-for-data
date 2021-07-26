@@ -95,6 +95,7 @@ if [[ $rc -ne 0 ]]; then
         oc new-project ${1:-m4d-system}
     else
         kubectl create ns ${1:-m4d-system}
+        kubectl config set-context --current --namespace=${1:-m4d-system}
     fi
 else
     if [[ ${is_openshift} == "true" ]]; then
