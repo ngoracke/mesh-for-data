@@ -59,7 +59,7 @@ spec:
     name: vaultValues
     type: string
   - default: "wcp-ibm-streams-docker-local.artifactory.swg-devops.com/elvis_build/suede_compile:latest"
-    desription: image to use for build
+    description: image to use for build
     name: build_image
     type: string
   - default: "false"
