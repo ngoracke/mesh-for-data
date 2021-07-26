@@ -14,6 +14,10 @@ spec:
     description: docker registry hostname.  This is where images will be pushed once built
     name: docker-hostname
     type: string
+  - default: wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial
+    description: where to pull dockerhub images from.
+    name: dockerhub-hostname
+    type: string
   - default: ngoracke
     description: namespace in us.icr.io where images will be pushed for VA scan
     name: va-scan-namespace
@@ -258,7 +262,7 @@ spec:
     - name: CONTEXT
       value: WKC-connector/java
     - name: BUILD_EXTRA_ARGS
-      value: --build-arg REGISTRY=wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial
+      value: --build-arg REGISTRY=$(params.dockerhub-hostname)
     - name: HELM_PROPERTY
       value: wkcConnector.image
     - name: docker-hostname
@@ -290,7 +294,7 @@ spec:
   - name: transfer-image-wkc-connector-vulnerability-advisor
     retries: 3
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: skopeo-copy
     params:
     - name: srcImageURL
@@ -422,7 +426,7 @@ spec:
   - name: transfer-image-manager-vulnerability-advisor
     retries: 3
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: skopeo-copy
     params:
     - name: srcImageURL
@@ -450,7 +454,7 @@ spec:
     - name: TLSVERIFY
       value: "false"
     - name: BUILD_EXTRA_ARGS
-      value: --build-arg REGISTRY=wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial
+      value: --build-arg REGISTRY=$(params.dockerhub-hostname)
     - name: HELM_PROPERTY
       value: dummymover.image
     - name: docker-hostname
@@ -482,7 +486,7 @@ spec:
   - name: transfer-image-dummy-mover-vulnerability-advisor
     retries: 3
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: skopeo-copy
     params:
     - name: srcImageURL
@@ -573,7 +577,7 @@ spec:
   - name: transfer-image-katalog-connector-vulnerability-advisor
     retries: 3
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: skopeo-copy
     params:
     - name: srcImageURL
@@ -664,7 +668,7 @@ spec:
   - name: transfer-image-opa-connector-vulnerability-advisor
     retries: 3
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: skopeo-copy
     params:
     - name: srcImageURL
@@ -780,7 +784,7 @@ spec:
   - name: transfer-image-datacatalog-vulnerability-advisor
     retries: 3
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: skopeo-copy
     params:
     - name: srcImageURL
@@ -893,7 +897,7 @@ spec:
   - name: transfer-image-serverpolicymanager-vulnerability-advisor
     retries: 3
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: skopeo-copy
     params:
     - name: srcImageURL
@@ -932,7 +936,7 @@ spec:
     # don't need to wait on this
     - build-image-datacatalog
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: helm-upgrade-from-source
     workspaces:
     - name: source
@@ -964,7 +968,7 @@ spec:
     - name: release_version
       value: 0.1.0
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: helm-upgrade-from-source
     workspaces:
     - name: source
@@ -994,7 +998,7 @@ spec:
     runAfter:
     - build-image-wkc-connector
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: helm-upgrade-from-source
     workspaces:
     - name: source
@@ -1026,7 +1030,7 @@ spec:
     - name: release_version
       value: 0.1.0
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: helm-upgrade-from-source
     workspaces:
     - name: source
@@ -1073,7 +1077,7 @@ spec:
     runAfter:
     - fetch-repository
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: helm-upgrade-from-source
     when:
     - Input: $(params.deployCRD)
@@ -1111,7 +1115,7 @@ spec:
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
-      value: server.dev.enabled=true,injector.enabled=false,global.openshift=true,server.image.repository=wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/vault
+      value: server.dev.enabled=true,injector.enabled=false,global.openshift=true,server.image.repository=$(params.dockerhub-hostname)/vault
     runAfter:
     - fetch-vault-plugin-secrets-wkc-reader
     taskRef:
@@ -1142,7 +1146,7 @@ spec:
     - name: helm_repo
       value: https://charts.jetstack.io
     - name: chart_name
-      value: jetstack/cert-mgr --create-namespace
+      value: jetstack/cert-manager --create-namespace
     - name: release_version
       value: v1.2.0
     - name: release_name
@@ -1152,7 +1156,7 @@ spec:
     - name: overwrite_values
       value: installCRDs=true
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: helm-upgrade-from-repo
     workspaces:
     - name: source
@@ -1216,7 +1220,7 @@ spec:
     runAfter:
     - upgrade-helm-crd-from-source
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: openshift-client
     when:
     - Input: $(params.IMAGE_DIGEST)
@@ -1238,7 +1242,7 @@ spec:
       - apply -f https://github.com/mesh-for-data/arrow-flight-module/releases/latest/download/module.yaml
         -n $(params.NAMESPACE)
     taskRef:
-      kind: ClusterTask
+      kind: Task
       name: openshift-client
     when:
     - Input: $(params.deployCRD)
@@ -1261,6 +1265,9 @@ spec:
       Operator: notin
       Values:
       - "true"
+    workspaces:
+    - name: source
+      workspace: shared-workspace
   - name: run-integration-tests-full-deploy
     params:
     - name: target
