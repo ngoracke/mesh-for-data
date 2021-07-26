@@ -495,9 +495,9 @@ spec:
   - name: vault-plugin-secrets-wkc-reader-url 
     value: https://${github}/data-mesh-research/vault-plugin-secrets-wkc-reader.git
   - name: skipTests
-    value: ${skip_tests}
+    value: "${skip_tests}"
   - name: transfer-images-to-icr
-    value: ${transfer_images_to_icr}
+    value: "${transfer_images_to_icr}"
   - name: clusterScoped
     value: "${cluster_scoped}"
   - name: deployVault
