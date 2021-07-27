@@ -100,27 +100,46 @@ cert-manager.io/v1alpha2
 {{- end -}}
 {{- end -}}
 
-
+{{/*
+Get blueprints namespace
+*/}}
+{{- define "m4d.getBlueprintNamespace" -}}
+{{- if .Values.blueprintNamespace -}}
+{{- .Values.blueprintNamespace -}}
+{{- else -}}
+{{- "m4d-blueprints" -}}
+{{- end -}}
+{{- end -}}
 
 {{/*
 Set watch namespace 
 */}}
 {{- define "m4d.setWatchNamespace" -}}
-{{- $manager := .Values.manager | default dict -}}
-{{- if $manager.watchNamespaces }}
+{{- if .Values.manager.watchNamespaces }}
 - name: WATCH_NAMESPACE
-  value: {{ $manager.watchNamespaces }}
+  value: {{.Values.manager.watchNamespaces }}
 {{- else if .Values.clusterScoped }}
 - name: WATCH_NAMESPACE
   value: ""
-{{- else if empty .Values.blueprintNamespace }}
+{{- else }}
+{{- $bluens := include "m4d.getBlueprintNamespace" . -}}
+{{- if not ( eq .Release.Namespace $bluens ) }}
 - name: WATCH_NAMESPACE
-  value: {{ .Release.Namespace }} 
-{{- else if not ( eq .Release.Namespace .Values.blueprintNamespace )  }}
-- name: WATCH_NAMESPACE
-  value: {{ printf "%s%s%s" .Release.Namespace "," .Values.blueprintNamespace }}
+  value: {{ printf "%s%s%s" .Release.Namespace "," $bluens }}
 {{- else }}
 - name: WATCH_NAMESPACE
   value: {{ .Release.Namespace }} 
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Indicate when webhooks should be enabled
+*/}}
+{{- define "m4d.enableWebhooks" -}}
+{{- if .Values.clusterScoped -}}
+true
+{{- else  -}}
+false
 {{- end -}}
 {{- end -}}

@@ -26,16 +26,16 @@ var _ = Describe("BatchTransfer Controller", func() {
 	const timeout = time.Second * 30
 	const interval = time.Millisecond * 300
 	const batchtransferName = "batchtransfer-sample"
-
-	batchtransferNameSpace := "m4d-blueprints"
-	blueprintNSEV := os.Getenv("BLUEPRINT_NAMESPACE")
-	if len(blueprintNSEV) > 0 {
-		batchtransferNameSpace = blueprintNSEV
-	}
-	fmt.Printf("batchtransfer namespace %v\n", batchtransferNameSpace)
+	const defaultBatchtransferNameSpace = "m4d-blueprints"
 
 	BeforeEach(func() {
 		// Add any setup steps that needs to be executed before each test
+
+		batchtransferNameSpace := os.Getenv("BLUEPRINT_NAMESPACE")
+		if len(batchtransferNameSpace) <= 0 {
+			batchtransferNameSpace = defaultBatchtransferNameSpace
+		}
+		fmt.Printf("batchtransfer namespace: " + batchtransferNameSpace + "\n")
 
 		f := &motionv1.BatchTransfer{}
 		key := client.ObjectKey{
@@ -62,6 +62,11 @@ var _ = Describe("BatchTransfer Controller", func() {
 			batchTransfer := &motionv1.BatchTransfer{}
 			err = yaml.Unmarshal(batchTransferYAML, batchTransfer)
 			Expect(err).ToNot(HaveOccurred())
+
+			batchtransferNameSpace := os.Getenv("BLUEPRINT_NAMESPACE")
+			if len(batchtransferNameSpace) <= 0 {
+				batchtransferNameSpace = defaultBatchtransferNameSpace
+			}
 
 			batchTransfer.Namespace = batchtransferNameSpace
 

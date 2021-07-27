@@ -6,7 +6,6 @@ package app
 import (
 	"context"
 	"math"
-	"os"
 	"reflect"
 	"strings"
 	"time"
@@ -32,8 +31,7 @@ type PlotterReconciler struct {
 	ClusterManager multicluster.ClusterManager
 }
 
-// BlueprintNamespace defines a namespace where blueprints and associated resources will be allocated
-const DefaultBlueprintNamespace = "m4d-blueprints"
+const BlueprintNamespace = "m4d-blueprints"
 
 // Reconcile receives a Plotter CRD
 //nolint:dupl
@@ -127,14 +125,8 @@ func (r *PlotterReconciler) reconcile(plotter *app.Plotter) (ctrl.Result, []erro
 	// Reconciliation loop per cluster
 	isReady := true
 
-	blueprintNS := DefaultBlueprintNamespace
-	blueprintNSEV := os.Getenv("BLUEPRINT_NAMESPACE")
-	if len(blueprintNSEV) > 0 {
-		blueprintNS = blueprintNSEV
-	} else {
-		r.Log.Info("BLUEPRINT_NAMESPACE environment variable is not defined or not set.")
-	}
-	r.Log.Info("Blueprint namespace:" + blueprintNS)
+	blueprintNamespace := getBlueprintNamespace()
+	r.Log.Info("blueprint namespace" + blueprintNamespace)
 
 	var errorCollection []error
 	for cluster, blueprintSpec := range plotter.Spec.Blueprints {
@@ -205,7 +197,7 @@ func (r *PlotterReconciler) reconcile(plotter *app.Plotter) (ctrl.Result, []erro
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:        plotter.Name,
-					Namespace:   blueprintNS,
+					Namespace:   blueprintNamespace,
 					ClusterName: cluster,
 					Labels: map[string]string{
 						"razee/watch-resource":        "debug",

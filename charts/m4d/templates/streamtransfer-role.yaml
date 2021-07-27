@@ -1,5 +1,5 @@
 {{- if .Values.worker.enabled }}
-{{- if not .Values.clusterScoped }}
+{{- if not (.Values.clusterScoped) }}
 # ClusterRole streamtransfer-editor allows managing streamtransfers
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1

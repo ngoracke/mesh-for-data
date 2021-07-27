@@ -946,7 +946,7 @@ spec:
     - name: charts_dir
       value: /workspace/source/mesh-for-data/charts/m4d
     - name: release_name
-      value: m4d --timeout 360
+      value: m4d --timeout 360s
       # --values /workspace/source/pipeline/pullsecrets.yaml
     - name: release_namespace
       value: $(params.NAMESPACE)

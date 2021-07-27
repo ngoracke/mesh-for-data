@@ -247,7 +247,7 @@ if [[ -z ${GH_TOKEN} ]]; then
     set +e
     oc secrets unlink pipeline git-token
     set -e
-    extra_params="${extra_params} -p git-url=git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git -p wkc-connector-git-url=git@github.ibm.com:ngoracke/WKC-connector.git -p vault-plugin-secrets-wkc-reader-url=git@github.ibm.com:data-mesh-research/vault-plugin-secrets-wkc-reader.git"
+    extra_params="${extra_params} -p wkc-connector-git-url=git@github.ibm.com:ngoracke/WKC-connector.git -p vault-plugin-secrets-wkc-reader-url=git@github.ibm.com:data-mesh-research/vault-plugin-secrets-wkc-reader.git -p git-url=git@github.ibm.com:IBM-Data-Fabric/mesh-for-data.git"
 else
     cat > ${TMP}/git-token.yaml <<EOH
 apiVersion: v1
@@ -266,7 +266,7 @@ EOH
     set +e
     oc secrets unlink pipeline git-ssh-key
     set -e
-    extra_params="${extra_params} -p git-url=https://github.ibm.com/IBM-Data-Fabric/mesh-for-data.git -p wkc-connector-git-url=https://github.ibm.com/ngoracke/WKC-connector.git -p vault-plugin-secrets-wkc-reader-url=https://github.ibm.com/data-mesh-research/vault-plugin-secrets-wkc-reader.git"
+    extra_params="${extra_params} -p wkc-connector-git-url=https://github.ibm.com/ngoracke/WKC-connector.git -p vault-plugin-secrets-wkc-reader-url=https://github.ibm.com/data-mesh-research/vault-plugin-secrets-wkc-reader.git -p git-url=https://github.ibm.com/IBM-Data-Fabric/mesh-for-data.git"
 fi
 cat > ${TMP}/wkc-credentials.yaml <<EOH
 apiVersion: v1
@@ -342,12 +342,12 @@ spec:
     value: pipeline
   - name: wkcConnectorServerUrl
     value: https://cpd-tooling-2q21-cpd.apps.cpstreamsx3.cp.fyre.ibm.com
-  - name: git-url
-    value: https://github.ibm.com/IBM-Data-Fabric/mesh-for-data.git
   - name: wkc-connector-git-url
     value: https://github.ibm.com/ngoracke/WKC-connector.git
   - name: vault-plugin-secrets-wkc-reader-url 
     value: https://github.ibm.com/data-mesh-research/vault-plugin-secrets-wkc-reader.git
+  - name: git-url
+    value: https://github.ibm.com/IBM-Data-Fabric/mesh-for-data.git    
   - name: skipTests
     value: ${skip_tests}
   - name: transfer-images-to-icr

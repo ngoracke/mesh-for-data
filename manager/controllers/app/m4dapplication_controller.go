@@ -234,6 +234,8 @@ func (r *M4DApplicationReconciler) deleteExternalResources(applicationContext *a
 // Current implementation assumes there is only one cluster with read modules (which is the same cluster the user's workload)
 func setReadModulesEndpoints(applicationContext *app.M4DApplication, blueprintsMap map[string]app.BlueprintSpec, moduleMap map[string]*app.M4DModule) {
 	var foundReadEndpoints = false
+	blueprintNamespace := getBlueprintNamespace()
+
 	for _, blueprintSpec := range blueprintsMap {
 		for _, step := range blueprintSpec.Flow.Steps {
 			if step.Arguments.Read != nil {
@@ -242,7 +244,7 @@ func setReadModulesEndpoints(applicationContext *app.M4DApplication, blueprintsM
 				releaseName := utils.GetReleaseName(applicationContext.ObjectMeta.Name, applicationContext.ObjectMeta.Namespace, step)
 				moduleName := step.Template
 				originalEndpointSpec := moduleMap[moduleName].Spec.Capabilities.API.Endpoint
-				fqdn := utils.GenerateModuleEndpointFQDN(releaseName, BlueprintNamespace)
+				fqdn := utils.GenerateModuleEndpointFQDN(releaseName, blueprintNamespace)
 				for _, arg := range step.Arguments.Read {
 					applicationContext.Status.ReadEndpointsMap[arg.AssetID] = app.EndpointSpec{
 						Hostname: fqdn,

@@ -1,5 +1,5 @@
 {{- if .Values.worker.enabled }}
-{{- if .Values.clusterScoped }}
+{{- if (.Values.clusterScoped) -}}
 # ClusterRole batchtransfer-editor allows managing batchtransfers
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1

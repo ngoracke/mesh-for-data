@@ -1,5 +1,5 @@
 {{- if .Values.worker.enabled }}
-{{- if not .Values.clusterScoped }}
+{{- if not (.Values.clusterScoped) }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:

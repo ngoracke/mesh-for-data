@@ -93,12 +93,8 @@ var _ = Describe("M4DApplication Controller", func() {
 				return application.Status.Ready
 			}, timeout, interval).Should(BeTrue(), "M4DApplication is not ready after timeout!")
 
-			blueprintNamespace := "m4d-blueprints"
-			blueprintNSEV := os.Getenv("BLUEPRINT_NAMESPACE")
-			if len(blueprintNSEV) > 0 {
-				blueprintNamespace = blueprintNSEV
-			}
-			fmt.Printf("blueprint namespace %v\n", blueprintNamespace)
+			blueprintNamespace := getBlueprintNamespace()
+			fmt.Printf("blueprint namespace" + blueprintNamespace)
 
 			By("Status should contain the details of the endpoint")
 			Expect(len(application.Status.ReadEndpointsMap)).To(Equal(1))

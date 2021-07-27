@@ -5,7 +5,6 @@ package app
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	app "github.com/mesh-for-data/mesh-for-data/manager/apis/app/v1alpha1"
@@ -60,12 +59,8 @@ func deployBlueprint(namespace string, shouldSucceed bool) {
 var _ = Describe("Blueprint Controller Real Env", func() {
 	Context("Blueprint", func() {
 
-		blueprintNamespace := "m4d-blueprints"
-		blueprintNSEV := os.Getenv("BLUEPRINT_NAMESPACE")
-		if len(blueprintNSEV) > 0 {
-			blueprintNamespace = blueprintNSEV
-		}
-		fmt.Printf("blueprint namespace %v\n", blueprintNamespace)
+		blueprintNamespace := getBlueprintNamespace()
+		fmt.Printf("blueprint namespace" + blueprintNamespace)
 
 		BeforeEach(func() {
 			// Add any setup steps that needs to be executed before each test

@@ -80,7 +80,7 @@ spec:
             {{- end }}
           env:
             - name: ENABLE_WEBHOOKS
-            {{- if .Values.clusterScoped }}
+            {{- if .Values.clusterScoped }} 
               value: "true"
             {{- else }}
               value: "false"
@@ -89,19 +89,23 @@ spec:
             {{- include "m4d.setWatchNamespace" . | indent 12 }}   
 
             - name: BLUEPRINT_NAMESPACE
-              value: {{ . .Values.blueprintNamespace | default "m4d-blueprints" }}
+              value: {{ include "m4d.getBlueprintNamespace" . }}
 
             {{- if .Values.manager.extraEnvs }}
             {{- toYaml .Values.manager.extraEnvs | nindent 12 }}
             {{- end }}
+          {{- if .Values.clusterScoped }} 
           ports:
             - containerPort: 9443
               name: webhook-server
               protocol: TCP
+          {{- end }}
           volumeMounts:
+            {{- if .Values.clusterScoped }}
             - mountPath: /tmp/k8s-webhook-server/serving-certs
               name: cert
-              readOnly: true
+              readOnly: true  
+            {{- end }}     
             - mountPath: /tmp/taxonomy
               name: m4d-taxonomy
           securityContext:
@@ -110,10 +114,13 @@ spec:
             {{- toYaml .Values.manager.resources | nindent 12 }}
       terminationGracePeriodSeconds: 10
       volumes:
+        {{- if .Values.clusterScoped }}
         - name: cert
           secret:
             defaultMode: 420
             secretName: webhook-server-cert
+        {{- end }}
+
         - name: m4d-taxonomy
           configMap:
             name: m4d-taxonomy-config

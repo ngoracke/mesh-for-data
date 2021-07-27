@@ -38,6 +38,8 @@ var mgr ctrl.Manager
 var testEnv *envtest.Environment
 var noSimulatedProgress bool
 
+const defaultBlueprintNameSpace = "m4d-blueprints"
+
 // This is the entry method for the ginko testing framework suite.
 // The actual test are in the following files:
 // - batchtransfer_controller_test.go
@@ -113,12 +115,11 @@ var _ = BeforeSuite(func(done Done) {
 			Expect(err).ToNot(HaveOccurred())
 		}()
 
-		blueprintNamespace := "m4d-blueprints"
-		blueprintNSEV := os.Getenv("BLUEPRINT_NAMESPACE")
-		if len(blueprintNSEV) > 0 {
-			blueprintNamespace = blueprintNSEV
+		blueprintNamespace := os.Getenv("BLUEPRINT_NAMESPACE")
+		if len(blueprintNamespace) <= 0 {
+			blueprintNamespace = defaultBlueprintNameSpace
 		}
-		fmt.Printf("blueprint namespace %v\n", blueprintNamespace)
+		fmt.Printf("blueprint namespace" + blueprintNamespace)
 
 		k8sClient = mgr.GetClient()
 		err = k8sClient.Create(context.Background(), &v1.Namespace{

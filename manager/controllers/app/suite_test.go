@@ -126,12 +126,8 @@ var _ = BeforeSuite(func(done Done) {
 			},
 		}))
 
-		blueprintNamespace := "m4d-blueprints"
-		blueprintNSEV := os.Getenv("BLUEPRINT_NAMESPACE")
-		if len(blueprintNSEV) > 0 {
-			blueprintNamespace = blueprintNSEV
-		}
-		fmt.Printf("blueprint namespace %v\n", blueprintNamespace)
+		blueprintNamespace := getBlueprintNamespace()
+		fmt.Printf("blueprint namespace" + blueprintNamespace)
 
 		Expect(k8sClient.Create(context.Background(), &v1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
