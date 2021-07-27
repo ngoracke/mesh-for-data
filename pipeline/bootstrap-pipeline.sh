@@ -215,9 +215,13 @@ helper_text=""
 
 set +e
 oc delete -f ${repo_root}/pipeline/pipeline.yaml
+oc delete -f ${repo_root}/pipeline/wkc-pipeline.yaml
 set -e
-oc apply -f ${repo_root}/pipeline/pipeline.yaml
-
+if [[ "${github}" == "github.com" ]]; then 
+    oc apply -f ${repo_root}/pipeline/pipeline.yaml
+else
+    oc apply -f ${repo_root}/pipeline/wkc-pipeline.yaml
+fi
 image_source_repo="wcp-ibm-streams-docker-local.artifactory.swg-devops.com"
 
 set +e
@@ -376,6 +380,15 @@ oc delete secret git-ssh-key
 oc delete secret git-token
 set -e
 
+git_url=
+wkc_connector_git_url=
+vault_plugin_secrets_wkc_reader_url=
+vault_values=/workspace/source/vault-plugin-secrets-wkc-reader/helm-deployment/vault-single-cluster/values.yaml
+if [[ "${github}" != "github.com" ]]; then
+    vault_values=https://raw.githubusercontent.com/mesh-for-data/mesh-for-data/v0.1.0/third_party/vault/vault-single-cluster/values.yaml
+fi
+extra_params="-p vaultValues=${vault_values}"
+
 if [[ -z ${GH_TOKEN} && "${github}" != "github.com" ]]; then
     cat ~/.ssh/known_hosts | base64 -w 0 > ${TMP}/known_hosts
     set +x
@@ -400,6 +413,9 @@ if [[ -z ${GH_TOKEN} && "${github}" != "github.com" ]]; then
     fi
     set -e
     extra_params="${extra_params} -p git-url=git@${github}:IBM-Data-Fabric/mesh-for-data.git -p wkc-connector-git-url=git@${github}:ngoracke/WKC-connector.git -p vault-plugin-secrets-wkc-reader-url=git@${github}:data-mesh-research/vault-plugin-secrets-wkc-reader.git"
+    git_url=git@${github}:IBM-Data-Fabric/mesh-for-data.git
+    wkc_connector_git_url=git@${github}:ngoracke/WKC-connector.git
+    vault_plugin_secrets_wkc_reader_url=git@${github}:data-mesh-research/vault-plugin-secrets-wkc-reader.git
 elif [[ ! -z ${GH_TOKEN} && "${github}" != "github.com" ]]; then
     cat > ${TMP}/git-token.yaml <<EOH
 apiVersion: v1
@@ -424,6 +440,9 @@ EOH
     fi
     set -e
     extra_params="${extra_params} -p git-url=https://${github}/IBM-Data-Fabric/mesh-for-data.git -p wkc-connector-git-url=https://${github}/ngoracke/WKC-connector.git -p vault-plugin-secrets-wkc-reader-url=https://${github}/data-mesh-research/vault-plugin-secrets-wkc-reader.git"
+    git_url=https://${github}/IBM-Data-Fabric/mesh-for-data.git
+    wkc_connector_git_url=https://${github}/ngoracke/WKC-connector.git
+    vault_plugin_secrets_wkc_reader_url=vault-plugin-secrets-wkc-reader-url=https://${github}/data-mesh-research/vault-plugin-secrets-wkc-reader.git"
 else
     extra_params="${extra_params} -p git-url= -p wkc-connector-git-url= -p vault-plugin-secrets-wkc-reader-url="
 fi
@@ -502,11 +521,11 @@ spec:
   - name: wkcConnectorServerUrl
     value: https://cpd-tooling-2q21-cpd.apps.cpstreamsx3.cp.fyre.ibm.com
   - name: git-url
-    value: https://${github}/IBM-Data-Fabric/mesh-for-data.git
+    value: "${git_url}"
   - name: wkc-connector-git-url
-    value: https://${github}/ngoracke/WKC-connector.git
+    value: "${wkc_connector_git_url}" 
   - name: vault-plugin-secrets-wkc-reader-url 
-    value: https://${github}/data-mesh-research/vault-plugin-secrets-wkc-reader.git
+    value: "${vault_plugin_secrets_wkc_reader_url}"
   - name: skipTests
     value: "${skip_tests}"
   - name: transfer-images-to-icr
@@ -523,6 +542,8 @@ spec:
     value: "${helm_image}"
   - name: deployCertManager
     value: "${deploy_cert_manager}"
+  - name: vaultValues
+    value: "${vault_values}"
   pipelineRef:
     name: build-and-deploy
   serviceAccountName: ${pipeline_sa}
