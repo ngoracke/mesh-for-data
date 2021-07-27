@@ -34,6 +34,10 @@ spec:
     description: deploy vault or no.  If deploying to the m4d-system namespace, make this true.
     name: deployVault
     type: string
+  - default: "https://raw.githubusercontent.com/mesh-for-data/mesh-for-data/v0.1.0/third_party/vault/vault-single-cluster/values.yaml"
+    description: values file for use when helm deploying vault
+    name: vaultValues
+    type: string
   - default: 'cluster.name="AmsterdamCluster",cluster.zone="Netherlands",cluster.region="Netherlands",cluster.vaultAuthPath="kubernetes"'
     description: values to pass to helm install of mesh-for-data charts
     type: string
