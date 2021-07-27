@@ -30,14 +30,34 @@ spec:
     description: branch/revision to be used from repo of the code for deployment
     name: git-revision
     type: string
+  - description: url of the git repo for the code of deployment
+    name: wkc-connector-git-url
+    type: string
+    default: git@github.ibm.com:ngoracke/WKC-connector.git
+  - description: url of the git repo for the code of deployment
+    name: vault-plugin-secrets-wkc-reader-url
+    type: string
+    default: git@github.ibm.com:data-mesh-research/vault-plugin-secrets-wkc-reader.git
+  - default: master
+    description: branch/revision to be used from repo of the code for deployment
+    name: wkc-connector-git-revision
+    type: string
   - default: "false"
     description: deploy vault or no.  If deploying to the m4d-system namespace, make this true.
     name: deployVault
     type: string
-  - default: 'cluster.name="AmsterdamCluster",cluster.zone="Netherlands",cluster.region="Netherlands",cluster.vaultAuthPath="kubernetes"'
+  - default: 'cluster.name="AmsterdamCluster",cluster.zone="Netherlands",cluster.region="Netherlands",cluster.vaultAuthPath="kubernetes",coordinator.catalog="WKC",coordinator.catalogConnectorURL="wkc-connector:50090"'
     description: values to pass to helm install of mesh-for-data charts
     type: string
     name: mesh-for-data-values
+  - default: "/workspace/source/vault-plugin-secrets-wkc-reader/helm-deployment/vault-single-cluster/vault-rbac.yaml"
+    description: roles to create when deploying vault
+    name: vaultRoles
+    type: string
+  - default: "/workspace/source/vault-plugin-secrets-wkc-reader/helm-deployment/vault-single-cluster/values.yaml"
+    description: values file for use when helm deploying vault
+    name: vaultValues
+    type: string
   - default: "wcp-ibm-streams-docker-local.artifactory.swg-devops.com/elvis_build/suede_compile:latest"
     description: image to use for build
     name: build_image
@@ -111,6 +131,65 @@ spec:
     type: string
     default: "false"
   tasks:
+  #git@github.ibm.com:data-mesh-research/WKC-connector.git
+  - name: fetch-vault-plugin-secrets-wkc-reader
+    params:
+    - name: url
+      value: $(params.vault-plugin-secrets-wkc-reader-url)
+    - name: subdirectory
+      value: "vault-plugin-secrets-wkc-reader"
+    - name: deleteExisting
+      value: "true"
+    - name: revision
+      value: master
+    - name: INCREMENTAL_CODE_RESTART
+      value: $(params.INCREMENTAL_CODE_RESTART)
+    - name: sslVerify
+      value: "false"
+    taskRef:
+      kind: Task
+      name: git-clone
+    workspaces:
+    - name: output
+      workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+  - name: fetch-wkc-connector
+    params:
+    - name: url
+      value: $(params.wkc-connector-git-url)
+    - name: subdirectory
+      value: "WKC-connector"
+    - name: deleteExisting
+      value: "true"
+    - name: revision
+      value: $(params.wkc-connector-git-revision)
+    - name: INCREMENTAL_CODE_RESTART
+      value: $(params.INCREMENTAL_CODE_RESTART)
+    - name: sslVerify
+      value: "false"
+    taskRef:
+      kind: Task
+      name: git-clone
+    workspaces:
+    - name: output
+      workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"  
   - name: fetch-repository
     params:
     - name: url
@@ -138,6 +217,112 @@ spec:
       Operator: notin
       Values:
       - "true"
+  # - name: remove-creds
+  #   params:
+  #   - name: ARGS
+  #     value:
+  #     - delete secret git-ssh-key --ignore-not-found=true
+  #       -n $(params.NAMESPACE)
+  #   taskRef:
+  #     kind: Task
+  #     name: openshift-client
+  #   runAfter:
+  #   - fetch-repository
+  #   - fetch-vault-plugin-secrets-wkc-reader
+  #   - fetch-wkc-connector
+  - name: build-wkc-connector
+    params:
+    - name: target
+      value: build
+    - name: context
+      value: WKC-connector/java
+    - name: image
+      value: $(params.build_image)
+    - name: docker-hostname
+      value: "$(params.docker-hostname)"
+    - name: docker-namespace
+      value: "$(params.docker-namespace)"
+    - name: INCREMENTAL_CODE_RESTART
+      value: $(params.INCREMENTAL_CODE_RESTART)
+    runAfter:
+    - fetch-wkc-connector
+    taskRef:
+      kind: Task
+      name: make
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+  - name: build-image-wkc-connector
+    params:
+    - name: IMAGE
+      value: $(params.docker-hostname)/$(params.docker-namespace)/wkc-connector
+    - name: TLSVERIFY
+      value: "false"
+    - name: DOCKERFILE
+      value: WKC-connector/Dockerfile.wkc_connector
+    - name: CONTEXT
+      value: WKC-connector/java
+    - name: BUILD_EXTRA_ARGS
+      value: --build-arg REGISTRY=$(params.dockerhub-hostname)
+    - name: HELM_PROPERTY
+      value: wkcConnector.image
+    - name: docker-hostname
+      value: "$(params.docker-hostname)"
+    - name: docker-namespace
+      value: "$(params.docker-namespace)"
+    runAfter:
+    - build-wkc-connector
+    taskRef:
+      kind: Task
+      name: buildah
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.COMPONENT_NAME)
+      Operator: in
+      Values:
+      - "all"
+      - "WKC-connector/java"
+  - name: transfer-image-wkc-connector-vulnerability-advisor
+    retries: 3
+    taskRef:
+      kind: Task
+      name: skopeo-copy
+    params:
+    - name: srcImageURL
+      value: docker://$(params.docker-hostname)/$(params.docker-namespace)/wkc-connector@$(tasks.build-image-wkc-connector.results.IMAGE_DIGEST)
+    - name: destImageURL
+      value: docker://us.icr.io/$(params.va-scan-namespace)/wkc-connector@$(tasks.build-image-wkc-connector.results.IMAGE_DIGEST)
+    - name: srcTLSverify
+      value: "false"
+    - name: destTLSverify
+      value: "false"
+    when:
+    - Input: $(params.transfer-images-to-icr)
+      Operator: in
+      Values:
+      - "true"
+    workspaces:
+      - name: images-url
+        workspace: images-url
   - name: build-manager
     params:
     - name: target
@@ -169,47 +354,6 @@ spec:
       Operator: notin
       Values:
       - "true"
-    # - Input: $(params.INCREMENTAL_CODE_RESTART)
-    #   Operator: notin
-    #   Values:
-    #   - "true"
-  # - name: rebuild-image
-  #   params:
-  #   - name: IMAGE
-  #     value: $(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)
-  #   - name: TLSVERIFY
-  #     value: "false"
-  #   - name: DOCKERFILE
-  #     value: $(params.rebuild-image-dockerfile)
-  #   - name: CONTEXT
-  #     value: $(params.rebuild-image-context)
-  #   - name: BUILD_EXTRA_ARGS
-  #     value: --build-arg REGISTRY=$(params.docker-hostname)/$(params.docker-namespace)
-  #   - name: HELM_PROPERTY
-  #     value: $(params.HELM_PROPERTY)
-  #   - name: docker-hostname
-  #     value: "$(params.docker-hostname)"
-  #   - name: docker-namespace
-  #     value: "$(params.docker-namespace)"
-  #   taskRef:
-  #     kind: Task
-  #     name: buildah
-  #   workspaces:
-  #   - name: source
-  #     workspace: shared-workspace
-  #   when:
-  #   - Input: $(params.IMAGE_DIGEST)
-  #     Operator: in
-  #     Values:
-  #     - "none"
-  #   - Input: $(params.INCREMENTAL_RESTART)
-  #     Operator: notin
-  #     Values:
-  #     - "true"
-  #   - Input: $(params.COMPONENT_NAME)
-  #     Operator: notin
-  #     Values:
-  #     - "all"
   - name: build-image-manager
     params:
     - name: IMAGE
@@ -589,31 +733,6 @@ spec:
       Values:
       - "all"
       - "mesh-for-data/test/services/datacatalog"
-  # - name: skopeo-copy-image-data-catalog-mock
-  #   taskRef:
-  #     name: skopeo-copy-image
-  #   workspaces:
-  #     - name: source
-  #       workspace: artifacts
-  #   params:
-  #     - name: source-image-repository
-  #       value: "cp.stg.icr.io/cp/cpd/scan"
-  #     - name: image-tags
-  #       value: "latest"
-  #     - name: source-image-digest
-  #       value: "$(tasks.build-image-manager.results.IMAGE_DIGEST)"
-  #     - name: target-image-repository
-  #       value: "$(params.docker-hostname)/$(params.docker-namespace)/data-catalog-mock"
-  #     - name: source-email
-  #       value: "a@b.com"
-  #     - name: target-email
-  #       value: "a@b.com"
-  #     - name: source-username
-  #       value: "your-username"
-  #     - name: target-username
-  #       value: "your-username"
-  #     - name: pipeline-debug
-  #       value: "1"
   - name: transfer-image-datacatalog-vulnerability-advisor
     retries: 3
     taskRef:
@@ -821,26 +940,72 @@ spec:
       Operator: in
       Values:
       - "true"
-  # - name: upgrade-helm-partial-code-to-image-update
-  #   params:
-  #   - name: charts_dir
-  #     value: /workspace/source/charts/m4d
-  #   - name: release_name
-  #     value: m4d --values /workspace/source/pipeline/pullsecrets.yaml --reuse-values
-  #   - name: release_namespace
-  #     value: $(params.NAMESPACE)
-  #   - name: overwrite_values
-  #     value: $(params.IMAGE_ID)=$(params.IMAGE_NAME)@$(params.IMAGE_DIGEST)
-  #   - name: release_version
-  #     value: 0.1.0
-  #   taskRef:
-  #     kind: ClusterTask
-  #     name: helm-upgrade-from-source
-  #   workspaces:
-  #   - name: source
-  #     workspace: shared-workspace
-  #   runAfter:
-  #   - rebuild-image
+  - name: upgrade-wkc-connector-helm-full
+    params:
+    - name: charts_dir
+      value: /workspace/source/WKC-connector/charts/wkc-connector
+    - name: release_name
+      value: wkc-connector
+      # --values /workspace/source/pipeline/pullsecrets.yaml
+    - name: release_namespace
+      value: $(params.NAMESPACE)
+    - name: overwrite_values
+      value: clusterScoped=$(params.clusterScoped),global.imagePullSecrets=,wkcConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/wkc-connector@$(tasks.build-image-wkc-connector.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://vault.m4d-system:8200,wkcConnector.vault.address=http://vault.m4d-system:8200,wkcConnector.serverURL=$(params.wkcConnectorServerUrl)
+    - name: release_version
+      value: 0.1.0
+    - name: image
+      value: $(params.helm_image)
+    runAfter:
+    - build-image-wkc-connector
+    taskRef:
+      kind: Task
+      name: helm-upgrade-from-source
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.INCREMENTAL_CODE_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+  - name: upgrade-wkc-connector-helm-partial
+    params:
+    - name: charts_dir
+      value: /workspace/source/WKC-connector/charts/wkc-connector
+    - name: release_name
+      value: wkc-connector --reuse-values
+      # --values /workspace/source/pipeline/pullsecrets.yaml --reuse-values
+    - name: release_namespace
+      value: $(params.NAMESPACE)
+    - name: overwrite_values
+      value: $(params.IMAGE_ID)=$(params.IMAGE_NAME)@$(params.IMAGE_DIGEST)
+    - name: release_version
+      value: 0.1.0
+    - name: image
+      value: $(params.helm_image)
+    taskRef:
+      kind: Task
+      name: helm-upgrade-from-source
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: notin
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: in
+      Values:
+      - "true"
   - name: upgrade-helm-crd-from-source
     params:
     - name: charts_dir
@@ -897,6 +1062,8 @@ spec:
       value: server.dev.enabled=true,injector.enabled=false,global.openshift=true,server.image.repository=$(params.dockerhub-hostname)/vault
     - name: image
       value: $(params.helm_image)
+    runAfter:
+    - fetch-vault-plugin-secrets-wkc-reader
     taskRef:
       kind: Task
       name: helm-upgrade-from-repo
@@ -1066,6 +1233,7 @@ spec:
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
     - upgrade-helm-full
+    - upgrade-wkc-connector-helm-full
     - build-image-datacatalog
     - build-image-serverpolicymanager
     when:
@@ -1114,6 +1282,7 @@ spec:
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
     - upgrade-helm-full
+    - upgrade-wkc-connector-helm-full
     when:
     - Input: $(params.skipTests)
       Operator: notin
@@ -1135,6 +1304,7 @@ spec:
       value: $(params.build_image)
     runAfter:
     - upgrade-helm-partial
+    - upgrade-wkc-connector-helm-partial
     when:
     - Input: $(params.skipTests)
       Operator: notin
