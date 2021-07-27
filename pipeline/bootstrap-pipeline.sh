@@ -385,7 +385,7 @@ wkc_connector_git_url=
 vault_plugin_secrets_wkc_reader_url=
 vault_values=/workspace/source/vault-plugin-secrets-wkc-reader/helm-deployment/vault-single-cluster/values.yaml
 if [[ "${github}" != "github.com" ]]; then
-    vault_values=https://raw.githubusercontent.com/mesh-for-data/mesh-for-data/v0.1.0/third_party/vault/vault-single-cluster/values.yaml
+    vault_values=/workspace/source/mesh-for-data/third_party/vault/vault-single-cluster/values.yaml
 fi
 extra_params="-p vaultValues=${vault_values}"
 
