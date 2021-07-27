@@ -375,7 +375,7 @@ oc delete secret git-ssh-key
 oc delete secret git-token
 set -e
 
-if [[ -z ${GH_TOKEN} ]]; then
+if [[ -z ${GH_TOKEN} && "${github}" != "github.com" ]]; then
     cat ~/.ssh/known_hosts | base64 -w 0 > ${TMP}/known_hosts
     set +x
     helper_text="If this step fails, make the second positional arg the path to an ssh key authenticated with Github Enterprise
@@ -399,7 +399,7 @@ if [[ -z ${GH_TOKEN} ]]; then
     fi
     set -e
     extra_params="${extra_params} -p git-url=git@${github}:IBM-Data-Fabric/mesh-for-data.git -p wkc-connector-git-url=git@${github}:ngoracke/WKC-connector.git -p vault-plugin-secrets-wkc-reader-url=git@${github}:data-mesh-research/vault-plugin-secrets-wkc-reader.git"
-else
+elif [[ ! -z ${GH_TOKEN} && "${github}" != "github.com" ]]; then
     cat > ${TMP}/git-token.yaml <<EOH
 apiVersion: v1
 kind: Secret
@@ -547,4 +547,5 @@ oc get pipelinerun --no-headers | grep -e "Failed" -e "Succeeded"
 EOH
     chmod u+x ${TMP}/streams_csv_check_script.sh
     try_command "${TMP}/streams_csv_check_script.sh"  40 false 30 
+    for i in $(oc get taskrun --no-headers | grep "False" | cut -d' ' -f1); do oc logs -l tekton.dev/taskRun=$i --all-containers; done
 fi
