@@ -531,6 +531,7 @@ EOH
     cat > ${TMP}/streams_csv_check_script.sh <<EOH
 #!/bin/bash
 set -x
+oc get taskrun,pvc,po
 oc get pipelinerun --no-headers
 oc get pipelinerun --no-headers | grep -e "Failed" -e "Succeeded"
 EOH
