@@ -8,6 +8,7 @@ GH_TOKEN=${GH_TOKEN}
 ARTIFACTORY_APIKEY=${ARTIFACTORY_APIKEY}
 git_user=${git_user}
 github=${github:-github.ibm.com}
+github_workspace=${github_workspace}
 image_source_repo_username=${image_source_repo_username}
 image_repo="${image_repo:-image-registry.openshift-image-registry.svc:5000}"
 dockerhub_hostname="${dockerhub_hostname:-wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial}"
@@ -423,6 +424,8 @@ EOH
     fi
     set -e
     extra_params="${extra_params} -p git-url=https://${github}/IBM-Data-Fabric/mesh-for-data.git -p wkc-connector-git-url=https://${github}/ngoracke/WKC-connector.git -p vault-plugin-secrets-wkc-reader-url=https://${github}/data-mesh-research/vault-plugin-secrets-wkc-reader.git"
+else
+    extra_params="${extra_params} -p git-url= -p wkc-connector-git-url= -p vault-plugin-secrets-wkc-reader-url=
 fi
 cat > ${TMP}/wkc-credentials.yaml <<EOH
 apiVersion: v1
@@ -535,6 +538,13 @@ spec:
       claimName: source-pvc
 EOH
     cat ${TMP}/pipelinerun.yaml
+    while [[ $(kubectl get pvc -f ${repo_root}/pipeline/pvc.yaml -o 'jsonpath={..status.phase}') != "Bound" ]]; do echo "waiting for PVC status" && sleep 1; done
+    if [[ ! -z "${github_workspace}" ]]; then
+        ls ${github_workspace}
+        ls ${github_workspace}/..
+        oc cp $github_workspace workspace-0:/workspace/source/
+    fi
+
     oc apply -f ${TMP}/pipelinerun.yaml
  
     cat > ${TMP}/streams_csv_check_script.sh <<EOH

@@ -143,7 +143,7 @@ jobs:
         image_repo: kind-registry:5000
         image_source_repo_username: ngoracke@us.ibm.com
         GH_TOKEN: fake
-      run: pushd hack/tools/ && ./create_kind.sh && popd && run_tkn=${run_tkn} skip_tests=true GH_TOKEN=${GH_TOKEN} git_user=${git_user} image_repo=${image_repo} pipeline/bootstrap-pipeline.sh m4d-system
+      run: pushd hack/tools/ && ./create_kind.sh && popd && run_tkn=${run_tkn} skip_tests=true GH_TOKEN=${GH_TOKEN} git_user=${git_user} image_repo=${image_repo} github_workspace=${{ github.workspace }} pipeline/bootstrap-pipeline.sh m4d-system
   push_images:
     name: Push images
     runs-on: ubuntu-latest
