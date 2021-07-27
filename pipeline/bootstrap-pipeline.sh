@@ -425,7 +425,7 @@ EOH
     set -e
     extra_params="${extra_params} -p git-url=https://${github}/IBM-Data-Fabric/mesh-for-data.git -p wkc-connector-git-url=https://${github}/ngoracke/WKC-connector.git -p vault-plugin-secrets-wkc-reader-url=https://${github}/data-mesh-research/vault-plugin-secrets-wkc-reader.git"
 else
-    extra_params="${extra_params} -p git-url= -p wkc-connector-git-url= -p vault-plugin-secrets-wkc-reader-url=
+    extra_params="${extra_params} -p git-url= -p wkc-connector-git-url= -p vault-plugin-secrets-wkc-reader-url="
 fi
 cat > ${TMP}/wkc-credentials.yaml <<EOH
 apiVersion: v1
