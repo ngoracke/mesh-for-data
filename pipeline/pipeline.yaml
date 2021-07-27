@@ -1251,6 +1251,9 @@ spec:
       Operator: notin
       Values:
       - "true"
+    workspaces:
+    - name: source
+      workspace: shared-workspace
   - name: oc-install-flight-opensource-crds-present
     params:
     - name: ARGS

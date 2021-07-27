@@ -48,15 +48,18 @@ fi
 is_openshift="false"
 is_kubernetes="false"
 client=kubectl
+pipeline_sa=pipeline
 set +e
 kubectl get ns | grep openshift-apiserver
 rc=$?
 if [[ $rc -eq 0 ]]; then
     is_openshift=true
     client=oc
+    pipeline_sa=pipeline
 else
     is_kubernetes=true
     client=kubectl
+    pipeline_sa=default
 fi
 if [[ ${is_kubernetes} == "true" ]]; then
     set -e
@@ -479,7 +482,7 @@ spec:
   - name: NAMESPACE
     value: ${unique_prefix} 
   - name: docker-hostname
-    value: image-registry.openshift-image-registry.svc:5000
+    value: ${image_repo}
   - name: dockerhub-hostname
     value: ${dockerhub_hostname}
   - name: docker-namespace
@@ -506,9 +509,11 @@ spec:
     value: "${deploy_crd}"
   - name: build_image
     value: "${build_image}"
+  - name: deployCertManager
+    value: "${deploy_cert_manager}"
   pipelineRef:
     name: build-and-deploy
-  serviceAccountName: pipeline
+  serviceAccountName: ${pipeline_sa}
   timeout: 1h0m0s
   workspaces:
   - emptyDir: {}

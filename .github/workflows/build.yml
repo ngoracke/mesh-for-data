@@ -136,9 +136,9 @@ jobs:
         #${{ secrets.ARTIFACTORY_APIKEY }}
         github: github.com
         run_tkn: 1
-        image_repo: localhost:5000/m4d-system
         dockerhub_hostname: docker.io
         git_user: ngoracke@us.ibm.com
+        image_repo: kind-registry:5000
         image_source_repo_username: ngoracke@us.ibm.com
         GH_TOKEN: fake
       run: pushd hack/tools/ && ./create_kind.sh && popd && run_tkn=${run_tkn} skip_tests=true GH_TOKEN=${GH_TOKEN} git_user=${git_user} image_repo=${image_repo} pipeline/bootstrap-pipeline.sh m4d-system
