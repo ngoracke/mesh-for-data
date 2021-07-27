@@ -43,14 +43,14 @@ if [[ "${github}" == "github.com" ]]; then
     is_external="true"
     build_image="docker.io/yakinikku/suede_compile"
     helm_image="docker.io/lachlanevenson/k8s-helm:latest"
-    extra_params="-p build_image ${build_image} -p helm_image ${helm_image}"
+    extra_params="${extra_params} -p build_image ${build_image} -p helm_image ${helm_image}"
     cp ${repo_root}/pipeline/statefulset.yaml ${TMP}/
     sed -i.bak "s|wcp-ibm-streams-docker-local.artifactory.swg-devops.com/elvis_build/suede:latest|docker.io/yakinikku/suede|g" ${TMP}/statefulset.yaml
 else
     is_internal="true"
     build_image="wcp-ibm-streams-docker-local.artifactory.swg-devops.com/elvis_build/suede_compile:latest"
     helm_image="wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/k8s-helm"
-    extra_params="-p build_image ${build_image} -p helm_image ${helm_image}"
+    extra_params="${extra_params} -p build_image ${build_image} -p helm_image ${helm_image}"
     cp ${repo_root}/pipeline/statefulset.yaml ${TMP}/
 fi
 is_openshift="false"
@@ -302,7 +302,7 @@ fi
 cluster_scoped="false"
 deploy_vault="false"
 if [[ "${unique_prefix}" == "m4d-system" ]]; then
-    extra_params='-p clusterScoped="true" -p deployVault="true"'
+    extra_params='${extra_params} -p clusterScoped="true" -p deployVault="true"'
     cluster_scoped="true"
     deploy_vault="true"
 fi
@@ -319,7 +319,7 @@ oc get crd | grep "certmanager"
 rc=$?
 deploy_cert_manager="false"
 if [[ $rc -ne 0 ]]; then
-    extra_params="${extra_params} -p deployCertManager='true'"
+    extra_params="${extra_params} -p deployCertManager=\"true\""
     deploy_cert_manager="true"
 fi
 
@@ -383,11 +383,11 @@ set -e
 git_url=
 wkc_connector_git_url=
 vault_plugin_secrets_wkc_reader_url=
-vault_values=/workspace/source/vault-plugin-secrets-wkc-reader/helm-deployment/vault-single-cluster/values.yaml
+vault_values="/workspace/source/vault-plugin-secrets-wkc-reader/helm-deployment/vault-single-cluster/values.yaml"
 if [[ "${github}" != "github.com" ]]; then
-    vault_values=/workspace/source/mesh-for-data/third_party/vault/vault-single-cluster/values.yaml
+    vault_values="/workspace/source/mesh-for-data/third_party/vault/vault-single-cluster/values.yaml"
 fi
-extra_params="-p vaultValues=${vault_values}"
+extra_params="${extra_params} -p vaultValues=${vault_values}"
 
 if [[ -z ${GH_TOKEN} && "${github}" != "github.com" ]]; then
     cat ~/.ssh/known_hosts | base64 -w 0 > ${TMP}/known_hosts
@@ -413,9 +413,9 @@ if [[ -z ${GH_TOKEN} && "${github}" != "github.com" ]]; then
     fi
     set -e
     extra_params="${extra_params} -p git-url=git@${github}:IBM-Data-Fabric/mesh-for-data.git -p wkc-connector-git-url=git@${github}:ngoracke/WKC-connector.git -p vault-plugin-secrets-wkc-reader-url=git@${github}:data-mesh-research/vault-plugin-secrets-wkc-reader.git"
-    git_url=git@${github}:IBM-Data-Fabric/mesh-for-data.git
-    wkc_connector_git_url=git@${github}:ngoracke/WKC-connector.git
-    vault_plugin_secrets_wkc_reader_url=git@${github}:data-mesh-research/vault-plugin-secrets-wkc-reader.git
+    git_url="git@${github}:IBM-Data-Fabric/mesh-for-data.git"
+    wkc_connector_git_url="git@${github}:ngoracke/WKC-connector.git"
+    vault_plugin_secrets_wkc_reader_url="git@${github}:data-mesh-research/vault-plugin-secrets-wkc-reader.git"
 elif [[ ! -z ${GH_TOKEN} && "${github}" != "github.com" ]]; then
     cat > ${TMP}/git-token.yaml <<EOH
 apiVersion: v1
@@ -440,9 +440,9 @@ EOH
     fi
     set -e
     extra_params="${extra_params} -p git-url=https://${github}/IBM-Data-Fabric/mesh-for-data.git -p wkc-connector-git-url=https://${github}/ngoracke/WKC-connector.git -p vault-plugin-secrets-wkc-reader-url=https://${github}/data-mesh-research/vault-plugin-secrets-wkc-reader.git"
-    git_url=https://${github}/IBM-Data-Fabric/mesh-for-data.git
-    wkc_connector_git_url=https://${github}/ngoracke/WKC-connector.git
-    vault_plugin_secrets_wkc_reader_url=vault-plugin-secrets-wkc-reader-url=https://${github}/data-mesh-research/vault-plugin-secrets-wkc-reader.git"
+    git_url="https://${github}/IBM-Data-Fabric/mesh-for-data.git"
+    wkc_connector_git_url="https://${github}/ngoracke/WKC-connector.git"
+    vault_plugin_secrets_wkc_reader_url="https://${github}/data-mesh-research/vault-plugin-secrets-wkc-reader.git"
 else
     extra_params="${extra_params} -p git-url= -p wkc-connector-git-url= -p vault-plugin-secrets-wkc-reader-url="
 fi
