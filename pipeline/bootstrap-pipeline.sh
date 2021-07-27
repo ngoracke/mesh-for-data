@@ -538,7 +538,7 @@ spec:
       claimName: source-pvc
 EOH
     cat ${TMP}/pipelinerun.yaml
-    while [[ $(kubectl get pvc -f ${repo_root}/pipeline/pvc.yaml -o 'jsonpath={..status.phase}') != "Bound" ]]; do echo "waiting for PVC status" && sleep 1; done
+    try_command "kubectl wait pod workspace-0 --for=condition=Ready --timeout=1m" 15 false 5
     if [[ ! -z "${github_workspace}" ]]; then
         ls ${github_workspace}
         ls ${github_workspace}/..
