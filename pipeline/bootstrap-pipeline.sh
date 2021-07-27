@@ -36,14 +36,21 @@ fi
 extra_params=''
 is_external="false"
 is_internal="false"
+helm_image=
+build_image=
 if [[ "${github}" == "github.com" ]]; then
     is_external="true"
     build_image="docker.io/yakinikku/suede_compile"
-    extra_params="-p build_image ${build_image}"
+    helm_image="docker.io/lachlanevenson/k8s-helm:latest"
+    extra_params="-p build_image ${build_image} -p helm_image ${helm_image}"
+    cp ${repo_root}/pipeline/statefulset.yaml ${TMP}/
+    sed -i.bak "s|wcp-ibm-streams-docker-local.artifactory.swg-devops.com/elvis_build/suede:latest|docker.io/yakinikku/suede|g" ${TMP}/statefulset.yaml
 else
     is_internal="true"
     build_image="wcp-ibm-streams-docker-local.artifactory.swg-devops.com/elvis_build/suede_compile:latest"
-    extra_params="-p build_image ${build_image}"
+    helm_image="wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/k8s-helm"
+    extra_params="-p build_image ${build_image} -p helm_image ${helm_image}"
+    cp ${repo_root}/pipeline/statefulset.yaml ${TMP}/
 fi
 is_openshift="false"
 is_kubernetes="false"
@@ -322,7 +329,7 @@ if [[ $rc -ne 0 ]]; then
 fi
 
 oc apply -f ${repo_root}/pipeline/rootsa.yaml
-oc apply -f ${repo_root}/pipeline/statefulset.yaml
+oc apply -f ${TMP}/statefulset.yaml
 oc apply -f ${repo_root}/pipeline/pvc.yaml
 if [[ ${is_openshift} == "true" ]]; then
     oc adm policy add-scc-to-user privileged system:serviceaccount:${unique_prefix}:root-sa
@@ -509,6 +516,8 @@ spec:
     value: "${deploy_crd}"
   - name: build_image
     value: "${build_image}"
+  - name: helm_image
+    value: "${helm_image}"
   - name: deployCertManager
     value: "${deploy_cert_manager}"
   pipelineRef:
@@ -532,6 +541,7 @@ EOH
 #!/bin/bash
 set -x
 oc get taskrun,pvc,po
+for i in $(oc get taskrun --no-headers | grep "False" | cut -d' ' -f1); do oc logs -l tekton.dev/taskRun=$i --all-containers; done
 oc get pipelinerun --no-headers
 oc get pipelinerun --no-headers | grep -e "Failed" -e "Succeeded"
 EOH
