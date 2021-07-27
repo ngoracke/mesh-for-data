@@ -62,6 +62,10 @@ spec:
     description: image to use for build
     name: build_image
     type: string
+  - default: "wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/k8s-helm"
+    description: image to use for helm
+    name: helm_image
+    type: string
   - default: "false"
     description: Skip Integration Tests
     name: skipTests
@@ -945,6 +949,8 @@ spec:
       value: clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),opaConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://vault.m4d-system:8200,vault.address=http://vault.m4d-system:8200,$(params.mesh-for-data-values)
     - name: release_version
       value: 0.1.0
+    - name: image
+      value: $(params.helm_image)
     runAfter:
     - build-image-manager
     - build-image-katalog
@@ -983,6 +989,8 @@ spec:
       value: $(params.IMAGE_ID)=$(params.IMAGE_NAME)@$(params.IMAGE_DIGEST)
     - name: release_version
       value: 0.1.0
+    - name: image
+      value: $(params.helm_image)
     taskRef:
       kind: Task
       name: helm-upgrade-from-source
@@ -1011,6 +1019,8 @@ spec:
       value: clusterScoped=$(params.clusterScoped),global.imagePullSecrets=,wkcConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/wkc-connector@$(tasks.build-image-wkc-connector.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://vault.m4d-system:8200,wkcConnector.vault.address=http://vault.m4d-system:8200,wkcConnector.serverURL=$(params.wkcConnectorServerUrl)
     - name: release_version
       value: 0.1.0
+    - name: image
+      value: $(params.helm_image)
     runAfter:
     - build-image-wkc-connector
     taskRef:
@@ -1045,6 +1055,8 @@ spec:
       value: $(params.IMAGE_ID)=$(params.IMAGE_NAME)@$(params.IMAGE_DIGEST)
     - name: release_version
       value: 0.1.0
+    - name: image
+      value: $(params.helm_image)
     taskRef:
       kind: Task
       name: helm-upgrade-from-source
@@ -1090,6 +1102,8 @@ spec:
       value: $(params.NAMESPACE)
     - name: release_version
       value: 0.1.0
+    - name: image
+      value: $(params.helm_image)
     runAfter:
     - fetch-repository
     taskRef:
@@ -1132,6 +1146,8 @@ spec:
       value: $(params.NAMESPACE)
     - name: overwrite_values
       value: server.dev.enabled=true,injector.enabled=false,global.openshift=true,server.image.repository=$(params.dockerhub-hostname)/vault
+    - name: image
+      value: $(params.helm_image)
     runAfter:
     - fetch-vault-plugin-secrets-wkc-reader
     taskRef:
@@ -1171,6 +1187,8 @@ spec:
       value: cert-manager 
     - name: overwrite_values
       value: installCRDs=true
+    - name: image
+      value: $(params.helm_image)
     taskRef:
       kind: Task
       name: helm-upgrade-from-repo

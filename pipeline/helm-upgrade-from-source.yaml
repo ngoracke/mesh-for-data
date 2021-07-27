@@ -32,8 +32,12 @@ spec:
     description: Specify a specific helm version
     name: helm_version
     type: string
+  - default: wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/k8s-helm
+    description: helm image
+    name: image
+    type: string
   steps:
-  - image: wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/k8s-helm:latest
+  - image: $(params.image)
     name: upgrade
     resources: {}
     script: |
