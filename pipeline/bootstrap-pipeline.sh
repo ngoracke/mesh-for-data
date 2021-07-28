@@ -578,8 +578,11 @@ oc get pipelinerun --no-headers | grep -e "Failed" -e "Completed"
 EOH
     chmod u+x ${TMP}/streams_csv_check_script.sh
     try_command "${TMP}/streams_csv_check_script.sh"  40 false 30
+    echo "debug: pods"
     oc describe pods
+    echo "debug: events"
     oc get events
+    echo "debug: taskruns"
     for i in $(oc get taskrun --no-headers | grep "False" | cut -d' ' -f1); do oc logs -l tekton.dev/taskRun=$i --all-containers; done
     #oc get pipelinerun -o yaml
 fi
