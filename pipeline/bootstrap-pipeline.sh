@@ -581,5 +581,5 @@ EOH
     oc describe pods
     oc get events
     for i in $(oc get taskrun --no-headers | grep "False" | cut -d' ' -f1); do oc logs -l tekton.dev/taskRun=$i --all-containers; done
-    oc get pipelinerun -o yaml
+    #oc get pipelinerun -o yaml
 fi
