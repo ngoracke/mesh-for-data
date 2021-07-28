@@ -574,11 +574,12 @@ set -x
 oc get taskrun,pvc,po
 for i in $(oc get taskrun --no-headers | grep "False" | cut -d' ' -f1); do oc logs -l tekton.dev/taskRun=$i --all-containers; done
 oc get pipelinerun --no-headers
-oc get pipelinerun --no-headers | grep -e "Failed" -e "Succeeded"
+oc get pipelinerun --no-headers | grep -e "Failed" -e "Completed"
 EOH
     chmod u+x ${TMP}/streams_csv_check_script.sh
     try_command "${TMP}/streams_csv_check_script.sh"  40 false 30
     oc describe pods
-    oc get events 
+    oc get events
     for i in $(oc get taskrun --no-headers | grep "False" | cut -d' ' -f1); do oc logs -l tekton.dev/taskRun=$i --all-containers; done
+    oc get pipelinerun -o yaml
 fi
