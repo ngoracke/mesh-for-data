@@ -158,7 +158,7 @@ var _ = Describe("BatchTransfer Controller", func() {
 			Eventually(func() error {
 				f := &motionv1.BatchTransfer{}
 				return k8sClient.Get(context.Background(), key, f)
-			}, timeout, interval).ShouldNot(Succeed())
+			}, timeout, interval * 10).ShouldNot(Succeed())
 		})
 	})
 })
