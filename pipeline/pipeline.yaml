@@ -1297,7 +1297,7 @@ spec:
     - name: context
       value: mesh-for-data/manager
     - name: flags
-      value: DOCKER_HOSTNAME=$(params.docker-hostname)/$(params.docker-namespace) BLUEPRINT_NAMESPACE=$(params.blueprintNamespace)
+      value: DOCKER_HOSTNAME=$(params.docker-hostname)/$(params.docker-namespace) CONTROLLER_NAMESPACE=$(params.NAMESPACE) BLUEPRINT_NAMESPACE=$(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
 
@@ -1324,7 +1324,7 @@ spec:
     - name: context
       value: mesh-for-data/manager
     - name: flags
-      value: DOCKER_HOSTNAME=$(params.docker-hostname)/$(params.docker-namespace) BLUEPRINT_NAMESPACE=$(params.blueprintNamespace)
+      value: DOCKER_HOSTNAME=$(params.docker-hostname)/$(params.docker-namespace) CONTROLLER_NAMESPACE=$(params.NAMESPACE) BLUEPRINT_NAMESPACE=$(params.blueprintNamespace)
       
     runAfter:
     - upgrade-helm-partial
@@ -1347,6 +1347,8 @@ spec:
       value: mesh-for-data
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
+    - name: flags
+      value: CONTROLLER_NAMESPACE=$(params.NAMESPACE) BLUEPRINT_NAMESPACE=$(params.blueprintNamespace)      
     runAfter:
     - upgrade-helm-full
     - upgrade-wkc-connector-helm-full
@@ -1367,6 +1369,8 @@ spec:
       value: test
     - name: context
       value: mesh-for-data
+    - name: flags
+      value: CONTROLLER_NAMESPACE=$(params.NAMESPACE) BLUEPRINT_NAMESPACE=$(params.blueprintNamespace)      
     runAfter:
     - upgrade-helm-partial
     - upgrade-wkc-connector-helm-partial
