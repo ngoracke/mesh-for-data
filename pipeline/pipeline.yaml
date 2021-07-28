@@ -962,39 +962,39 @@ spec:
       Operator: notin
       Values:
       - "true"
-  - name: oc-apply-vault-roles
-    params:
-    - name: ARGS
-      value:
-      - apply -f $(params.vaultRoles)
-        -n $(params.NAMESPACE)
-      # old rbac file
-      # -f https://raw.githubusercontent.com/mesh-for-data/mesh-for-data/v0.1.0/third_party/vault/vault-single-cluster/vault-rbac.yaml
-    runAfter:
-    - upgrade-helm-vault-from-repo
-    taskRef:
-      kind: Task
-      name: openshift-client
-    workspaces:
-    - name: source
-      workspace: shared-workspace
-    when:
-    - Input: $(params.deployVault)
-      Operator: in
-      Values:
-      - "true"
-    - Input: $(params.IMAGE_DIGEST)
-      Operator: in
-      Values:
-      - "none"
-    - Input: $(params.INCREMENTAL_RESTART)
-      Operator: notin
-      Values:
-      - "true"
-    - Input: $(params.INCREMENTAL_CODE_RESTART)
-      Operator: notin
-      Values:
-      - "true"
+        #- name: oc-apply-vault-roles
+        #  params:
+        #  - name: ARGS
+        #    value:
+        #    - apply -f $(params.vaultRoles)
+        #      -n $(params.NAMESPACE)
+        #    # old rbac file
+        #    # -f https://raw.githubusercontent.com/mesh-for-data/mesh-for-data/v0.1.0/third_party/vault/vault-single-cluster/vault-rbac.yaml
+        #  runAfter:
+        #  - upgrade-helm-vault-from-repo
+        #  taskRef:
+        #    kind: Task
+        #    name: openshift-client
+        #  workspaces:
+        #  - name: source
+        #    workspace: shared-workspace
+        #  when:
+        #  - Input: $(params.deployVault)
+        #    Operator: in
+        #    Values:
+        #    - "true"
+        #  - Input: $(params.IMAGE_DIGEST)
+        #    Operator: in
+        #    Values:
+        #    - "none"
+        #  - Input: $(params.INCREMENTAL_RESTART)
+        #    Operator: notin
+        #    Values:
+        #    - "true"
+        #  - Input: $(params.INCREMENTAL_CODE_RESTART)
+        #    Operator: notin
+        #    Values:
+        #    - "true"
   - name: oc-install-flight-opensource-crds-absent
     params:
     - name: ARGS
