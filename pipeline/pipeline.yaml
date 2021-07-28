@@ -889,7 +889,7 @@ spec:
   - name: upgrade-helm-vault-from-repo
     params:
     - name: context
-      value: third_party/vault
+      value: mesh-for-data/third_party/vault
     - name: target
       value: deploy
     - name: image
