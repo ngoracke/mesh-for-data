@@ -384,7 +384,7 @@ git_url=
 wkc_connector_git_url=
 vault_plugin_secrets_wkc_reader_url=
 vault_values="/workspace/source/vault-plugin-secrets-wkc-reader/helm-deployment/vault-single-cluster/values.yaml"
-if [[ "${github}" != "github.com" ]]; then
+if [[ "${github}" == "github.com" ]]; then
     vault_values="/workspace/source/mesh-for-data/third_party/vault/vault-single-cluster/values.yaml"
 fi
 extra_params="${extra_params} -p vaultValues=${vault_values}"
@@ -577,6 +577,8 @@ oc get pipelinerun --no-headers
 oc get pipelinerun --no-headers | grep -e "Failed" -e "Succeeded"
 EOH
     chmod u+x ${TMP}/streams_csv_check_script.sh
-    try_command "${TMP}/streams_csv_check_script.sh"  40 false 30 
+    try_command "${TMP}/streams_csv_check_script.sh"  40 false 30
+    oc describe pods
+    oc get events 
     for i in $(oc get taskrun --no-headers | grep "False" | cut -d' ' -f1); do oc logs -l tekton.dev/taskRun=$i --all-containers; done
 fi
