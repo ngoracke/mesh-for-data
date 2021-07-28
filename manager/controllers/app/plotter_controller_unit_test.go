@@ -5,8 +5,9 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
+
+	"fmt"
 	"testing"
 
 	"github.com/mesh-for-data/mesh-for-data/manager/controllers/utils"
@@ -34,9 +35,13 @@ func TestPlotterController(t *testing.T) {
 	// Set the logger to development mode for verbose logs.
 	logf.SetLogger(zap.New(zap.UseDevMode(true)))
 
+	controllerNamespace := getControllerNamespace()
+	blueprintNamespace := getBlueprintNamespace()
+	fmt.Printf("LAW: Using controller namespace: " + controllerNamespace + " using blueprint namespace: " + blueprintNamespace)
+
 	var (
 		name      = "plotter"
-		namespace = "m4d-system"
+		namespace = controllerNamespace
 	)
 
 	var err error
@@ -45,6 +50,8 @@ func TestPlotterController(t *testing.T) {
 	plotter := &app.Plotter{}
 	err = yaml.Unmarshal(plotterYAML, plotter)
 	g.Expect(err).To(gomega.BeNil(), "Cannot read plotter file for test")
+
+	plotter.Namespace = controllerNamespace
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{
@@ -88,10 +95,6 @@ func TestPlotterController(t *testing.T) {
 	g.Expect(plotter.Status.Blueprints).To(gomega.HaveKey("thegreendragon"))
 	blueprintMeta := plotter.Status.Blueprints["thegreendragon"]
 	g.Expect(blueprintMeta.Name).To(gomega.Equal(plotter.Name))
-
-	blueprintNamespace := getBlueprintNamespace()
-	fmt.Printf("blueprint namespace" + blueprintNamespace)
-
 	g.Expect(blueprintMeta.Namespace).To(gomega.Equal(blueprintNamespace))
 
 	// Simulate that blueprint changes state to Ready=true

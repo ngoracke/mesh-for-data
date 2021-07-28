@@ -83,9 +83,16 @@ var _ = BeforeSuite(func(done Done) {
 
 	if os.Getenv("USE_EXISTING_CONTROLLER") == "true" {
 		logf.Log.Info("Using existing controller in existing cluster...")
+		fmt.Printf("Using existing controller in existing cluster... law\n")
 		k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
 		Expect(err).ToNot(HaveOccurred())
 	} else {
+		fmt.Printf("Setup fake environment... law \n")
+
+		controllerNamespace := getControllerNamespace()
+		blueprintNamespace := getBlueprintNamespace()
+		fmt.Printf("LAW: Using controller namespace: " + controllerNamespace + " using blueprint namespace: " + blueprintNamespace)
+
 		mgr, err = ctrl.NewManager(cfg, ctrl.Options{
 			Scheme:             scheme.Scheme,
 			MetricsBindAddress: "localhost:8086",
@@ -108,7 +115,7 @@ var _ = BeforeSuite(func(done Done) {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Setup plotter controller
-		clusterMgr, err := local.NewManager(mgr.GetClient(), "m4d-system")
+		clusterMgr, err := local.NewManager(mgr.GetClient(), controllerNamespace)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(clusterMgr).NotTo(BeNil())
 		err = NewPlotterReconciler(mgr, "Plotter", clusterMgr).SetupWithManager(mgr)
@@ -122,12 +129,9 @@ var _ = BeforeSuite(func(done Done) {
 		k8sClient = mgr.GetClient()
 		Expect(k8sClient.Create(context.Background(), &v1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "m4d-system",
+				Name: controllerNamespace,
 			},
 		}))
-
-		blueprintNamespace := getBlueprintNamespace()
-		fmt.Printf("blueprint namespace" + blueprintNamespace)
 
 		Expect(k8sClient.Create(context.Background(), &v1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
@@ -137,7 +141,7 @@ var _ = BeforeSuite(func(done Done) {
 		Expect(k8sClient.Create(context.Background(), &v1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "cluster-metadata",
-				Namespace: "m4d-system",
+				Namespace: controllerNamespace,
 			},
 			Data: map[string]string{
 				"ClusterName":   "thegreendragon",

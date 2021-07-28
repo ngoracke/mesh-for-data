@@ -23,7 +23,7 @@ func deployBlueprint(namespace string, shouldSucceed bool) {
 
 	// Set the correct namespace
 	blueprint.SetNamespace(namespace)
-
+	fmt.Printf("deploy blueprint -  namespace: " + namespace + "\n")
 	blueprintKey := client.ObjectKeyFromObject(blueprint)
 
 	// Create Blueprint
@@ -60,7 +60,7 @@ var _ = Describe("Blueprint Controller Real Env", func() {
 	Context("Blueprint", func() {
 
 		blueprintNamespace := getBlueprintNamespace()
-		fmt.Printf("blueprint namespace" + blueprintNamespace)
+		fmt.Printf("blueprint controller test -  blueprintNamespace: " + blueprintNamespace + "\n")
 
 		BeforeEach(func() {
 			// Add any setup steps that needs to be executed before each test

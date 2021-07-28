@@ -21,22 +21,30 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+const DefaultStreamtransferNameSpace = "m4d-blueprints"
+
+func getStreamsTransferNamespace() string {
+	streamtransferNameSpace := DefaultStreamtransferNameSpace
+	streamtransferNameSpace = os.Getenv("BLUEPRINT_NAMESPACE")
+	if len(streamtransferNameSpace) <= 0 {
+		streamtransferNameSpace = DefaultStreamtransferNameSpace
+	}
+
+	return streamtransferNameSpace
+}
+
 var _ = Describe("StreamTransfer Controller", func() {
 
 	const timeout = time.Second * 30
 	const interval = time.Millisecond * 100
 	const streamtransferName = "streamtransfer-sample"
-	const defaultStreamtransferNameSpace = "m4d-blueprints"
 
 	BeforeEach(func() {
 		// Add any setup steps that needs to be executed before each test
 		f := &motionv1.StreamTransfer{}
 
-		streamtransferNameSpace := os.Getenv("BLUEPRINT_NAMESPACE")
-		if len(streamtransferNameSpace) <= 0 {
-			streamtransferNameSpace = defaultStreamtransferNameSpace
-		}
-		fmt.Printf("streamtransfer namespace" + streamtransferNameSpace)
+		streamtransferNameSpace := getStreamsTransferNamespace()
+		fmt.Printf("streamtransfer namespace: " + streamtransferNameSpace)
 
 		key := client.ObjectKey{
 			Namespace: streamtransferNameSpace,
@@ -62,12 +70,7 @@ var _ = Describe("StreamTransfer Controller", func() {
 			err = yaml.Unmarshal(streamTransferYAML, streamTransfer)
 			Expect(err).ToNot(HaveOccurred())
 
-			streamtransferNameSpace := os.Getenv("BLUEPRINT_NAMESPACE")
-			if len(streamtransferNameSpace) <= 0 {
-				streamtransferNameSpace = defaultStreamtransferNameSpace
-			}
-
-			streamTransfer.Namespace = streamtransferNameSpace
+			streamTransfer.Namespace = getStreamsTransferNamespace()
 			fmt.Printf("template namespace %v\n", streamTransfer.Namespace)
 
 			//registry := os.Getenv("DOCKER_HOSTNAME")

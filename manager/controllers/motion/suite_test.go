@@ -38,8 +38,6 @@ var mgr ctrl.Manager
 var testEnv *envtest.Environment
 var noSimulatedProgress bool
 
-const defaultBlueprintNameSpace = "m4d-blueprints"
-
 // This is the entry method for the ginko testing framework suite.
 // The actual test are in the following files:
 // - batchtransfer_controller_test.go
@@ -48,7 +46,7 @@ func TestMotionAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
 
 	RunSpecsWithDefaultAndCustomReporters(t,
-		"Controller Suite",
+		"Controller Suite App",
 		[]Reporter{printer.NewlineReporter{}})
 }
 
@@ -98,6 +96,12 @@ var _ = BeforeSuite(func(done Done) {
 		logf.Log.Info("Using existing controller in existing cluster...")
 		k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
 	} else {
+		fmt.Printf("Setup fake environment... law \n")
+
+		controllerNamespace := os.Getenv("CONTROLLER_NAMESPACE")
+		blueprintNamespace := os.Getenv("BLUEPRINT_NAMESPACE")
+		fmt.Printf("LAW: Using controller namespace: " + controllerNamespace + " using blueprint namespace: " + blueprintNamespace)
+
 		mgr, err = ctrl.NewManager(cfg, ctrl.Options{
 			Scheme:             scheme.Scheme,
 			MetricsBindAddress: "localhost:8085",
@@ -114,12 +118,6 @@ var _ = BeforeSuite(func(done Done) {
 			err = mgr.Start(ctrl.SetupSignalHandler())
 			Expect(err).ToNot(HaveOccurred())
 		}()
-
-		blueprintNamespace := os.Getenv("BLUEPRINT_NAMESPACE")
-		if len(blueprintNamespace) <= 0 {
-			blueprintNamespace = defaultBlueprintNameSpace
-		}
-		fmt.Printf("blueprint namespace" + blueprintNamespace)
 
 		k8sClient = mgr.GetClient()
 		err = k8sClient.Create(context.Background(), &v1.Namespace{

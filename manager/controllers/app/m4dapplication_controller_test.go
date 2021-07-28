@@ -9,13 +9,13 @@ import (
 	"os"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	apiv1alpha1 "github.com/mesh-for-data/mesh-for-data/manager/apis/app/v1alpha1"
 	app "github.com/mesh-for-data/mesh-for-data/manager/apis/app/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const timeout = time.Second * 30
@@ -23,10 +23,16 @@ const interval = time.Millisecond * 100
 
 var _ = Describe("M4DApplication Controller", func() {
 	Context("M4DApplication", func() {
+
+		controllerNamespace := getControllerNamespace()
+		fmt.Printf("M4DApplication: controller namespace " + controllerNamespace)
+
 		BeforeEach(func() {
 			// Add any setup steps that needs to be executed before each test
 			module := &app.M4DModule{}
 			Expect(readObjectFromFile("../../testdata/e2e/module-read.yaml", module)).ToNot(HaveOccurred())
+			module.Namespace = controllerNamespace
+
 			application := &app.M4DApplication{}
 			Expect(readObjectFromFile("../../testdata/e2e/m4dapplication.yaml", application)).ToNot(HaveOccurred())
 			_ = k8sClient.Delete(context.Background(), application)
@@ -46,10 +52,13 @@ var _ = Describe("M4DApplication Controller", func() {
 			module := &app.M4DModule{}
 			Expect(readObjectFromFile("../../testdata/e2e/module-read.yaml", module)).ToNot(HaveOccurred())
 			moduleKey := client.ObjectKeyFromObject(module)
+			module.Namespace = controllerNamespace
+
 			application := &app.M4DApplication{}
 			Expect(readObjectFromFile("../../testdata/e2e/m4dapplication.yaml", application)).ToNot(HaveOccurred())
 			applicationKey := client.ObjectKeyFromObject(application)
-
+			fmt.Printf("Module:  %v\n", module.Namespace)
+			fmt.Printf("Application:  %v\n", application.Namespace)
 			// Create M4DApplication and M4DModule
 			Expect(k8sClient.Create(context.Background(), module)).Should(Succeed())
 			Expect(k8sClient.Create(context.Background(), application)).Should(Succeed())
@@ -94,7 +103,7 @@ var _ = Describe("M4DApplication Controller", func() {
 			}, timeout, interval).Should(BeTrue(), "M4DApplication is not ready after timeout!")
 
 			blueprintNamespace := getBlueprintNamespace()
-			fmt.Printf("blueprint namespace" + blueprintNamespace)
+			fmt.Printf("blueprint namespace m4dapp: " + blueprintNamespace + "\n")
 
 			By("Status should contain the details of the endpoint")
 			Expect(len(application.Status.ReadEndpointsMap)).To(Equal(1))

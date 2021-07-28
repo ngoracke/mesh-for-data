@@ -9,14 +9,18 @@ include $(ROOT_DIR)/hack/make-rules/tools.mk
 DOCKER_NAME ?= manager
 GO_OUTPUT_FILE = manager
 KUBE_NAMESPACE ?= m4d-system
+CONTROLLER_NAMESPACE ?= ${KUBE_NAMESPACE}
 include $(ROOT_DIR)/hack/make-rules/docker.mk
 include $(ROOT_DIR)/hack/make-rules/verify.mk
+
 
 pre-test: generate manifests $(TOOLBIN)/etcd $(TOOLBIN)/kube-apiserver
 
 # Run tests
+test: export BLUEPRINT_NAMESPACE?=m4d-blueprints
+test: export CONTROLLER_NAMESPACE?=m4d-system
 test: pre-test
-	go test ./... -coverprofile cover.out
+	go test ./... -v  -coverprofile cover.out
 
 # Build manager binary
 manager: generate fmt vet
@@ -57,12 +61,13 @@ docker-build: generate source-build
 
 .PHONY: wait_for_manager
 wait_for_manager: $(TOOLBIN)/kubectl
-	$(TOOLBIN)/kubectl wait --for=condition=available -n ${KUBE_NAMESPACE} deployment/manager --timeout=120s
+	$(TOOLBIN)/kubectl wait --for=condition=available -n ${CONTROLLER_NAMESPACE} deployment/manager --timeout=120s
 
 .PHONY: run-integration-tests
 run-integration-tests: export DOCKER_HOSTNAME?=localhost:5000
 run-integration-tests: export DOCKER_NAMESPACE?=m4d-system
 run-integration-tests: export BLUEPRINT_NAMESPACE?=m4d-blueprints
+run-integration-tests: export CONTROLLER_NAMESPACE?=m4d-system
 run-integration-tests: export USE_WKC_CONTROLLER?=true
 run-integration-tests: wait_for_manager
 	NO_SIMULATED_PROGRESS=true USE_EXISTING_CONTROLLER=true USE_EXISTING_CLUSTER=true go test ./... -v -run TestMotionAPIs -count 1

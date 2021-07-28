@@ -21,20 +21,28 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+const DefaultBatchtransferNameSpace = "m4d-blueprints"
+
+func getBatchTransferNamespace() string {
+	batchtransferNameSpace := DefaultBatchtransferNameSpace
+	batchtransferNameSpace = os.Getenv("BLUEPRINT_NAMESPACE")
+	if len(batchtransferNameSpace) <= 0 {
+		batchtransferNameSpace = DefaultBatchtransferNameSpace
+	}
+
+	return batchtransferNameSpace
+}
+
 var _ = Describe("BatchTransfer Controller", func() {
 
 	const timeout = time.Second * 30
 	const interval = time.Millisecond * 300
 	const batchtransferName = "batchtransfer-sample"
-	const defaultBatchtransferNameSpace = "m4d-blueprints"
 
 	BeforeEach(func() {
 		// Add any setup steps that needs to be executed before each test
 
-		batchtransferNameSpace := os.Getenv("BLUEPRINT_NAMESPACE")
-		if len(batchtransferNameSpace) <= 0 {
-			batchtransferNameSpace = defaultBatchtransferNameSpace
-		}
+		batchtransferNameSpace := getBatchTransferNamespace()
 		fmt.Printf("batchtransfer namespace: " + batchtransferNameSpace + "\n")
 
 		f := &motionv1.BatchTransfer{}
@@ -63,13 +71,7 @@ var _ = Describe("BatchTransfer Controller", func() {
 			err = yaml.Unmarshal(batchTransferYAML, batchTransfer)
 			Expect(err).ToNot(HaveOccurred())
 
-			batchtransferNameSpace := os.Getenv("BLUEPRINT_NAMESPACE")
-			if len(batchtransferNameSpace) <= 0 {
-				batchtransferNameSpace = defaultBatchtransferNameSpace
-			}
-
-			batchTransfer.Namespace = batchtransferNameSpace
-
+			batchTransfer.Namespace = getBatchTransferNamespace()
 			fmt.Printf("template namespace %v\n", batchTransfer.Namespace)
 
 			registry := os.Getenv("DOCKER_HOSTNAME")
