@@ -1064,7 +1064,7 @@ spec:
     - name: image
       value: $(params.build_image)
     - name: flags
-      value: DOCKER_HOSTNAME=$(params.docker-hostname)/$(params.docker-namespace)
+      value: DOCKER_HOSTNAME=$(params.docker-hostname) DOCKER_NAMESPACE=$(params.docker-namespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
@@ -1091,7 +1091,7 @@ spec:
     - name: image
       value: $(params.build_image)
     - name: flags
-      value: DOCKER_HOSTNAME=$(params.docker-hostname)/$(params.docker-namespace)
+      value: DOCKER_HOSTNAME=$(params.docker-hostname) DOCKER_NAMESPACE=$(params.docker-namespace)
     runAfter:
     - upgrade-helm-partial
     when:
