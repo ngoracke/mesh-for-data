@@ -92,11 +92,11 @@ spec:
       cd $(params.context)
       $(params.env_vars) make $(params.target) $(params.flags) $(params.packages)
     workingDir: $(workspaces.source.path)
-  - image: wcp-ibm-streams-docker-local.artifactory.swg-devops.com/elvis_build/suede_compile:latest
+  - image: $(params.image)
     name: docker-namespace-to-results
     resources: {}
     script: echo -n $(params.docker-namespace) > /tekton/results/docker-namespace
-  - image: wcp-ibm-streams-docker-local.artifactory.swg-devops.com/elvis_build/suede_compile:latest
+  - image: $(params.image)
     name: docker-hostname-to-results
     resources: {}
     script: echo -n $(params.docker-hostname) > /tekton/results/docker-hostname
