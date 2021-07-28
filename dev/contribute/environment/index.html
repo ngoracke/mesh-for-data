@@ -16,7 +16,7 @@
     
     
       
-        <title>Contribute Documentation - Mesh for Data</title>
+        <title>Development Environment - Mesh for Data</title>
       
     
     
@@ -67,7 +67,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#contribute-documentation" class="md-skip">
+        <a href="#development-environment" class="md-skip">
           Skip to content
         </a>
       
@@ -96,7 +96,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Contribute Documentation
+              Development Environment
             
           </span>
         </div>
@@ -700,11 +700,72 @@
             
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../environment/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Development Environment
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Development Environment
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#operating-system" class="md-nav__link">
+    Operating system
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies" class="md-nav__link">
+    Dependencies
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#editors" class="md-nav__link">
+    Editors
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#docker-hub-rate-limits" class="md-nav__link">
+    Docker hub rate limits
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -736,14 +797,12 @@
             
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_5" type="checkbox" id="__nav_6_5" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_5" type="checkbox" id="__nav_6_5" >
       
       <label class="md-nav__link" for="__nav_6_5">
         Documentation
@@ -759,21 +818,11 @@
             
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../documentation/" class="md-nav__link">
         Contribute Documentation
       </a>
-      
     </li>
   
 
@@ -783,7 +832,7 @@
   
   
     <li class="md-nav__item">
-      <a href="formatting/" class="md-nav__link">
+      <a href="../documentation/formatting/" class="md-nav__link">
         Formatting Standards
       </a>
     </li>
@@ -795,7 +844,7 @@
   
   
     <li class="md-nav__item">
-      <a href="style/" class="md-nav__link">
+      <a href="../documentation/style/" class="md-nav__link">
         Style Guide
       </a>
     </li>
@@ -872,6 +921,42 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#operating-system" class="md-nav__link">
+    Operating system
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies" class="md-nav__link">
+    Dependencies
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#editors" class="md-nav__link">
+    Editors
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#docker-hub-rate-limits" class="md-nav__link">
+    Docker hub rate limits
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -882,15 +967,42 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/mesh-for-data/mesh-for-data/edit/master/site/docs/contribute/documentation/index.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/mesh-for-data/mesh-for-data/edit/master/site/docs/contribute/environment.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
-                <h1 id="contribute-documentation">Contribute Documentation</h1>
-<p>The content of this website is the documentation of the project. The documentation is managed in <code>/site/docs</code> as markdown files. <a href="https://www.mkdocs.org/">MkDocs</a> and the <a href="https://squidfunk.github.io/mkdocs-material/">Material</a> theme are used to generate the website from these markdown files.</p>
-<p>Reference pages are auto generated from the source code. Therefore, if you change Kubernetes Custom Resource Definitions or the connectors API then you must add reasonable documentation comments. The rest of the documentation pages are written manually.</p>
-<p>Contributing to the documentation is therefore similar to code contribution and follows the same process of using pull requests. However, when writing documentation you must also follow the <a href="./formatting">formatting</a> and <a href="./style">style</a> guidelines.</p>
+                <h1 id="development-environment">Development Environment</h1>
+<p>This page describes what you need to install as a developer and contributor to this project, for setting up a development environment.</p>
+<h2 id="operating-system">Operating system</h2>
+<p>Linux and Mac OS operating systems are officially supported.</p>
+<p>Windows users should consider using Windows Subsystem for Linux 2 (WSL 2), 
+a remote Linux machine, or any other solution such as a virtual machine.</p>
+<h2 id="dependencies">Dependencies</h2>
+<p>Install the following on your machine:</p>
+<ol>
+<li><a href="https://golang.org/dl/">go</a> 1.16 or above</li>
+<li><a href="https://docs.docker.com/get-docker/">Docker</a></li>
+<li><code>make</code></li>
+<li><code>jq</code></li>
+<li><code>unzip</code></li>
+<li>Maven (<code>mvn</code>) </li>
+<li>Java Development Kit version 8 or above</li>
+<li><strong>Mac only</strong>: <code>brew install coreutils</code> (installs the timeout command)</li>
+</ol>
+<p>Then, run the following command to install additional dependencies:</p>
+<div class="highlight"><pre><span></span><code>make install-tools
+</code></pre></div>
+<p>This installs additional dependencies to <code>hack/tools/bin</code>. The <code>make</code> targets (e.g., <code>make test</code>) are configured to use the binaries from <code>hack/tools/bin</code>. However, you may want to add some of these tools to your system PATH for direct usage from your terminal (e.g., for using <code>kubectl</code>).</p>
+<h2 id="editors">Editors</h2>
+<p>The project is predominantly written in Go so we recommend <a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode.Go">Visual Studio Code</a> for its good Go support. Alternatively you can select from <a href="https://golang.org/doc/editors.html">Editors</a></p>
+<h2 id="docker-hub-rate-limits">Docker hub rate limits</h2>
+<p>As docker hub introduced rate limits on docker image downloads this may effect development using the local kind setup.
+One option to fix the limit is to use a docker hub login for downloading the images. The environment will run
+a docker registry as a proxy for all public images. This registry runs in a docker container next to the kind clusters. </p>
+<div class="highlight"><pre><span></span><code><span class="nb">export</span> <span class="nv">DOCKERHUB_USERNAME</span><span class="o">=</span><span class="s1">&#39;your docker hub username&#39;</span>
+<span class="nb">export</span> <span class="nv">DOCKERHUB_PASSWORD</span><span class="o">=</span><span class="s1">&#39;your password&#39;</span>
+</code></pre></div>
                 
               
               
@@ -910,7 +1022,7 @@
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="../flow/" class="md-footer__link md-footer__link--prev" aria-label="Previous: GitHub Workflow" rel="prev">
+        <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Previous: About" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -919,20 +1031,20 @@
               <span class="md-footer__direction">
                 Previous
               </span>
-              GitHub Workflow
+              About
             </div>
           </div>
         </a>
       
       
         
-        <a href="formatting/" class="md-footer__link md-footer__link--next" aria-label="Next: Formatting Standards" rel="next">
+        <a href="../build-test/" class="md-footer__link md-footer__link--next" aria-label="Next: Build and Test" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Formatting Standards
+              Build and Test
             </div>
           </div>
           <div class="md-footer__button md-icon">
