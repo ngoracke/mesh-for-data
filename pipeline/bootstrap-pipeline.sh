@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ex
+set -x
 set +e
 
 run_tkn=${run_tkn:-0}
@@ -11,6 +11,7 @@ github=${github:-github.ibm.com}
 github_workspace=${github_workspace}
 image_source_repo_username=${image_source_repo_username}
 image_repo="${image_repo:-image-registry.openshift-image-registry.svc:5000}"
+image_source_repo="${image_source_repo:-wcp-ibm-streams-docker-local.artifactory.swg-devops.com}"
 dockerhub_hostname="${dockerhub_hostname:-wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial}"
 helper_text=""
 realpath() {
@@ -21,19 +22,30 @@ repo_root=$(realpath $(dirname $(realpath $0)))/..
 
 . ${repo_root}/pipeline/common_functions.sh
 
+# Define function for cleaning up temp directory created during script runtime
 function cleanup {
     if [[ ! -z ${TMP} ]]; then
         rm -rf ${TMP}
+        echo "Deleted temp working directory ${TMP}"
         echo ${helper_text}
-#        echo "Deleted temp working directory ${TMP}"
     fi
 }
 
+# Create a temp dir to place files in
 if [[ -z "$TMP" ]]; then
     TMP=$(mktemp -d) || exit 1
     trap cleanup EXIT
 fi
 
+# Set ssh key path for potential use with authenticated github
+if [[ ! -z $2 ]]; then
+    ssh_key=$2
+else
+    ssh_key=${HOME}/.ssh/id_rsa
+fi
+set -e
+
+# Figure out if we're using air-gapped machines that should pull images from somewhere other than dockerhub
 extra_params=''
 is_external="false"
 is_internal="false"
@@ -43,16 +55,18 @@ if [[ "${github}" == "github.com" ]]; then
     is_external="true"
     build_image="docker.io/yakinikku/suede_compile"
     helm_image="docker.io/lachlanevenson/k8s-helm:latest"
-    extra_params="${extra_params} -p build_image ${build_image} -p helm_image ${helm_image}"
+    extra_params="${extra_params} -p build_image=${build_image} -p helm_image=${helm_image}"
     cp ${repo_root}/pipeline/statefulset.yaml ${TMP}/
-    sed -i.bak "s|wcp-ibm-streams-docker-local.artifactory.swg-devops.com/elvis_build/suede:latest|docker.io/yakinikku/suede|g" ${TMP}/statefulset.yaml
+    sed -i.bak "s|${dockerhub_hostname}/suede:latest|docker.io/yakinikku/suede|g" ${TMP}/statefulset.yaml
 else
     is_internal="true"
-    build_image="wcp-ibm-streams-docker-local.artifactory.swg-devops.com/elvis_build/suede_compile:latest"
-    helm_image="wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/k8s-helm"
-    extra_params="${extra_params} -p build_image ${build_image} -p helm_image ${helm_image}"
+    build_image="${dockerhub_hostname}/suede_compile:latest"
+    helm_image="${dockerhub_hostname}/k8s-helm"
+    extra_params="${extra_params} -p build_image=${build_image} -p helm_image=${helm_image}"
     cp ${repo_root}/pipeline/statefulset.yaml ${TMP}/
 fi
+
+# Figure out if we're running on OpenShift or Kubernetes (kind)
 is_openshift="false"
 is_kubernetes="false"
 client=kubectl
@@ -70,37 +84,26 @@ else
     pipeline_sa=default
 fi
 if [[ ${is_kubernetes} == "true" ]]; then
+    # Assume this is a kind cluster, and install nfs client pvc
     set -e
     kubectl apply -f ${repo_root}/pipeline/nfs.yaml
     helm repo add stable https://charts.helm.sh/stable
     ip=$(kubectl get svc -n default nfs-service -o jsonpath='{.spec.clusterIP}')
     helm upgrade --install nfs-provisioner stable/nfs-client-provisioner --values ${repo_root}/pipeline/nfs-values.yaml --set nfs.server=${ip} --namespace nfs-provisioner --create-namespace
 fi
+
+# See if an install namespace will need to be created
 set +e
 rc=1
 if [[ ! -z $1 ]]; then
-    if [[ ${is_openshift} == "true" ]]; then
-        oc get project $1
-        rc=$?
-    else
-        kubectl get ns $1
-        rc=$?
-    fi
+    kubectl get ns $1
+    rc=$?
 else
-    if [[ ${is_openshift} == "true" ]]; then
-        oc get project m4d-system
-        rc=$?
-    else
-        kubectl get ns m4d-system
-        rc=$?
-    fi
+    kubectl get ns m4d-system
+    rc=$?
 fi
-if [[ ! -z $2 ]]; then
-    ssh_key=$2
-else
-    ssh_key=${HOME}/.ssh/id_rsa
-fi
-set -e
+
+# Create new project if necessary
 if [[ $rc -ne 0 ]]; then
     if [[ ${is_openshift} == "true" ]]; then
         oc new-project ${1:-m4d-system}
@@ -118,11 +121,12 @@ fi
 unique_prefix=$(kubectl config view --minify --output 'jsonpath={..namespace}'; echo)
 
 set +e
-# Be smarter about this - just a quick hack for typical default installs
+# Be smarter about this - just a quick hack for typical default OpenShift & Kind installs so we can control the default storage class
 oc patch storageclass managed-nfs-storage -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": "true"}}}'
 oc patch storageclass standard -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": "false"}}}'
 set -e
 
+# Install Tekton & Knative eventing
 if [[ ${is_openshift} == "true" ]]; then
     oc apply -f ${repo_root}/pipeline/subscription.yaml
     oc apply -f ${repo_root}/pipeline/serverless-subscription.yaml
@@ -166,23 +170,22 @@ EOH
 fi
 
 if [[ ${is_openshift} == "true" ]]; then
+    # Give extended privileges to the pipeline service account, make sure images can be pulled from the integrated openshift registry
     oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${unique_prefix}:pipeline
     oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${unique_prefix}:root-sa
     oc adm policy add-role-to-group system:image-puller system:serviceaccounts:${unique_prefix} --namespace ${unique_prefix}
     oc adm policy add-role-to-group system:image-puller system:serviceaccounts:m4d-blueprints --namespace ${unique_prefix}
     oc adm policy add-role-to-user system:image-puller system:serviceaccount:${unique_prefix}:wkc-connector --namespace ${unique_prefix}
+    
     # Temporary hack pending a better solution
     oc adm policy add-scc-to-user anyuid system:serviceaccount:${unique_prefix}:opa-connector
     oc adm policy add-scc-to-user anyuid system:serviceaccount:${unique_prefix}:manager
 else
     set +e
+    # Tekton pipeline will run under the default service account in Kind/Kubernetes, so give that admin privileges as well
     kubectl create clusterrolebinding ${unique_prefix}-default-cluster-admin --clusterrole=cluster-admin --serviceaccount=${unique_prefix}:default
-    set -e
-    #exit 1
 fi
 
-set +e
-#resource_version=$(oc get -f ${repo_root}/pipeline/make.yaml -o jsonpath='{.metadata.resourceVersion}')
 set -e
 set +x
 helper_text="If this step fails, tekton related pods may be restarting or initializing:
@@ -213,17 +216,20 @@ helper_text=""
 #  "value": "wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/k8s-helm:latest"
 #}]' --type=json
 
+# Wipe old pipeline definitions in case of merge conflicts
 set +e
 oc delete -f ${repo_root}/pipeline/pipeline.yaml
 oc delete -f ${repo_root}/pipeline/wkc-pipeline.yaml
+
+# If running open source, exclude WKC from the pipeline
 set -e
 if [[ "${github}" == "github.com" ]]; then 
     oc apply -f ${repo_root}/pipeline/pipeline.yaml
 else
     oc apply -f ${repo_root}/pipeline/wkc-pipeline.yaml
 fi
-image_source_repo="wcp-ibm-streams-docker-local.artifactory.swg-devops.com"
 
+# Delete old registry credentials
 set +e
 oc delete secret -n ${unique_prefix} regcred --wait
 oc delete secret -n ${unique_prefix} regcred-test --wait
@@ -240,7 +246,8 @@ helper_text="If this step fails:
 "
 set -x
 
-set +e 
+# See if we have a pull secret available on cluster that has access to authenticated registries we need
+set +e
 oc get secret -n openshift-config pull-secret -o yaml > ${TMP}/secret.yaml
 rc=$?
 if [[ ${rc} -eq 0 ]]; then
@@ -290,6 +297,7 @@ EOH
     fi
 fi
 
+# Patch service accounts with necessary secrets for pulling images from authenticated registries
 if [[ ${is_openshift} == "true" ]]; then
     oc secrets link pipeline regcred --for=mount
     oc secrets link builder regcred --for=mount
@@ -299,10 +307,11 @@ else
     kubectl patch serviceaccount default -p '{"secrets": [{"name": "regcred"}]}'
 fi
 
+# Install resources that are cluster scoped only if installing to m4d-system
 cluster_scoped="false"
 deploy_vault="false"
 if [[ "${unique_prefix}" == "m4d-system" ]]; then
-    extra_params='${extra_params} -p clusterScoped="true" -p deployVault="true"'
+    extra_params="${extra_params} -p clusterScoped='true' -p deployVault='true'"
     cluster_scoped="true"
     deploy_vault="true"
 fi
@@ -315,11 +324,12 @@ if [[ $rc -ne 0 ]]; then
     deploy_crd="true"
 fi
 
+# Don't attempt to reinstall certmanager if some form of it is already installed
 oc get crd | grep "certmanager"
 rc=$?
 deploy_cert_manager="false"
 if [[ $rc -ne 0 ]]; then
-    extra_params="${extra_params} -p deployCertManager=\"true\""
+    extra_params="${extra_params} -p deployCertManager='true'"
     deploy_cert_manager="true"
 fi
 
@@ -333,6 +343,7 @@ if [[ $rc -ne 0 ]]; then
     exit 1
 fi
 
+# Create a workspace to allow users to exec in and run arbitrary commands
 oc apply -f ${repo_root}/pipeline/rootsa.yaml
 oc apply -f ${TMP}/statefulset.yaml
 oc apply -f ${repo_root}/pipeline/pvc.yaml
@@ -340,6 +351,7 @@ if [[ ${is_openshift} == "true" ]]; then
     oc adm policy add-scc-to-user privileged system:serviceaccount:${unique_prefix}:root-sa
 fi
 
+# Install tekton triggers
 pushd ${TMP}
 wget https://storage.googleapis.com/tekton-releases/triggers/latest/release.yaml
 if [[ ${is_openshift} == "true" ]]; then
@@ -352,11 +364,10 @@ if [[ ${is_openshift} == "true" ]]; then
 fi
 cat ${TMP}/interceptors.yaml
 popd
-
 oc apply -f ${TMP}/release.yaml
 oc apply -f ${TMP}/interceptors.yaml
 
-oc apply -f ${repo_root}/pipeline/eventlistener/generic-image-pipeline.yaml
+# Install triggers for rebuilds of specific tasks
 oc apply -f ${repo_root}/pipeline/eventlistener/generic-triggerbinding.yaml
 oc apply -f ${repo_root}/pipeline/eventlistener/generic-triggertemplate.yaml
 oc apply -f ${repo_root}/pipeline/eventlistener/generic-watcher-apiserversource.yaml
@@ -380,15 +391,17 @@ oc delete secret git-ssh-key
 oc delete secret git-token
 set -e
 
-git_url=
-wkc_connector_git_url=
-vault_plugin_secrets_wkc_reader_url=
+# Determine which set of vault values to used, based on whether or not WKC components will be installed
 vault_values="/workspace/source/vault-plugin-secrets-wkc-reader/helm-deployment/vault-single-cluster/values.yaml"
 if [[ "${github}" == "github.com" ]]; then
     vault_values="/workspace/source/mesh-for-data/third_party/vault/vault-single-cluster/values.yaml"
 fi
-extra_params="${extra_params} -p vaultValues=${vault_values}"
+extra_params="${extra_params} -p vaultValues=\"${vault_values}\""
 
+# Determine which set of repositories to use, based on whether or not we're dealing with open source
+git_url=
+wkc_connector_git_url=
+vault_plugin_secrets_wkc_reader_url=
 if [[ -z ${GH_TOKEN} && "${github}" != "github.com" ]]; then
     cat ~/.ssh/known_hosts | base64 -w 0 > ${TMP}/known_hosts
     set +x
@@ -446,7 +459,10 @@ EOH
 else
     extra_params="${extra_params} -p git-url= -p wkc-connector-git-url= -p vault-plugin-secrets-wkc-reader-url="
 fi
-cat > ${TMP}/wkc-credentials.yaml <<EOH
+
+# Set up credentials for WKC
+if [[ "${github}" != "github.com" ]]; then
+    cat > ${TMP}/wkc-credentials.yaml <<EOH
 apiVersion: v1
 kind: Secret
 metadata:
@@ -458,24 +474,12 @@ stringData:
   CP4D_PASSWORD: password
   CP4D_SERVER_URL: https://cpd-tooling-2q21-cpd.apps.cpstreamsx3.cp.fyre.ibm.com
 EOH
-cat ${TMP}/wkc-credentials.yaml
-oc apply -f ${TMP}/wkc-credentials.yaml
+    cat ${TMP}/wkc-credentials.yaml
+    oc apply -f ${TMP}/wkc-credentials.yaml
+    extra_params="${extra_params} -p wkcConnectorServerUrl=https://cpd-tooling-2q21-cpd.apps.cpstreamsx3.cp.fyre.ibm.com"
+fi
 
-extra_params="${extra_params} -p wkcConnectorServerUrl=https://cpd-tooling-2q21-cpd.apps.cpstreamsx3.cp.fyre.ibm.com"
-#set +e
-#oc -n ${unique_prefix} delete configmap sample-policy
-#set -e
-#oc -n ${unique_prefix} create configmap sample-policy --from-file=sample-policy.rego
-#oc -n ${unique_prefix} label configmap sample-policy openpolicyagent.org/policy=rego
-
-#if [[ ${unique_prefix} != "m4d-system" ]]; then
-#    set +e
-#    oc delete secrets vault-credentials -n ${unique_prefix}
-#    set -e
-#    oc get secrets vault-credentials -n m4d-system -o jsonpath={.data.VAULT_TOKEN} | base64 --decode > ${TMP}/token.txt
-#    oc create secret generic vault-credentials --from-file=VAULT_TOKEN=${TMP}/token.txt -n ${unique_prefix}
-#fi
-
+# Determine whether images should be sent to ICR for security scanning if creds exist
 set +e
 oc get secret us-south-creds
 rc=$?
@@ -483,16 +487,23 @@ transfer_images_to_icr=false
 if [[ $rc -eq 0 ]]; then
     transfer_images_to_icr=true
 fi
+extra_params="${extra_params} -p transfer-images-to-icr=${transfer_images_to_icr}"
 
+# If a github_workspace was specified, don't clone the code, copy it to volume from the local host
 set -e
+if [[ ! -z "${github_workspace}" ]]; then
+    try_command "kubectl wait pod workspace-0 --for=condition=Ready --timeout=1m" 15 false 5
+    ls ${github_workspace}
+    ls ${github_workspace}/..
+    oc cp $github_workspace workspace-0:/workspace/source/
+    git_url=""
+    extra_params="${extra_params} -p git-url="
+fi
 set +x
-#echo "install tekton extension is vscode and then run:
-# for a dynamically provisioned PVC that will be deleted when the pipelinerun is deleted
-#tkn pipeline start build-and-deploy -w name=shared-workspace,volumeClaimTemplateFile=${repo_root}/pipeline/pvc.yaml -p docker-namespace=${unique_prefix} -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params}"
 
 echo "
 # for a pre-existing PVC that will be deleted when the namespace is deleted
-tkn pipeline start build-and-deploy -w name=images-url,emptyDir="" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=${image_repo} -p dockerhub-hostname=${dockerhub_hostname} -p docker-namespace=${unique_prefix} -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} -p transfer-images-to-icr=${transfer_images_to_icr} ${extra_params} -p git-revision=pipeline"
+tkn pipeline start build-and-deploy -w name=images-url,emptyDir=\"\" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=${image_repo} -p dockerhub-hostname=${dockerhub_hostname} -p docker-namespace=${unique_prefix} -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} ${extra_params} -p git-revision=pipeline"
 
 if [[ ${run_tkn} -eq 1 ]]; then
     set -x

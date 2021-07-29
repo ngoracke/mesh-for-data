@@ -217,19 +217,6 @@ spec:
       Operator: notin
       Values:
       - "true"
-  # - name: remove-creds
-  #   params:
-  #   - name: ARGS
-  #     value:
-  #     - delete secret git-ssh-key --ignore-not-found=true
-  #       -n $(params.NAMESPACE)
-  #   taskRef:
-  #     kind: Task
-  #     name: openshift-client
-  #   runAfter:
-  #   - fetch-repository
-  #   - fetch-vault-plugin-secrets-wkc-reader
-  #   - fetch-wkc-connector
   - name: build-wkc-connector
     params:
     - name: target
@@ -755,28 +742,6 @@ spec:
     workspaces:
       - name: images-url
         workspace: images-url
-  # - name: vulnerability-advisor-image-datacatalog-vulnerability
-  #   taskRef:
-  #     kind: Task
-  #     name: containerize-check-va-scan
-  #   workspaces:
-  #     - name: artifacts
-  #       workspace: artifacts
-  #   runAfter:
-  #   - transfer-image-datacatalog-vulnerability-advisor
-  #   params:
-  #     - name: image-url
-  #       value: "stg.icr.io/cp/cpd/ngoracke/data-catalog-mock"
-  #     - name: image-digest
-  #       value: "$(tasks.build-image-datacatalog.results.IMAGE_DIGEST)"
-  #     - name: scan-report-file
-  #       value: 'app-image-va-report.json'
-  #     - name: ibmcloud-api-key-secret-key
-  #       value: "api-key"
-  #     - name: fail-on-scanned-issues
-  #       value: "false"
-  #     - name: pipeline-debug
-  #       value: "1"
   - name: build-servicepolicymanager
     params:
     - name: target
@@ -1045,21 +1010,28 @@ spec:
       workspace: shared-workspace
   - name: upgrade-helm-vault-from-repo
     params:
-    - name: context
-      value: mesh-for-data/third_party/vault
-    - name: target
-      value: deploy
+    - name: helm_repo
+      value: https://helm.releases.hashicorp.com
+    - name: chart_name
+      value: hashicorp/vault --values $(params.vaultValues)
+        --create-namespace
+      # old values 
+      # --values https://raw.githubusercontent.com/mesh-for-data/mesh-for-data/v0.1.0/third_party/vault/vault-single-cluster/values.yaml
+    - name: release_version
+      value: 0.9.1
+    - name: release_name
+      value: vault
+    - name: release_namespace
+      value: $(params.NAMESPACE)
+    - name: overwrite_values
+      value: server.dev.enabled=true,injector.enabled=false,global.openshift=true,server.image.repository=$(params.dockerhub-hostname)/vault
     - name: image
-      value: $(params.build_image)
-    - name: docker-hostname
-      value: "$(params.docker-hostname)"
-    - name: docker-namespace
-      value: "$(params.docker-namespace)"
-    - name: INCREMENTAL_CODE_RESTART
-      value: $(params.INCREMENTAL_CODE_RESTART)
+      value: $(params.helm_image)
+    runAfter:
+    - fetch-vault-plugin-secrets-wkc-reader
     taskRef:
       kind: Task
-      name: make
+      name: helm-upgrade-from-repo
     workspaces:
     - name: source
       workspace: shared-workspace
