@@ -492,7 +492,7 @@ extra_params="${extra_params} -p transfer-images-to-icr=${transfer_images_to_icr
 # If a github_workspace was specified, don't clone the code, copy it to volume from the local host
 set -e
 if [[ ! -z "${github_workspace}" ]]; then
-    try_command "kubectl wait pod workspace-0 --for=condition=Ready --timeout=1m" 15 false 5
+    try_command "kubectl get pvc && kubectl wait pod workspace-0 --for=condition=Ready --timeout=1m" 15 false 5
     ls ${github_workspace}
     ls ${github_workspace}/..
     oc cp $github_workspace workspace-0:/workspace/source/
@@ -570,12 +570,6 @@ spec:
       claimName: source-pvc
 EOH
     cat ${TMP}/pipelinerun.yaml
-    try_command "kubectl wait pod workspace-0 --for=condition=Ready --timeout=1m" 15 false 5
-    if [[ ! -z "${github_workspace}" ]]; then
-        ls ${github_workspace}
-        ls ${github_workspace}/..
-        oc cp $github_workspace workspace-0:/workspace/source/
-    fi
 
     oc apply -f ${TMP}/pipelinerun.yaml
  
