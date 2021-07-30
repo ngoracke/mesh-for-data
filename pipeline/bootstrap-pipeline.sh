@@ -492,7 +492,8 @@ extra_params="${extra_params} -p transfer-images-to-icr=${transfer_images_to_icr
 # If a github_workspace was specified, don't clone the code, copy it to volume from the local host
 set -e
 if [[ ! -z "${github_workspace}" ]]; then
-    try_command "kubectl get pvc && kubectl wait pod workspace-0 --for=condition=Ready --timeout=1m" 15 false 5
+    kubectl describe pvc
+    try_command "kubectl wait pod workspace-0 --for=condition=Ready --timeout=1m" 15 false 5
     ls ${github_workspace}
     ls ${github_workspace}/..
     oc cp $github_workspace workspace-0:/workspace/source/
