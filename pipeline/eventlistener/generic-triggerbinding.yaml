@@ -6,8 +6,6 @@ spec:
   params:
     - name: IMAGE_DIGEST
       value: $(body.status.taskResults[?(@.name=='IMAGE_DIGEST')].value)
-#    - name: GENERATE_NAME 
-#      value: $(body.metadata.generateName)
     - name: IMAGE_NAME
       value: $(body.spec.params[?(@.name=='IMAGE')].value)
     - name: docker-hostname
@@ -29,8 +27,6 @@ metadata:
   name: code-change-triggerbinding
 spec:
   params:
-#    - name: GENERATE_NAME
-#      value: $(body.metadata.generateName)
     - name: COMPONENT_NAME
       value: $(body.spec.params[?(@.name=='context')].value)
     - name: docker-hostname

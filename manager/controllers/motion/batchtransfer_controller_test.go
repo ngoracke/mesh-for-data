@@ -75,8 +75,13 @@ var _ = Describe("BatchTransfer Controller", func() {
 			fmt.Printf("template namespace %v\n", batchTransfer.Namespace)
 
 			registry := os.Getenv("DOCKER_HOSTNAME")
+			registryNamespace := os.Getenv("DOCKER_NAMESPACE")
 			if len(registry) > 0 && registry != "ghcr.io" {
-				batchTransfer.Spec.Image = registry + "/dummy-mover:latest"
+				if len(registryNamespace) > 0 {
+					batchTransfer.Spec.Image = registry + "/" + registryNamespace + "/dummy-mover:latest"
+				} else {
+					batchTransfer.Spec.Image = registry + "/dummy-mover:latest"
+				}
 			}
 			fmt.Printf("%v\n", registry)
 			key := client.ObjectKeyFromObject(batchTransfer)
@@ -177,7 +182,7 @@ var _ = Describe("BatchTransfer Controller", func() {
 			Eventually(func() error {
 				f := &motionv1.BatchTransfer{}
 				return k8sClient.Get(context.Background(), key, f)
-			}, timeout, interval).ShouldNot(Succeed())
+			}, timeout, interval*10).ShouldNot(Succeed())
 		})
 	})
 })
