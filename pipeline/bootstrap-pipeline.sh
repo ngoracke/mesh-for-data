@@ -130,6 +130,54 @@ fi
 extra_params="${extra_params} -p blueprintNamespace=${blueprint_namespace}"
 
 set +e
+rc=1
+kubectl get ns ${unique_prefix}-app
+rc=$?
+set -e
+# Create new project if necessary
+if [[ $rc -ne 0 ]]; then
+    if [[ ${is_openshift} == "true" ]]; then
+        oc new-project ${unique_prefix}-app
+        oc project ${unique_prefix} 
+    else
+        kubectl create ns ${unique_prefix}-app 
+    fi
+fi
+
+cat > ${TMP}/approle.yaml <<EOH
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ${unique_prefix}-app-role
+  namespace: ${unique_prefix}-app 
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - '*'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ${unique_prefix}-app-rb
+  namespace: ${unique_prefix}-app
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ${unique_prefix}-app-role
+subjects:
+- kind: ServiceAccount
+  name: manager
+  namespace: ${unique_prefix}
+EOH
+set +e
+oc delete -f ${TMP}/approle.yaml
+set -e
+oc apply -f ${TMP}/approle.yaml
+
+set +e
 # Be smarter about this - just a quick hack for typical default OpenShift & Kind installs so we can control the default storage class
 oc patch storageclass managed-nfs-storage -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": "true"}}}'
 oc patch storageclass standard -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": "false"}}}'
@@ -184,6 +232,7 @@ if [[ ${is_openshift} == "true" ]]; then
     oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${unique_prefix}:root-sa
     oc adm policy add-role-to-group system:image-puller system:serviceaccounts:${unique_prefix} --namespace ${unique_prefix}
     oc adm policy add-role-to-group system:image-puller system:serviceaccounts:${blueprint_namespace} --namespace ${unique_prefix}
+    oc adm policy add-role-to-group system:image-puller system:serviceaccounts:${unique_prefix}-app --namespace ${unique_prefix}
     oc adm policy add-role-to-user system:image-puller system:serviceaccount:${unique_prefix}:wkc-connector --namespace ${unique_prefix}
     
     # Temporary hack pending a better solution
@@ -203,6 +252,7 @@ helper_text="If this step fails, tekton related pods may be restarting or initia
 "
 set -x
 oc apply -f ${repo_root}/pipeline/make.yaml
+oc apply -f ${repo_root}/pipeline/shell.yaml
 oc apply -f ${repo_root}/pipeline/git-clone.yaml
 oc apply -f ${repo_root}/pipeline/buildah.yaml
 oc apply -f ${repo_root}/pipeline/skopeo-copy.yaml
@@ -317,11 +367,11 @@ else
 fi
 
 # Install resources that are cluster scoped only if installing to m4d-system
-deploy_vault="false"
-if [[ "${unique_prefix}" == "m4d-system" ]]; then
+#deploy_vault="false"
+#if [[ "${unique_prefix}" == "m4d-system" ]]; then
     extra_params="${extra_params} -p deployVault='true'"
     deploy_vault="true"
-fi
+#fi
 set +e
 oc get crd | grep "m4dapplications.app.m4d.ibm.com"
 rc=$?
@@ -479,11 +529,28 @@ type: kubernetes.io/Opaque
 stringData:
   CP4D_USERNAME: admin 
   CP4D_PASSWORD: password
-  CP4D_SERVER_URL: https://cpd-tooling-2q21-cpd.apps.cpstreamsx3.cp.fyre.ibm.com
+  WKC_USERNAME: admin
+  WKC_PASSWORD: password
+  CP4D_SERVER_URL: https://cpd-cpd4.apps.cpstreamsx4.cp.fyre.ibm.com
 EOH
     cat ${TMP}/wkc-credentials.yaml
     oc apply -f ${TMP}/wkc-credentials.yaml
-    extra_params="${extra_params} -p wkcConnectorServerUrl=https://cpd-tooling-2q21-cpd.apps.cpstreamsx3.cp.fyre.ibm.com"
+    cat > ${TMP}/wkc-credentials.yaml <<EOH
+apiVersion: v1
+kind: Secret
+metadata:
+  name: wkc-credentials
+  namespace: ${unique_prefix}-app
+type: kubernetes.io/Opaque
+stringData:
+  CP4D_USERNAME: admin
+  CP4D_PASSWORD: password
+  WKC_USERNAME: admin
+  WKC_PASSWORD: password
+  CP4D_SERVER_URL: https://cpd-cpd4.apps.cpstreamsx4.cp.fyre.ibm.com
+EOH
+    oc apply -f ${TMP}/wkc-credentials.yaml
+    extra_params="${extra_params} -p wkcConnectorServerUrl=https://cpd-cpd4.apps.cpstreamsx4.cp.fyre.ibm.com"
 fi
 
 # Determine whether images should be sent to ICR for security scanning if creds exist
@@ -503,7 +570,11 @@ if [[ ! -z "${github_workspace}" ]]; then
     try_command "kubectl wait pod workspace-0 --for=condition=Ready --timeout=1m" 15 false 5
     ls ${github_workspace}
     ls ${github_workspace}/..
-    kubectl cp $github_workspace workspace-0:/workspace/source/
+    if [[ ${is_kubernetes} == "true" ]]; then
+        kubectl cp $github_workspace workspace-0:/workspace/source/
+    else 
+        oc rsync $github_workspace workspace-0:/workspace/source/
+    fi
     git_url=""
     extra_params="${extra_params} -p git-url="
 fi
@@ -536,11 +607,11 @@ spec:
   - name: blueprintNamespace
     value: ${blueprint_namespace}
   - name: docker-namespace
-    value: ${unique_prefix} 
+    value: ${unique_prefix}
   - name: git-revision
     value: pipeline
   - name: wkcConnectorServerUrl
-    value: https://cpd-tooling-2q21-cpd.apps.cpstreamsx3.cp.fyre.ibm.com
+    value: https://cpd-cpd4.apps.cpstreamsx4.cp.fyre.ibm.com
   - name: git-url
     value: "${git_url}"
   - name: wkc-connector-git-url

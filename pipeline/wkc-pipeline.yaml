@@ -328,9 +328,9 @@ spec:
     - name: docker-hostname
       value: "$(params.docker-hostname)"
     - name: docker-namespace
-      value: "$(params.docker-namespace)
+      value: "$(params.docker-namespace)"
     - name: blueprintNamespace
-      value: $(params.blueprintNamespace)"
+      value: "$(params.blueprintNamespace)"
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
@@ -874,7 +874,7 @@ spec:
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
-      value: blueprintNamespace=$(params.blueprintNamespace),clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),opaConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://vault.m4d-system:8200,vault.address=http://vault.m4d-system:8200,$(params.mesh-for-data-values)
+      value: blueprintNamespace=$(params.blueprintNamespace),manager.watchNamespaces=$(params.blueprintNamespace)\,$(params.NAMESPACE)\,$(params.NAMESPACE)-app,clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),opaConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,$(params.mesh-for-data-values)
     - name: release_version
       value: 0.1.0
     - name: image
@@ -944,7 +944,7 @@ spec:
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
-      value: clusterScoped=$(params.clusterScoped),global.imagePullSecrets=,wkcConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/wkc-connector@$(tasks.build-image-wkc-connector.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://vault.m4d-system:8200,wkcConnector.vault.address=http://vault.m4d-system:8200,wkcConnector.serverURL=$(params.wkcConnectorServerUrl)
+      value: clusterScoped=$(params.clusterScoped),global.imagePullSecrets=,wkcConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/wkc-connector@$(tasks.build-image-wkc-connector.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,wkcConnector.vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,wkcConnector.serverURL=$(params.wkcConnectorServerUrl)
     - name: release_version
       value: 0.1.0
     - name: image
@@ -1037,6 +1037,100 @@ spec:
     workspaces:
     - name: source
       workspace: shared-workspace
+  - name: update-helm-vault-values
+    params:
+    - name: context
+      value: .
+    - name: command
+      value: sed -i 's|bound_service_account_namespaces=.*"|bound_service_account_namespaces="m4d-nick-blueprints"|g' $(params.vaultValues)
+    runAfter:
+    - fetch-vault-plugin-secrets-wkc-reader
+    taskRef:
+      kind: Task
+      name: shell
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+    when:
+    - Input: $(params.deployVault)
+      Operator: in
+      Values:
+      - "true"
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.INCREMENTAL_CODE_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+  - name: update-helm-vault-roles
+    params:
+    - name: context
+      value: .
+    - name: command
+      value: |
+        sed -i 's|namespace: .*|namespace: $(params.NAMESPACE)|g' $(params.vaultRoles)
+        sed -i 's|name: role-tokenreview-binding|name: $(params.NAMESPACE)-role-tokenreview-binding|g' $(params.vaultRoles)
+        sed -i 's|name: vault-secrets-manager|name: $(params.NAMESPACE)-vault-secrets-manager|g' $(params.vaultRoles)
+        sed -i 's|name: vault-auth-delegator|name: $(params.NAMESPACE)-vault-auth-delegator|g' $(params.vaultRoles)
+        sed -i '0,/name: vault$/{s/name: vault/name: $(params.NAMESPACE)/}' $(params.vaultRoles)
+    runAfter:
+    - fetch-vault-plugin-secrets-wkc-reader
+    taskRef:
+      kind: Task
+      name: shell
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+    when:
+    - Input: $(params.deployVault)
+      Operator: in
+      Values:
+      - "true"
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.INCREMENTAL_CODE_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+  - name: oc-apply-vault-crds
+    params:
+    - name: ARGS
+      value:
+      - apply -f $(params.vaultRoles)
+        -n $(params.NAMESPACE)
+    runAfter:
+    - update-helm-vault-roles
+    taskRef:
+      kind: Task
+      name: openshift-client
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.INCREMENTAL_CODE_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    workspaces:
+    - name: source
+      workspace: shared-workspace
   - name: upgrade-helm-vault-from-repo
     params:
     - name: helm_repo
@@ -1049,7 +1143,7 @@ spec:
     - name: release_version
       value: 0.9.1
     - name: release_name
-      value: vault
+      value: $(params.NAMESPACE)-vault
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
@@ -1057,7 +1151,8 @@ spec:
     - name: image
       value: $(params.helm_image)
     runAfter:
-    - fetch-vault-plugin-secrets-wkc-reader
+    - update-helm-vault-values
+    - update-helm-vault-roles
     taskRef:
       kind: Task
       name: helm-upgrade-from-repo

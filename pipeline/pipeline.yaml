@@ -152,12 +152,12 @@ spec:
       value: mesh-for-data/manager
     - name: image
       value: $(params.build_image)
+    - name: blueprintNamespace
+      value: "$(params.blueprintNamespace)"
     - name: docker-hostname
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
-    - name: blueprintNamespace
-      value: $(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
@@ -196,7 +196,7 @@ spec:
     - name: docker-namespace
       value: "$(params.docker-namespace)"
     - name: blueprintNamespace
-      value: $(params.blueprintNamespace)
+      value: "$(params.blueprintNamespace)"
     runAfter:
     - build-manager
     taskRef:
@@ -258,7 +258,7 @@ spec:
     - name: docker-namespace
       value: "$(params.docker-namespace)"
     - name: blueprintNamespace
-      value: $(params.blueprintNamespace)
+      value: "$(params.blueprintNamespace)"
     runAfter:
     - fetch-repository
     taskRef:
@@ -316,7 +316,7 @@ spec:
     - name: docker-namespace
       value: "$(params.docker-namespace)"
     - name: blueprintNamespace
-      value: $(params.blueprintNamespace)
+      value: "$(params.blueprintNamespace)"
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
@@ -355,7 +355,7 @@ spec:
     - name: docker-namespace
       value: "$(params.docker-namespace)"
     - name: blueprintNamespace
-      value: $(params.blueprintNamespace)
+      value: "$(params.blueprintNamespace)"
     runAfter:
     - build-katalog
     taskRef:
@@ -415,6 +415,7 @@ spec:
     - name: blueprintNamespace
       value: $(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
+    runAfter:
     - fetch-repository
     taskRef:
       kind: Task
@@ -450,7 +451,7 @@ spec:
     - name: docker-namespace
       value: "$(params.docker-namespace)"
     - name: blueprintNamespace
-      value: $(params.blueprintNamespace)
+      value: "$(params.blueprintNamespace)"
     runAfter:
     - build-opa
     taskRef:
@@ -508,7 +509,7 @@ spec:
     - name: docker-namespace
       value: "$(params.docker-namespace)"
     - name: blueprintNamespace
-      value: $(params.blueprintNamespace)
+      value: "$(params.blueprintNamespace)"
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
@@ -547,7 +548,7 @@ spec:
     - name: docker-namespace
       value: "$(params.docker-namespace)"
     - name: blueprintNamespace
-      value: $(params.blueprintNamespace)
+      value: "$(params.blueprintNamespace)"
     runAfter:
     - build-datacatalog
     taskRef:
@@ -605,7 +606,7 @@ spec:
     - name: docker-namespace
       value: "$(params.docker-namespace)"
     - name: blueprintNamespace
-      value: $(params.blueprintNamespace)
+      value: "$(params.blueprintNamespace)"
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
@@ -644,7 +645,7 @@ spec:
     - name: docker-namespace
       value: "$(params.docker-namespace)"
     - name: blueprintNamespace
-      value: $(params.blueprintNamespace)
+      value: "$(params.blueprintNamespace)"
     runAfter:
     - build-servicepolicymanager
     taskRef:
@@ -699,7 +700,7 @@ spec:
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
-      value: blueprintNamespace=$(params.blueprintNamespace),clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),opaConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://vault.m4d-system:8200,vault.address=http://vault.m4d-system:8200,$(params.mesh-for-data-values)
+      value: blueprintNamespace=$(params.blueprintNamespace),manager.watchNamespaces='$(params.blueprintNamespace),$(params.NAMESPACE),$(params.NAMESPACE)-app',clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),opaConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,$(params.mesh-for-data-values)
     - name: release_version
       value: 0.1.0
     runAfter:
