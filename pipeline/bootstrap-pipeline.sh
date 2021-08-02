@@ -17,6 +17,11 @@ helper_text=""
 realpath() {
     [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
 }
+kube_os="$(uname | tr '[:upper:]' '[:lower:]')"
+base64_arg="-w 0"
+if [[ $kube_os == "darwin" ]]; then
+    base64_arg="-b 0"
+fi
 
 repo_root=$(realpath $(dirname $(realpath $0)))/..
 
@@ -264,7 +269,7 @@ if [[ ${rc} -eq 0 ]]; then
     else
         if [[ ! -z ${ARTIFACTORY_APIKEY} ]]; then
             set -e
-            auth=$(echo -n "${image_source_repo_username:-$git_username}:${ARTIFACTORY_APIKEY}" | base64 -w 0)
+            auth=$(echo -n "${image_source_repo_username:-$git_username}:${ARTIFACTORY_APIKEY}" | base64 ${base64_arg})
             cat > ${TMP}/secret.yaml <<EOH
 {"auths":{"${image_source_repo}":{"username":"${image_source_repo_username:-$git_username}","password":"${ARTIFACTORY_APIKEY}","auth":"${auth}"}}}
 EOH
@@ -282,7 +287,7 @@ else
     helper_text=""
     if [[ ! -z ${ARTIFACTORY_APIKEY} ]]; then
         set -e
-        auth=$(echo -n "${image_source_repo_username:-$git_username}:${ARTIFACTORY_APIKEY}" | base64 -w 0)
+        auth=$(echo -n "${image_source_repo_username:-$git_username}:${ARTIFACTORY_APIKEY}" | base64 ${base64_arg})
         cat > ${TMP}/secret.yaml <<EOH
 {"auths":{"${image_source_repo}":{"username":"${image_source_repo_username:-$git_username}","password":"${ARTIFACTORY_APIKEY}","auth":"${auth}"}}}
 EOH
@@ -403,7 +408,7 @@ git_url=
 wkc_connector_git_url=
 vault_plugin_secrets_wkc_reader_url=
 if [[ -z ${GH_TOKEN} && "${github}" != "github.com" ]]; then
-    cat ~/.ssh/known_hosts | base64 -w 0 > ${TMP}/known_hosts
+    cat ~/.ssh/known_hosts | base64 ${base64_arg} > ${TMP}/known_hosts
     set +x
     helper_text="If this step fails, make the second positional arg the path to an ssh key authenticated with Github Enterprise
     
