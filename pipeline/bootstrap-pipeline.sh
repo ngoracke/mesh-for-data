@@ -104,23 +104,23 @@ if [[ ! -z $1 ]]; then
     kubectl get ns $1
     rc=$?
 else
-    kubectl get ns m4d-system
+    kubectl get ns fybrik-system
     rc=$?
 fi
 
 # Create new project if necessary
 if [[ $rc -ne 0 ]]; then
     if [[ ${is_openshift} == "true" ]]; then
-        oc new-project ${1:-m4d-system}
+        oc new-project ${1:-fybrik-system}
     else
-        kubectl create ns ${1:-m4d-system}
-        kubectl config set-context --current --namespace=${1:-m4d-system}
+        kubectl create ns ${1:-fybrik-system}
+        kubectl config set-context --current --namespace=${1:-fybrik-system}
     fi
 else
     if [[ ${is_openshift} == "true" ]]; then
-        oc project ${1:-m4d-system}
+        oc project ${1:-fybrik-system}
     else
-        kubectl config set-context --current --namespace=${1:-m4d-system}
+        kubectl config set-context --current --namespace=${1:-fybrik-system}
     fi
 fi
 unique_prefix=$(kubectl config view --minify --output 'jsonpath={..namespace}'; echo)
@@ -179,7 +179,7 @@ if [[ ${is_openshift} == "true" ]]; then
     oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${unique_prefix}:pipeline
     oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${unique_prefix}:root-sa
     oc adm policy add-role-to-group system:image-puller system:serviceaccounts:${unique_prefix} --namespace ${unique_prefix}
-    oc adm policy add-role-to-group system:image-puller system:serviceaccounts:m4d-blueprints --namespace ${unique_prefix}
+    oc adm policy add-role-to-group system:image-puller system:serviceaccounts:fybrik-blueprints --namespace ${unique_prefix}
     oc adm policy add-role-to-user system:image-puller system:serviceaccount:${unique_prefix}:wkc-connector --namespace ${unique_prefix}
     
     # Temporary hack pending a better solution
@@ -312,16 +312,16 @@ else
     kubectl patch serviceaccount default -p '{"secrets": [{"name": "regcred"}]}'
 fi
 
-# Install resources that are cluster scoped only if installing to m4d-system
+# Install resources that are cluster scoped only if installing to fybrik-system
 cluster_scoped="false"
 deploy_vault="false"
-if [[ "${unique_prefix}" == "m4d-system" ]]; then
+if [[ "${unique_prefix}" == "fybrik-system" ]]; then
     extra_params="${extra_params} -p clusterScoped='true' -p deployVault='true'"
     cluster_scoped="true"
     deploy_vault="true"
 fi
 set +e
-oc get crd | grep "m4dapplications.app.m4d.ibm.com"
+oc get crd | grep "fybrikapplications.app.fybrik.ibm.com"
 rc=$?
 deploy_crd="false"
 if [[ $rc -ne 0 ]]; then
@@ -339,12 +339,12 @@ if [[ $rc -ne 0 ]]; then
 fi
 
 set +e
-oc get ns m4d-system
+oc get ns fybrik-system
 rc=$?
 set -e
 if [[ $rc -ne 0 ]]; then
     set +x
-    helper_text="please install into m4d-system first - currently vault can only be installed in one namespace, and needs to go in m4d-system"
+    helper_text="please install into fybrik-system first - currently vault can only be installed in one namespace, and needs to go in fybrik-system"
     exit 1
 fi
 
@@ -412,7 +412,7 @@ if [[ -z ${GH_TOKEN} && "${github}" != "github.com" ]]; then
     set +x
     helper_text="If this step fails, make the second positional arg the path to an ssh key authenticated with Github Enterprise
     
-    ex: bash -x bootstrap.sh m4d-system /path/to/private/ssh/key
+    ex: bash -x bootstrap.sh fybrik-system /path/to/private/ssh/key
     "
     set -x
     oc create secret generic git-ssh-key --from-file=ssh-privatekey=${ssh_key} --type=kubernetes.io/ssh-auth
