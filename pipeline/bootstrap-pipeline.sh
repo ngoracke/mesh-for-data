@@ -371,12 +371,8 @@ else
     kubectl patch serviceaccount default -p '{"secrets": [{"name": "regcred"}]}'
 fi
 
-# Install resources that are cluster scoped only if installing to fybrik-system
-#deploy_vault="false"
-#if [[ "${unique_prefix}" == "fybrik-system" ]]; then
-    extra_params="${extra_params} -p clusterScoped='true' -p deployVault='true'"
-    deploy_vault="true"
-#fi
+extra_params="${extra_params} -p deployVault='true'"
+deploy_vault="true"
 set +e
 oc get crd | grep "fybrikapplications.app.fybrik.io"
 rc=$?
