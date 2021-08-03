@@ -1078,7 +1078,7 @@ spec:
         sed -i 's|name: role-tokenreview-binding|name: $(params.NAMESPACE)-role-tokenreview-binding|g' $(params.vaultRoles)
         sed -i 's|name: vault-secrets-manager|name: $(params.NAMESPACE)-vault-secrets-manager|g' $(params.vaultRoles)
         sed -i 's|name: vault-auth-delegator|name: $(params.NAMESPACE)-vault-auth-delegator|g' $(params.vaultRoles)
-        sed -i '0,/name: vault$/{s/name: vault/name: $(params.NAMESPACE)/}' $(params.vaultRoles)
+        sed -i '0,/name: vault$/{s/name: vault$/name: $(params.NAMESPACE)/}' $(params.vaultRoles)
     runAfter:
     - fetch-vault-plugin-secrets-wkc-reader
     taskRef:
