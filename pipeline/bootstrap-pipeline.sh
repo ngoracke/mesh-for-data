@@ -18,6 +18,11 @@ helper_text=""
 realpath() {
     [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
 }
+kube_os="$(uname | tr '[:upper:]' '[:lower:]')"
+base64_arg="-w 0"
+if [[ $kube_os == "darwin" ]]; then
+    base64_arg="-b 0"
+fi
 
 repo_root=$(realpath $(dirname $(realpath $0)))/..
 
@@ -101,29 +106,29 @@ if [[ ! -z $1 ]]; then
     kubectl get ns $1
     rc=$?
 else
-    kubectl get ns m4d-system
+    kubectl get ns fybrik-system
     rc=$?
 fi
 
 # Create new project if necessary
 if [[ $rc -ne 0 ]]; then
     if [[ ${is_openshift} == "true" ]]; then
-        oc new-project ${1:-m4d-system}
+        oc new-project ${1:-fybrik-system}
     else
-        kubectl create ns ${1:-m4d-system}
-        kubectl config set-context --current --namespace=${1:-m4d-system}
+        kubectl create ns ${1:-fybrik-system}
+        kubectl config set-context --current --namespace=${1:-fybrik-system}
     fi
 else
     if [[ ${is_openshift} == "true" ]]; then
-        oc project ${1:-m4d-system}
+        oc project ${1:-fybrik-system}
     else
-        kubectl config set-context --current --namespace=${1:-m4d-system}
+        kubectl config set-context --current --namespace=${1:-fybrik-system}
     fi
 fi
 unique_prefix=$(kubectl config view --minify --output 'jsonpath={..namespace}'; echo)
 
-if [[ "${unique_prefix}" == "m4d-system" ]]; then
-  blueprint_namespace="m4d-blueprints"
+if [[ "${unique_prefix}" == "fybrik-system" ]]; then
+  blueprint_namespace="fybrik-blueprints"
 else
   blueprint_namespace="${unique_prefix}-blueprints"
 fi
@@ -194,7 +199,7 @@ set -x
 oc get -n openshift-pipelines csv | grep redhat-openshift-pipelines-operator 
 oc get -n openshift-pipelines csv | grep redhat-openshift-pipelines-operator | grep Succeeded
 EOH
-chmod u+x ${TMP}/streams_csv_check_script.sh
+    chmod u+x ${TMP}/streams_csv_check_script.sh
     try_command "${TMP}/streams_csv_check_script.sh"  40 true 5
 
     cat > ${TMP}/streams_csv_check_script.sh <<EOH
@@ -203,8 +208,8 @@ set -x
 oc get -n openshift-operators csv | grep serverless-operator
 oc get -n openshift-operators csv | grep serverless-operator | grep -e Succeeded -e Replacing
 EOH
-chmod u+x ${TMP}/streams_csv_check_script.sh
-    try_command "${TMP}/streams_csv_check_script.sh"  40 false 5
+    chmod u+x ${TMP}/streams_csv_check_script.sh
+#    try_command "${TMP}/streams_csv_check_script.sh"  40 false 5
     oc apply -f ${repo_root}/pipeline/knative-eventing.yaml
 else
     kubectl apply --filename https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
@@ -323,7 +328,7 @@ if [[ ${rc} -eq 0 ]]; then
     else
         if [[ ! -z ${ARTIFACTORY_APIKEY} ]]; then
             set -e
-            auth=$(echo -n "${image_source_repo_username:-$git_username}:${ARTIFACTORY_APIKEY}" | base64 -w 0)
+            auth=$(echo -n "${image_source_repo_username:-$git_username}:${ARTIFACTORY_APIKEY}" | base64 ${base64_arg})
             cat > ${TMP}/secret.yaml <<EOH
 {"auths":{"${image_source_repo}":{"username":"${image_source_repo_username:-$git_username}","password":"${ARTIFACTORY_APIKEY}","auth":"${auth}"}}}
 EOH
@@ -341,7 +346,7 @@ else
     helper_text=""
     if [[ ! -z ${ARTIFACTORY_APIKEY} ]]; then
         set -e
-        auth=$(echo -n "${image_source_repo_username:-$git_username}:${ARTIFACTORY_APIKEY}" | base64 -w 0)
+        auth=$(echo -n "${image_source_repo_username:-$git_username}:${ARTIFACTORY_APIKEY}" | base64 ${base64_arg})
         cat > ${TMP}/secret.yaml <<EOH
 {"auths":{"${image_source_repo}":{"username":"${image_source_repo_username:-$git_username}","password":"${ARTIFACTORY_APIKEY}","auth":"${auth}"}}}
 EOH
@@ -366,14 +371,14 @@ else
     kubectl patch serviceaccount default -p '{"secrets": [{"name": "regcred"}]}'
 fi
 
-# Install resources that are cluster scoped only if installing to m4d-system
+# Install resources that are cluster scoped only if installing to fybrik-system
 #deploy_vault="false"
-#if [[ "${unique_prefix}" == "m4d-system" ]]; then
-    extra_params="${extra_params} -p deployVault='true'"
+#if [[ "${unique_prefix}" == "fybrik-system" ]]; then
+    extra_params="${extra_params} -p clusterScoped='true' -p deployVault='true'"
     deploy_vault="true"
 #fi
 set +e
-oc get crd | grep "m4dapplications.app.m4d.ibm.com"
+oc get crd | grep "fybrikapplications.app.fybrik.ibm.com"
 rc=$?
 deploy_crd="false"
 if [[ $rc -ne 0 ]]; then
@@ -391,12 +396,12 @@ if [[ $rc -ne 0 ]]; then
 fi
 
 set +e
-kubectl get ns m4d-system
+kubectl get ns fybrik-system
 rc=$?
 set -e
 if [[ $rc -ne 0 ]]; then
     set +x
-    helper_text="please install into m4d-system first - currently vault can only be installed in one namespace, and needs to go in m4d-system"
+    helper_text="please install into fybrik-system first - currently vault can only be installed in one namespace, and needs to go in fybrik-system"
     exit 1
 fi
 
@@ -460,11 +465,11 @@ git_url=
 wkc_connector_git_url=
 vault_plugin_secrets_wkc_reader_url=
 if [[ -z ${GH_TOKEN} && "${github}" != "github.com" ]]; then
-    cat ~/.ssh/known_hosts | base64 -w 0 > ${TMP}/known_hosts
+    cat ~/.ssh/known_hosts | base64 ${base64_arg} > ${TMP}/known_hosts
     set +x
     helper_text="If this step fails, make the second positional arg the path to an ssh key authenticated with Github Enterprise
     
-    ex: bash -x bootstrap.sh m4d-system /path/to/private/ssh/key
+    ex: bash -x bootstrap.sh fybrik-system /path/to/private/ssh/key
     "
     set -x
     oc create secret generic git-ssh-key --from-file=ssh-privatekey=${ssh_key} --type=kubernetes.io/ssh-auth

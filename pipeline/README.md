@@ -4,15 +4,15 @@
 
 ## Bootstrapping
 
-Initial install for a cluster must happen in m4d-system (currently).  It won't hurt anything if you aren't sure, and reinstall in m4d-system.
+Initial install for a cluster must happen in fybrik-system (currently).  It won't hurt anything if you aren't sure, and reinstall in fybrik-system.
 ```
-bash -x bootstrap-pipeline.sh m4d-system
+bash -x bootstrap-pipeline.sh fybrik-system
 # follow on screen instructions
 ```
 
 Subsequent installs can go in any namespace
 ```
-bash -x bootstrap-pipeline.sh m4d-myname
+bash -x bootstrap-pipeline.sh fybrik-myname
 # follow on screen instructions
 ```
 

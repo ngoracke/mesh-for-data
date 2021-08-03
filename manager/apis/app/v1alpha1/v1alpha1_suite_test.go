@@ -27,7 +27,7 @@ func TestMain(m *testing.M) {
 	fmt.Println("path is")
 	fmt.Println(path)
 	t := &envtest.Environment{
-		CRDDirectoryPaths:     []string{filepath.Join(path, "..", "..", "..", "..", "charts", "m4d-crd", "templates")},
+		CRDDirectoryPaths:     []string{filepath.Join(path, "..", "..", "..", "..", "charts", "fybrik-crd", "templates")},
 		ErrorIfCRDPathMissing: true,
 	}
 

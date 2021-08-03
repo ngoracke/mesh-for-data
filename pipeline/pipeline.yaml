@@ -19,6 +19,7 @@ spec:
     type: string
   - default: docker.io
     description: where to pull dockerhub images from.
+    name: dockerhub-hostname
     type: string
   - default: vascan  
     description: namespace in us.icr.io where images will be pushed for VA scan
@@ -33,7 +34,7 @@ spec:
     name: git-revision
     type: string
   - default: "false"
-    description: deploy vault or no.  If deploying to the m4d-system namespace, make this true.
+    description: deploy vault or no.  If deploying to the fybrik-system namespace, make this true.
     name: deployVault
     type: string
   - default: "/workspace/source/mesh-for-data/third_party/vault/vault-single-cluster/vault-rbac.yaml"
@@ -61,15 +62,15 @@ spec:
     name: skipTests
     type: string
   - default: "false"
-    description: deploy CRDs or no.  If deploying to the m4d-system namespace, make this true.
+    description: deploy CRDs or no.  If deploying to the fybrik-system namespace, make this true.
     name: deployCRD
     type: string
   - default: "false"
-    description: deploy certmanager or no.  If deploying to the m4d-system namespace, and bedrock is not installed, make this true.
+    description: deploy certmanager or no.  If deploying to the fybrik-system namespace, and bedrock is not installed, make this true.
     name: deployCertManager
     type: string
   - default: "false"
-    description: install cluster scoped helm resources.  If deploying to the m4d-system namespace, make this true
+    description: install cluster scoped helm resources.  If deploying to the fybrik-system namespace, make this true
     name: clusterScoped
     type: string
   - default: manager
@@ -87,7 +88,7 @@ spec:
   - description: Not currently used.  Leave as-is
     name: deployment-name
     type: string
-    default: m4d
+    default: fybrik
   - description: Used only when restarting tasks.  Do not fill
     name: IMAGE_DIGEST
     type: string
@@ -415,6 +416,7 @@ spec:
     - name: blueprintNamespace
       value: $(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
+      value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
     - fetch-repository
     taskRef:
@@ -693,9 +695,9 @@ spec:
   - name: upgrade-helm-full
     params:
     - name: charts_dir
-      value: /workspace/source/mesh-for-data/charts/m4d
+      value: /workspace/source/mesh-for-data/charts/fybrik
     - name: release_name
-      value: m4d --timeout 360s
+      value: fybrik --timeout 360s
       # --values /workspace/source/pipeline/pullsecrets.yaml
     - name: release_namespace
       value: $(params.NAMESPACE)
@@ -703,6 +705,8 @@ spec:
       value: blueprintNamespace=$(params.blueprintNamespace),manager.watchNamespaces='$(params.blueprintNamespace),$(params.NAMESPACE),$(params.NAMESPACE)-app',clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),opaConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,$(params.mesh-for-data-values)
     - name: release_version
       value: 0.1.0
+    - name: image
+      value: $(params.helm_image)
     runAfter:
     - build-image-manager
     - build-image-katalog
@@ -731,9 +735,9 @@ spec:
   - name: upgrade-helm-partial
     params:
     - name: charts_dir
-      value: /workspace/source/mesh-for-data/charts/m4d
+      value: /workspace/source/mesh-for-data/charts/fybrik
     - name: release_name
-      value: m4d --reuse-values
+      value: fybrik --reuse-values
       # --values /workspace/source/pipeline/pullsecrets.yaml --reuse-values
     - name: release_namespace
       value: $(params.NAMESPACE)
@@ -761,9 +765,9 @@ spec:
   - name: upgrade-helm-crd-from-source
     params:
     - name: charts_dir
-      value: /workspace/source/mesh-for-data/charts/m4d-crd
+      value: /workspace/source/mesh-for-data/charts/fybrik-crd
     - name: release_name
-      value: m4d-crd
+      value: fybrik-crd
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: release_version
@@ -915,7 +919,7 @@ spec:
     - Input: $(params.NAMESPACE)
       Operator: in
       Values:
-      - "m4d-system"
+      - "fybrik-system"
     - Input: $(params.IMAGE_DIGEST)
       Operator: in
       Values:
@@ -994,7 +998,7 @@ spec:
     - name: flags
       value: CONTROLLER_NAMESPACE=$(params.NAMESPACE) BLUEPRINT_NAMESPACE=$(params.blueprintNamespace)
     runAfter:
-    - upgrade-helm-partial
+    - upgrade-helm-full
     when:
     - Input: $(params.skipTests)
       Operator: notin

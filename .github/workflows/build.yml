@@ -67,7 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DOCKER_HOSTNAME: "localhost:5000"
-      DOCKER_NAMESPACE: m4d-system
+      DOCKER_NAMESPACE: fybrik-system
     steps:
     - name: Set up JDK
       uses: actions/setup-java@v1
@@ -149,7 +149,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DOCKER_HOSTNAME: "localhost:5000"
-      DOCKER_NAMESPACE: m4d-system
+      DOCKER_NAMESPACE: fybrik-system
       DOCKER_USERNAME: ${{ github.actor }}
       DOCKER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
     needs: [verify, test, integration-tests]

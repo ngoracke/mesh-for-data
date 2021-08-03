@@ -46,7 +46,7 @@ spec:
     name: wkc-connector-git-revision
     type: string
   - default: "false"
-    description: deploy vault or no.  If deploying to the m4d-system namespace, make this true.
+    description: deploy vault or no.  If deploying to the fybrik-system namespace, make this true.
     name: deployVault
     type: string
   - default: 'cluster.name="AmsterdamCluster",cluster.zone="Netherlands",cluster.region="Netherlands",cluster.vaultAuthPath="kubernetes",coordinator.catalog="WKC",coordinator.catalogConnectorURL="wkc-connector:50090"'
@@ -74,15 +74,15 @@ spec:
     name: skipTests
     type: string
   - default: "false"
-    description: deploy CRDs or no.  If deploying to the m4d-system namespace, make this true.
+    description: deploy CRDs or no.  If deploying to the fybrik-system namespace, make this true.
     name: deployCRD
     type: string
   - default: "false"
-    description: deploy certmanager or no.  If deploying to the m4d-system namespace, and bedrock is not installed, make this true.
+    description: deploy certmanager or no.  If deploying to the fybrik-system namespace, and bedrock is not installed, make this true.
     name: deployCertManager
     type: string
   - default: "false"
-    description: install cluster scoped helm resources.  If deploying to the m4d-system namespace, make this true
+    description: install cluster scoped helm resources.  If deploying to the fybrik-system namespace, make this true
     name: clusterScoped
     type: string
   - default: "https://cpd-tooling-2q21-cpd.apps.cpstreamsx6.cp.fyre.ibm.com"
@@ -104,7 +104,7 @@ spec:
   - description: Not currently used.  Leave as-is
     name: deployment-name
     type: string
-    default: m4d
+    default: fybrik
   - description: Used only when restarting tasks.  Do not fill
     name: IMAGE_DIGEST
     type: string
@@ -722,7 +722,7 @@ spec:
     - name: docker-namespace
       value: "$(params.docker-namespace)"
     - name: blueprintNamespace
-      value: $(params.blueprintNamespace)
+      value: "$(params.blueprintNamespace)"
     runAfter:
     - build-datacatalog
     taskRef:
@@ -867,9 +867,9 @@ spec:
   - name: upgrade-helm-full
     params:
     - name: charts_dir
-      value: /workspace/source/mesh-for-data/charts/m4d
+      value: /workspace/source/mesh-for-data/charts/fybrik
     - name: release_name
-      value: m4d
+      value: fybrik
       # --values /workspace/source/pipeline/pullsecrets.yaml
     - name: release_namespace
       value: $(params.NAMESPACE)
@@ -907,9 +907,9 @@ spec:
   - name: upgrade-helm-partial
     params:
     - name: charts_dir
-      value: /workspace/source/mesh-for-data/charts/m4d
+      value: /workspace/source/mesh-for-data/charts/fybrik
     - name: release_name
-      value: m4d --reuse-values
+      value: fybrik --reuse-values
       # --values /workspace/source/pipeline/pullsecrets.yaml --reuse-values
     - name: release_namespace
       value: $(params.NAMESPACE)
@@ -1003,9 +1003,9 @@ spec:
   - name: upgrade-helm-crd-from-source
     params:
     - name: charts_dir
-      value: /workspace/source/mesh-for-data/charts/m4d-crd
+      value: /workspace/source/mesh-for-data/charts/fybrik-crd
     - name: release_name
-      value: m4d-crd
+      value: fybrik-crd
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: release_version
@@ -1259,7 +1259,7 @@ spec:
     - Input: $(params.NAMESPACE)
       Operator: in
       Values:
-      - "m4d-system"
+      - "fybrik-system"
     - Input: $(params.IMAGE_DIGEST)
       Operator: in
       Values:

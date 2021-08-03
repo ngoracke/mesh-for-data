@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"emperror.dev/errors"
+	app "fybrik.io/fybrik/manager/apis/app/v1alpha1"
+	"fybrik.io/fybrik/pkg/multicluster"
 	"github.com/go-logr/logr"
-	app "github.com/mesh-for-data/mesh-for-data/manager/apis/app/v1alpha1"
-	"github.com/mesh-for-data/mesh-for-data/pkg/multicluster"
 	"k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -31,7 +31,8 @@ type PlotterReconciler struct {
 	ClusterManager multicluster.ClusterManager
 }
 
-const BlueprintNamespace = "m4d-blueprints"
+// BlueprintNamespace defines a namespace where blueprints and associated resources will be allocated
+const BlueprintNamespace = "fybrik-blueprints"
 
 // Reconcile receives a Plotter CRD
 //nolint:dupl
@@ -193,7 +194,7 @@ func (r *PlotterReconciler) reconcile(plotter *app.Plotter) (ctrl.Result, []erro
 			blueprint := &app.Blueprint{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Blueprint",
-					APIVersion: "app.m4d.ibm.com/v1alpha1",
+					APIVersion: "app.fybrik.io/v1alpha1",
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:        plotter.Name,
