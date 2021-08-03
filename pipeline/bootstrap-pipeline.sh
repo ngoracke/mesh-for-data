@@ -534,8 +534,8 @@ type: kubernetes.io/Opaque
 stringData:
   CP4D_USERNAME: admin 
   CP4D_PASSWORD: password
-  WKC_USERNAME: admin
-  WKC_PASSWORD: password
+  WKC_username: admin
+  WKC_password: password
   CP4D_SERVER_URL: https://cpd-cpd4.apps.cpstreamsx4.cp.fyre.ibm.com
 EOH
     cat ${TMP}/wkc-credentials.yaml
@@ -550,8 +550,8 @@ type: kubernetes.io/Opaque
 stringData:
   CP4D_USERNAME: admin
   CP4D_PASSWORD: password
-  WKC_USERNAME: admin
-  WKC_PASSWORD: password
+  WKC_username: admin
+  WKC_password: password
   CP4D_SERVER_URL: https://cpd-cpd4.apps.cpstreamsx4.cp.fyre.ibm.com
 EOH
     oc apply -f ${TMP}/wkc-credentials.yaml
