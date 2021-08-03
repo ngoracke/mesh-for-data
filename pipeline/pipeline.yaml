@@ -7,10 +7,10 @@ spec:
   - description: docker registry namespace.  Choose something unique.  If using the local OpenShift registry, make this the same as NAMESPACE.
     name: docker-namespace
     type: string
-  - description: namespace to deploy control plane to.  If nobody has deployed m4d on this cluster before, choose m4d-system.
+  - description: namespace to deploy control plane to.  If nobody has deployed fybrik on this cluster before, choose fybrik-system.
     name: NAMESPACE
     type: string
-  - description: namespace to deploy blueprints to. Name will be derived from control plane namespace.  If control plane namespace is set to m4d-system; this will default to m4d-blueprints.
+  - description: namespace to deploy blueprints to. Name will be derived from control plane namespace.  If control plane namespace is set to fybrik-system; this will default to fybrik-blueprints.
     name: blueprintNamespace
     type: string   
   - default: kind-registry:5000

@@ -7,10 +7,10 @@ spec:
   - description: docker registry namespace.  Choose something unique.  If using the local OpenShift registry, make this the same as NAMESPACE.
     name: docker-namespace
     type: string
-  - description: namespace to deploy control plane to.  If nobody has deployed m4d on this cluster before, choose m4d-system.
+  - description: namespace to deploy control plane to.  If nobody has deployed fybrik on this cluster before, choose fybrik-system.
     name: NAMESPACE
     type: string
-  - description: namespace to deploy blueprints to. Name will be derived from control plane namespace.  If control plane namespace is set to m4d-system; this will default to m4d-blueprints.
+  - description: namespace to deploy blueprints to. Name will be derived from control plane namespace.  If control plane namespace is set to fybrik-system; this will default to fybrik-blueprints.
     name: blueprintNamespace
     type: string
   - default: wcp-ibm-streams-docker-local.artifactory.swg-devops.com
@@ -1042,7 +1042,7 @@ spec:
     - name: context
       value: .
     - name: command
-      value: sed -i 's|bound_service_account_namespaces=.*"|bound_service_account_namespaces="m4d-nick-blueprints"|g' $(params.vaultValues)
+      value: sed -i 's|bound_service_account_namespaces=.*"|bound_service_account_namespaces="$(params.blueprintNamespace"|g' $(params.vaultValues)
     runAfter:
     - fetch-vault-plugin-secrets-wkc-reader
     taskRef:
