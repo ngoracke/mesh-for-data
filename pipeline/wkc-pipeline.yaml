@@ -1042,7 +1042,7 @@ spec:
     - name: context
       value: .
     - name: command
-      value: sed -i 's|bound_service_account_namespaces=.*"|bound_service_account_namespaces="$(params.blueprintNamespace"|g' $(params.vaultValues)
+      value: sed -i 's|bound_service_account_namespaces=.*"|bound_service_account_namespaces="$(params.blueprintNamespace)"|g' $(params.vaultValues)
     runAfter:
     - fetch-vault-plugin-secrets-wkc-reader
     taskRef:
