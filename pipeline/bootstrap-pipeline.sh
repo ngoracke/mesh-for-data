@@ -378,7 +378,7 @@ fi
     deploy_vault="true"
 #fi
 set +e
-oc get crd | grep "fybrikapplications.app.fybrik.ibm.com"
+oc get crd | grep "fybrikapplications.app.fybrik.io"
 rc=$?
 deploy_crd="false"
 if [[ $rc -ne 0 ]]; then

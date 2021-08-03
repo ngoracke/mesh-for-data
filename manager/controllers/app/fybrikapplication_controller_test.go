@@ -103,7 +103,7 @@ var _ = Describe("FybrikApplication Controller", func() {
 			}, timeout, interval).Should(BeTrue(), "FybrikApplication is not ready after timeout!")
 
 			blueprintNamespace := getBlueprintNamespace()
-			fmt.Printf("blueprint namespace m4dapp: " + blueprintNamespace + "\n")
+			fmt.Printf("blueprint namespace fybrikapp: " + blueprintNamespace + "\n")
 
 			By("Status should contain the details of the endpoint")
 			Expect(len(application.Status.ReadEndpointsMap)).To(Equal(1))

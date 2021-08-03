@@ -21,7 +21,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-const DefaultBatchtransferNameSpace = "m4d-blueprints"
+const DefaultBatchtransferNameSpace = "fybrik-blueprints"
 
 func getBatchTransferNamespace() string {
 	batchtransferNameSpace := DefaultBatchtransferNameSpace

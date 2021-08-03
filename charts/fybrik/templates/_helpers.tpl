@@ -103,18 +103,18 @@ cert-manager.io/v1alpha2
 {{/*
 Get blueprints namespace
 */}}
-{{- define "m4d.getBlueprintNamespace" -}}
+{{- define "fybrik.getBlueprintNamespace" -}}
 {{- if .Values.blueprintNamespace -}}
 {{- .Values.blueprintNamespace -}}
 {{- else -}}
-{{- "m4d-blueprints" -}}
+{{- "fybrik-blueprints" -}}
 {{- end -}}
 {{- end -}}
 
 {{/*
 Set watch namespace 
 */}}
-{{- define "m4d.setWatchNamespace" -}}
+{{- define "fybrik.setWatchNamespace" -}}
 {{- if .Values.manager.watchNamespaces }}
 - name: WATCH_NAMESPACE
   value: {{.Values.manager.watchNamespaces }}
@@ -122,7 +122,7 @@ Set watch namespace
 - name: WATCH_NAMESPACE
   value: ""
 {{- else }}
-{{- $bluens := include "m4d.getBlueprintNamespace" . -}}
+{{- $bluens := include "fybrik.getBlueprintNamespace" . -}}
 {{- if not ( eq .Release.Namespace $bluens ) }}
 - name: WATCH_NAMESPACE
   value: {{ printf "%s%s%s" .Release.Namespace "," $bluens }}
@@ -136,7 +136,7 @@ Set watch namespace
 {{/*
 Indicate when webhooks should be enabled
 */}}
-{{- define "m4d.enableWebhooks" -}}
+{{- define "fybrik.enableWebhooks" -}}
 {{- if .Values.clusterScoped -}}
 true
 {{- else  -}}

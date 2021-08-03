@@ -21,7 +21,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-const DefaultStreamtransferNameSpace = "m4d-blueprints"
+const DefaultStreamtransferNameSpace = "fybrik-blueprints"
 
 func getStreamsTransferNamespace() string {
 	streamtransferNameSpace := DefaultStreamtransferNameSpace

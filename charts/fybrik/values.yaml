@@ -13,7 +13,7 @@ fullnameOverride: ""
 
 clusterScoped: true
 
-blueprintNamespace: "m4d-blueprints"
+blueprintNamespace: "fybrik-blueprints"
 
 # Global configuration applies to multiple components installed by this chart
 global:
@@ -103,7 +103,7 @@ manager:
   enabled: auto
 
   # Specify the namespaces to watch. Set to "" if want to watch all namespaces.
-  #watchNamespaces: "m4d-system,m4d-blueprints"
+  #watchNamespaces: "fybrik-system,fybrik-blueprints"
   
   # Override GRPC connection timeout in manager
   connectionTimeout: 

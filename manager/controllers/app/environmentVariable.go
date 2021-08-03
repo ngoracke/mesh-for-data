@@ -5,10 +5,10 @@ import (
 )
 
 // BlueprintNamespace defines a namespace where blueprints and associated resources will be allocated
-const DefaultBlueprintNamespace = "m4d-blueprints"
+const DefaultBlueprintNamespace = "fybrik-blueprints"
 
 // Controller namespace defines a namespace where
-const DefaultControllerNamespace = "m4d-system"
+const DefaultControllerNamespace = "fybrik-system"
 
 func getBlueprintNamespace() string {
 

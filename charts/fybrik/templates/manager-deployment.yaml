@@ -86,10 +86,10 @@ spec:
               value: "false"
             {{- end }}
 
-            {{- include "m4d.setWatchNamespace" . | indent 12 }}   
+            {{- include "fybrik.setWatchNamespace" . | indent 12 }}   
 
             - name: BLUEPRINT_NAMESPACE
-              value: {{ include "m4d.getBlueprintNamespace" . }}
+              value: {{ include "fybrik.getBlueprintNamespace" . }}
 
             {{- if .Values.manager.extraEnvs }}
             {{- toYaml .Values.manager.extraEnvs | nindent 12 }}
