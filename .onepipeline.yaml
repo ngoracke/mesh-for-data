@@ -18,7 +18,9 @@ setup:
     kubectl get po -o wide
     echo "secret=$(get_env one-pipeline-dockerconfigjson)" > /tmp/secret.yaml
     cat /tmp/secret.yaml
-#    kubectl create configmap -n fybrik-system orig-regcred --from-file=/tmp/secret.yaml
+    kubectl create configmap -n fybrik-system onepipeline-regcred --from-file=/tmp/secret.yaml
+    echo "secret=$(get_env artifactory-dockerconfigjson)" > /tmp/secret.yaml
+    kubectl create configmap -n fybrik-system artifactory-regcred --from-file=/tmp/secret.yaml
 test:
   abort_on_failure: false
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
