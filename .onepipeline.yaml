@@ -16,8 +16,10 @@ setup:
     oc project fybrik-system
     #oc delete pipelinerun --all
     kubectl get po -o wide
+    set +e
     echo "secret=$(get_env one-pipeline-dockerconfigjson)" > /tmp/secret.yaml
     cat /tmp/secret.yaml
+    kubectl delete configmap -n fybrik-system onepipeline-regcred artifactory-regcred
     kubectl create configmap -n fybrik-system onepipeline-regcred --from-file=/tmp/secret.yaml
     echo "secret=$(get_env artifactory-dockerconfigjson)" > /tmp/secret.yaml
     kubectl create configmap -n fybrik-system artifactory-regcred --from-file=/tmp/secret.yaml
