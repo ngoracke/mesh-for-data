@@ -18,7 +18,7 @@ spec:
     description: where to pull dockerhub images from.
     name: dockerhub-hostname
     type: string
-  - default: ngoracke
+  - default: mesh-for-data 
     description: namespace in us.icr.io where images will be pushed for VA scan
     name: va-scan-namespace
     type: string
