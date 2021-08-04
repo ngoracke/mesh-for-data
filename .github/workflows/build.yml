@@ -134,16 +134,15 @@ jobs:
       run: make install-tools
     - name: Integration tests
       env:
-        ARTIFACTORY_APIKEY: "fake"
-        #${{ secrets.ARTIFACTORY_APIKEY }}
+        image_source_repo_password: "fake"
         github: github.com
         run_tkn: 1
         dockerhub_hostname: docker.io
-        git_user: ngoracke@us.ibm.com
+        git_user: fake@fake.com
         image_repo: kind-registry:5000
-        image_source_repo_username: ngoracke@us.ibm.com
+        image_source_repo_username: fake@fake.com 
         GH_TOKEN: fake
-      run: pushd hack/tools/ && ./create_kind.sh && popd && run_tkn=${run_tkn} skip_tests=false GH_TOKEN=${GH_TOKEN} git_user=${git_user} image_repo=${image_repo} github_workspace=${{ github.workspace }} pipeline/bootstrap-pipeline.sh m4d-system
+      run: pushd hack/tools/ && ./create_kind.sh && popd && . pipeline/source-external.sh && skip_tests=false github_workspace=${{ github.workspace }} pipeline/bootstrap-pipeline.sh fybrik-system
   push_images:
     name: Push images
     runs-on: ubuntu-latest

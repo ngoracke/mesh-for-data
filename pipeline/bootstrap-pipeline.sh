@@ -2,17 +2,23 @@
 set -x
 set +e
 
-run_tkn=${run_tkn:-0}
-skip_tests=${skip_tests:-false}
-GH_TOKEN=${GH_TOKEN}
-ARTIFACTORY_APIKEY=${ARTIFACTORY_APIKEY}
-git_user=${git_user}
-github=${github:-github.ibm.com}
-github_workspace=${github_workspace}
-image_source_repo_username=${image_source_repo_username}
-image_repo="${image_repo:-image-registry.openshift-image-registry.svc:5000}"
-image_source_repo="${image_source_repo:-wcp-ibm-streams-docker-local.artifactory.swg-devops.com}"
-dockerhub_hostname="${dockerhub_hostname:-wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial}"
+export run_tkn=${run_tkn:-0}
+export skip_tests=${skip_tests:-false}
+export GH_TOKEN=${GH_TOKEN:-fake}
+export image_source_repo_password=${image_source_repo_password:-fake}
+export cluster_scoped=${cluster_scoped:-false}
+export git_user=${git_user:-fake@fake.com}
+export github=${github:-github.com}
+export github_workspace=${github_workspace}
+export image_source_repo_username=${image_source_repo_username}
+export image_repo="${image_repo:-kind-registry:5000}"
+export image_source_repo="${image_source_repo:-fake.com}"
+export dockerhub_hostname="${dockerhub_hostname:-docker.io}"
+export cpd_url="${cpd_url:-https://cpd.fake.com}"
+export git_url="${git_url:-https://github.com/fybrik/fybrik.git}"
+export wkc_connector_git_url="${wkc_connector_git_url}"
+export vault_plugin_secrets_wkc_reader_url="${vault_plugin_secrets_wkc_reader_url}"
+
 helper_text=""
 realpath() {
     [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
@@ -207,20 +213,6 @@ oc apply -f ${repo_root}/pipeline/helm-upgrade-from-source.yaml
 oc apply -f ${repo_root}/pipeline/helm-upgrade-from-repo.yaml 
 helper_text=""
 
-#oc patch clustertask helm-upgrade-from-repo -p '
-#[{
-#  "op": "replace",
-#  "path": "/spec/steps/0/image",
-#  "value": "wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/k8s-helm:latest"
-#}]' --type=json
-#
-#oc patch clustertask helm-upgrade-from-source -p '
-#[{
-#  "op": "replace",
-#  "path": "/spec/steps/0/image",
-#  "value": "wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/k8s-helm:latest"
-#}]' --type=json
-
 # Wipe old pipeline definitions in case of merge conflicts
 set +e
 oc delete -f ${repo_root}/pipeline/pipeline.yaml
@@ -240,15 +232,6 @@ oc delete secret -n ${unique_prefix} regcred --wait
 oc delete secret -n ${unique_prefix} regcred-test --wait
 oc delete secret -n ${unique_prefix} sourceregcred --wait
 set -e
-set +x
-helper_text="If this step fails:
-
-1. login to one of the openshift clusters here: https://github.ibm.com/IBM-Streams/infra-streams#for-openshift-4x
-2. oc get secret -n openshift-config pull-secret -o yaml > /tmp/secret.yaml
-3. login to your target cluster again
-4. oc create -f /tmp/secret.yaml
-5. re-run bootstrap.sh
-"
 set -x
 
 # See if we have a pull secret available on cluster that has access to authenticated registries we need
@@ -257,7 +240,7 @@ oc get secret -n openshift-config pull-secret -o yaml > ${TMP}/secret.yaml
 rc=$?
 if [[ ${rc} -eq 0 ]]; then
     helper_text=""
-    oc get secret -n openshift-config pull-secret -o=go-template='{{index .data ".dockerconfigjson"}}' | base64 --decode | grep wcp-ibm-streams-docker-local
+    oc get secret -n openshift-config pull-secret -o=go-template='{{index .data ".dockerconfigjson"}}' | base64 --decode | grep "${image_source_repo}"
     rc=$?
     if [[ ${rc} -eq 0 ]]; then
         set -e
@@ -267,17 +250,17 @@ if [[ ${rc} -eq 0 ]]; then
         cat ${TMP}/secret.yaml
         oc apply -f ${TMP}/secret.yaml
     else
-        if [[ ! -z ${ARTIFACTORY_APIKEY} ]]; then
+        if [[ ! -z ${image_source_repo_password} ]]; then
             set -e
-            auth=$(echo -n "${image_source_repo_username:-$git_username}:${ARTIFACTORY_APIKEY}" | base64 ${base64_arg})
+            auth=$(echo -n "${image_source_repo_username:-$git_username}:${image_source_repo_password}" | base64 ${base64_arg})
             cat > ${TMP}/secret.yaml <<EOH
-{"auths":{"${image_source_repo}":{"username":"${image_source_repo_username:-$git_username}","password":"${ARTIFACTORY_APIKEY}","auth":"${auth}"}}}
+{"auths":{"${image_source_repo}":{"username":"${image_source_repo_username:-$git_username}","password":"${image_source_repo_password}","auth":"${auth}"}}}
 EOH
             kubectl create secret -n ${unique_prefix} generic regcred --from-file=.dockerconfigjson=${TMP}/secret.yaml --type=kubernetes.io/dockerconfigjson
         else
-            helper_text="Run the following commands to set up credentials for artifactory:
+            helper_text="Run the following commands to set up credentials for ${image_source_repo}:
 
-            export ARTIFACTORY_APIKEY=xxx
+            export image_source_repo_password=xxx
             export image_source_repo_username=user@email.com
             "
             exit 1
@@ -285,17 +268,17 @@ EOH
     fi
 else
     helper_text=""
-    if [[ ! -z ${ARTIFACTORY_APIKEY} ]]; then
+    if [[ ! -z ${image_source_repo_password} ]]; then
         set -e
-        auth=$(echo -n "${image_source_repo_username:-$git_username}:${ARTIFACTORY_APIKEY}" | base64 ${base64_arg})
+        auth=$(echo -n "${image_source_repo_username:-$git_username}:${image_source_repo_password}" | base64 ${base64_arg})
         cat > ${TMP}/secret.yaml <<EOH
-{"auths":{"${image_source_repo}":{"username":"${image_source_repo_username:-$git_username}","password":"${ARTIFACTORY_APIKEY}","auth":"${auth}"}}}
+{"auths":{"${image_source_repo}":{"username":"${image_source_repo_username:-$git_username}","password":"${image_source_repo_password}","auth":"${auth}"}}}
 EOH
         kubectl create secret -n ${unique_prefix} generic regcred --from-file=.dockerconfigjson=${TMP}/secret.yaml --type=kubernetes.io/dockerconfigjson
     else
-        helper_text="Run the following commands to set up credentials for artifactory:
+        helper_text="Run the following commands to set up credentials for ${image_source_repo}:
     
-        export ARTIFACTORY_APIKEY=xxx
+        export image_source_repo_password=xxx
         export image_source_repo_username=user@email.com
         "
         exit 1
@@ -404,9 +387,6 @@ fi
 extra_params="${extra_params} -p vaultValues=\"${vault_values}\""
 
 # Determine which set of repositories to use, based on whether or not we're dealing with open source
-git_url=
-wkc_connector_git_url=
-vault_plugin_secrets_wkc_reader_url=
 if [[ -z ${GH_TOKEN} && "${github}" != "github.com" ]]; then
     cat ~/.ssh/known_hosts | base64 ${base64_arg} > ${TMP}/known_hosts
     set +x
@@ -430,10 +410,6 @@ if [[ -z ${GH_TOKEN} && "${github}" != "github.com" ]]; then
 #        oc get sa default -o yaml | grep -A3 "secrets:" | awk '/git-token/ { print NR }' 
     fi
     set -e
-    extra_params="${extra_params} -p git-url=git@${github}:IBM-Data-Fabric/mesh-for-data.git -p wkc-connector-git-url=git@${github}:ngoracke/WKC-connector.git -p vault-plugin-secrets-wkc-reader-url=git@${github}:data-mesh-research/vault-plugin-secrets-wkc-reader.git"
-    git_url="git@${github}:IBM-Data-Fabric/mesh-for-data.git"
-    wkc_connector_git_url="git@${github}:ngoracke/WKC-connector.git"
-    vault_plugin_secrets_wkc_reader_url="git@${github}:data-mesh-research/vault-plugin-secrets-wkc-reader.git"
 elif [[ ! -z ${GH_TOKEN} && "${github}" != "github.com" ]]; then
     cat > ${TMP}/git-token.yaml <<EOH
 apiVersion: v1
@@ -457,13 +433,8 @@ EOH
         set +e
     fi
     set -e
-    extra_params="${extra_params} -p git-url=https://${github}/IBM-Data-Fabric/mesh-for-data.git -p wkc-connector-git-url=https://${github}/ngoracke/WKC-connector.git -p vault-plugin-secrets-wkc-reader-url=https://${github}/data-mesh-research/vault-plugin-secrets-wkc-reader.git"
-    git_url="https://${github}/IBM-Data-Fabric/mesh-for-data.git"
-    wkc_connector_git_url="https://${github}/ngoracke/WKC-connector.git"
-    vault_plugin_secrets_wkc_reader_url="https://${github}/data-mesh-research/vault-plugin-secrets-wkc-reader.git"
-else
-    extra_params="${extra_params} -p git-url= -p wkc-connector-git-url= -p vault-plugin-secrets-wkc-reader-url="
 fi
+extra_params="${extra_params} -p git-url=${git_url} -p wkc-connector-git-url=${wkc_connector_git_url} -p vault-plugin-secrets-wkc-reader-url=${vault_plugin_secrets_wkc_reader_url}"
 
 # Set up credentials for WKC
 if [[ "${github}" != "github.com" ]]; then
@@ -475,13 +446,15 @@ metadata:
   namespace: ${unique_prefix} 
 type: kubernetes.io/Opaque
 stringData:
-  CP4D_USERNAME: admin 
-  CP4D_PASSWORD: password
-  CP4D_SERVER_URL: https://cpd-tooling-2q21-cpd.apps.cpstreamsx3.cp.fyre.ibm.com
+  CP4D_USERNAME: ${cpd_username}
+  CP4D_PASSWORD: ${cpd_password}
+  WKC_USERNAME: ${cpd_username}
+  WKC_PASSWORD: ${cpd_password}
+  CP4D_SERVER_URL: ${cpd_url}
 EOH
     cat ${TMP}/wkc-credentials.yaml
     oc apply -f ${TMP}/wkc-credentials.yaml
-    extra_params="${extra_params} -p wkcConnectorServerUrl=https://cpd-tooling-2q21-cpd.apps.cpstreamsx3.cp.fyre.ibm.com"
+    extra_params="${extra_params} -p wkcConnectorServerUrl=${cpd_url}"
 fi
 
 # Determine whether images should be sent to ICR for security scanning if creds exist
@@ -501,7 +474,11 @@ if [[ ! -z "${github_workspace}" ]]; then
     try_command "kubectl wait pod workspace-0 --for=condition=Ready --timeout=1m" 15 false 5
     ls ${github_workspace}
     ls ${github_workspace}/..
-    oc cp $github_workspace workspace-0:/workspace/source/
+    if [[ ${is_kubernetes} == "true" ]]; then
+        kubectl cp $github_workspace workspace-0:/workspace/source/
+    else 
+        oc rsync $github_workspace workspace-0:/workspace/source/
+    fi
     git_url=""
     extra_params="${extra_params} -p git-url="
 fi
@@ -513,7 +490,6 @@ tkn pipeline start build-and-deploy -w name=images-url,emptyDir=\"\" -w name=art
 
 if [[ ${run_tkn} -eq 1 ]]; then
     set -x
-    #tkn pipeline start build-and-deploy -w name=images-url,emptyDir="" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=image-registry.openshift-image-registry.svc:5000 -p docker-namespace=${unique_prefix} -p git-url=git@${github}:IBM-Data-Fabric/mesh-for-data.git -p git-revision=pipeline -p NAMESPACE=${unique_prefix} ${extra_params} --dry-run > ${TMP}/pipelinerun.yaml
 
     cat > ${TMP}/pipelinerun.yaml <<EOH
 apiVersion: tekton.dev/v1beta1
@@ -536,7 +512,7 @@ spec:
   - name: git-revision
     value: pipeline
   - name: wkcConnectorServerUrl
-    value: https://cpd-tooling-2q21-cpd.apps.cpstreamsx3.cp.fyre.ibm.com
+    value: ${cpd_url}
   - name: git-url
     value: "${git_url}"
   - name: wkc-connector-git-url
