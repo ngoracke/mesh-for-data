@@ -68,13 +68,13 @@ if [[ "${github}" == "github.com" ]]; then
     helm_image="docker.io/lachlanevenson/k8s-helm:latest"
     extra_params="${extra_params} -p build_image=${build_image} -p helm_image=${helm_image}"
     cp ${repo_root}/pipeline/statefulset.yaml ${TMP}/
-    sed -i.bak "s|${dockerhub_hostname}/suede:latest|docker.io/yakinikku/suede|g" ${TMP}/statefulset.yaml
 else
     is_internal="true"
     build_image="${dockerhub_hostname}/suede_compile:latest"
     helm_image="${dockerhub_hostname}/k8s-helm"
     extra_params="${extra_params} -p build_image=${build_image} -p helm_image=${helm_image}"
     cp ${repo_root}/pipeline/statefulset.yaml ${TMP}/
+    sed -i.bak "s|image: docker.io/yakinikku/suede:latest|${dockerhub_hostname}/suede|g" ${TMP}/statefulset.yaml
 fi
 
 # Figure out if we're running on OpenShift or Kubernetes (kind)
