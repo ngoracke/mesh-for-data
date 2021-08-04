@@ -66,8 +66,6 @@ wait_for_manager: $(TOOLBIN)/kubectl
 .PHONY: run-integration-tests
 run-integration-tests: export DOCKER_HOSTNAME?=localhost:5000
 run-integration-tests: export DOCKER_NAMESPACE?=fybrik-system
-run-integration-tests: export BLUEPRINT_NAMESPACE?=fybrik-blueprints
-run-integration-tests: export CONTROLLER_NAMESPACE?=fybrik-system
 run-integration-tests: export USE_WKC_CONTROLLER?=true
 run-integration-tests: wait_for_manager
 	NO_SIMULATED_PROGRESS=true USE_EXISTING_CONTROLLER=true USE_EXISTING_CLUSTER=true go test ./... -v -run TestMotionAPIs -count 1

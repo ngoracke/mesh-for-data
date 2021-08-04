@@ -13,12 +13,16 @@ setup:
     env
     ls $WORKSPACE
     oc login $(get_env openshift_cluster) -u $(get_env admin_user) -p $(get_env admin_pw) --insecure-skip-tls-verify=true
-    oc project m4d-system
+    oc project fybrik-system
     #oc delete pipelinerun --all
     kubectl get po -o wide
+    set +e
     echo "secret=$(get_env one-pipeline-dockerconfigjson)" > /tmp/secret.yaml
     cat /tmp/secret.yaml
-#    kubectl create configmap -n m4d-system orig-regcred --from-file=/tmp/secret.yaml
+    kubectl delete configmap -n fybrik-system onepipeline-regcred artifactory-regcred
+    kubectl create configmap -n fybrik-system onepipeline-regcred --from-file=/tmp/secret.yaml
+    echo "secret=$(get_env artifactory-dockerconfigjson)" > /tmp/secret.yaml
+    kubectl create configmap -n fybrik-system artifactory-regcred --from-file=/tmp/secret.yaml
 test:
   abort_on_failure: false
   image: icr.io/continuous-delivery/pipeline/pipeline-base-image:2.12@sha256:ff4053b0bca784d6d105fee1d008cfb20db206011453071e86b69ca3fde706a4
@@ -31,7 +35,7 @@ test:
     env
     ls $WORKSPACE
     oc login $(get_env openshift_cluster) -u $(get_env admin_user) -p $(get_env admin_pw) --insecure-skip-tls-verify=true
-    oc project m4d-system
+    oc project fybrik-system
     kubectl get po -o wide
 containerize:
   dind: true
@@ -50,11 +54,11 @@ containerize:
     ls $WORKSPACE
     oc login $(get_env openshift_cluster) -u $(get_env admin_user) -p $(get_env admin_pw) --insecure-skip-tls-verify=true
     set +e
-    oc new-project m4d-system
-    oc project m4d-system
-    #oc delete pipelinerun --all --wait
+    oc new-project fybrik-system
+    oc project fybrik-system
+    oc delete pipelinerun --all --wait
     set -e
-    #run_tkn=$(get_env run_tkn) skip_tests=true GH_TOKEN=$(get_env different-git-token) git_user=$(get_env git-user) image_repo=$(get_env push_registry) bash -x pipeline/bootstrap-pipeline.sh m4d-system
+    github_workspace=`pwd`/../mesh-for-data run_tkn=$(get_env run_tkn) skip_tests=true GH_TOKEN=$(get_env different-git-token) git_user=$(get_env git-user) bash -x pipeline/bootstrap-pipeline.sh fybrik-system
     kubectl get po -o wide
     . pipeline/common_functions.sh
     cat > ${TMP}/streams_csv_check_script.sh <<EOH
@@ -92,7 +96,7 @@ containerize:
     for i in $images
     do
         #external_route_image=$(echo $i | sed "s|image-registry.openshift-image-registry.svc:5000|default-route-openshift-image-registry.apps.cpstreamsx3.cp.fyre.ibm.com|g")
-        icr_route_image=$(echo $i | sed "s|image-registry.openshift-image-registry.svc:5000/m4d-system|$ICR_REGISTRY_REGION.icr.io/$ICR_REGISTRY_NAMESPACE|g")
+        icr_route_image=$(echo $i | sed "s|image-registry.openshift-image-registry.svc:5000/fybrik-system|$ICR_REGISTRY_REGION.icr.io/$ICR_REGISTRY_NAMESPACE|g")
         #skopeo copy --all --authfile ~/.docker/config.json --dest-tls-verify=false --src-tls-verify=false docker://${external_route_image} docker://${icr_route_image}
         save_artifact service type=image name="$(echo ${icr_route_image} | cut -d'@' -f1)" digest="$(echo $i | cut -d'@' -f2)" tags="latest"
         save_artifact service_debug type=image name="$(echo ${icr_route_image} | cut -d'@' -f1)" digest="$(echo $i | cut -d'@' -f2)"
@@ -116,11 +120,12 @@ acceptance-test:
   image: wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/compliance-baseimage-with-tkn:2.26.1
   script: |
     env
+    set -x
     ls $WORKSPACE
     oc login $(get_env openshift_cluster) -u $(get_env admin_user) -p $(get_env admin_pw) --insecure-skip-tls-verify=true
-    oc project m4d-system
+    oc project fybrik-system
     # go get github.com/tebeka/go2xunit
-    for i in $(oc get po --no-headers | grep run-integr | cut -d' ' -f1); do oc logs $i -c step-unit-test > $i.logs ; cat $i.logs | ~/go/bin/go2xunit > $i.xml; save_artifact acceptance-test $i.logs; save_artifact acceptance-test $.xml; done
+    for i in $(oc get po --no-headers | grep run-integr | cut -d' ' -f1); do oc logs $i -c step-unit-test > $i.logs ; cat $i.logs | ~/go/bin/go2xunit > $i.xml; save_artifact acceptance-test log_$i=$i.logs; save_artifact acceptance-test xml_$i=$i.xml ; done
 release:
   abort_on_failure: false
   image: wcp-compliance-automation-team-docker-local.artifactory.swg-devops.com/ibm-compliance-automation:1.2.4@sha256:dc98cc52c0caede42149c08727147520e30e81fee543b8dd5939b45d06baa142

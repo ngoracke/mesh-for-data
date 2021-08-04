@@ -13,13 +13,17 @@ import (
 
 	"github.com/onsi/gomega/gexec"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 
 	motionv1 "fybrik.io/fybrik/manager/apis/motion/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	kbatch "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -100,10 +104,20 @@ var _ = BeforeSuite(func(done Done) {
 		controllerNamespace := os.Getenv("CONTROLLER_NAMESPACE")
 		blueprintNamespace := os.Getenv("BLUEPRINT_NAMESPACE")
 		fmt.Printf("LAW: Using controller namespace: " + controllerNamespace + " using blueprint namespace: " + blueprintNamespace)
+		workerNamespaceSelector := fields.SelectorFromSet(fields.Set{"metadata.namespace": "fybrik-blueprints"})
+		selectorsByObject := cache.SelectorsByObject{
+			&motionv1.BatchTransfer{}:       {Field: workerNamespaceSelector},
+			&motionv1.StreamTransfer{}:      {Field: workerNamespaceSelector},
+			&kbatch.Job{}:                   {Field: workerNamespaceSelector},
+			&corev1.Secret{}:                {Field: workerNamespaceSelector},
+			&corev1.Pod{}:                   {Field: workerNamespaceSelector},
+			&corev1.PersistentVolumeClaim{}: {Field: workerNamespaceSelector},
+		}
 
 		mgr, err = ctrl.NewManager(cfg, ctrl.Options{
 			Scheme:             scheme.Scheme,
 			MetricsBindAddress: "localhost:8085",
+			NewCache:           cache.BuilderWithOptions(cache.Options{SelectorsByObject: selectorsByObject}),
 		})
 		Expect(err).ToNot(HaveOccurred())
 

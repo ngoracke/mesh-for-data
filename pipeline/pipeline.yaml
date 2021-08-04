@@ -12,7 +12,7 @@ spec:
     type: string
   - description: namespace to deploy blueprints to. Name will be derived from control plane namespace.  If control plane namespace is set to fybrik-system; this will default to fybrik-blueprints.
     name: blueprintNamespace
-    type: string   
+    type: string
   - default: kind-registry:5000
     description: docker registry hostname.  This is where images will be pushed once built
     name: docker-hostname
@@ -875,66 +875,66 @@ spec:
       Operator: notin
       Values:
       - "true"
-  - name: oc-install-flight-opensource-crds-absent
-    params:
-    - name: ARGS
-      value:
-      - apply -f https://github.com/mesh-for-data/arrow-flight-module/releases/latest/download/module.yaml
-        -n $(params.NAMESPACE)
-    runAfter:
-    - upgrade-helm-crd-from-source
-    taskRef:
-      kind: Task
-      name: openshift-client
-    when:
-    - Input: $(params.IMAGE_DIGEST)
-      Operator: in
-      Values:
-      - "none"
-    - Input: $(params.INCREMENTAL_RESTART)
-      Operator: notin
-      Values:
-      - "true"
-    - Input: $(params.INCREMENTAL_CODE_RESTART)
-      Operator: notin
-      Values:
-      - "true"
-    workspaces:
-    - name: source
-      workspace: shared-workspace
-  - name: oc-install-flight-opensource-crds-present
-    params:
-    - name: ARGS
-      value:
-      - apply -f https://github.com/mesh-for-data/arrow-flight-module/releases/latest/download/module.yaml
-        -n $(params.NAMESPACE)
-    taskRef:
-      kind: Task
-      name: openshift-client
-    when:
-    - Input: $(params.deployCRD)
-      Operator: in
-      Values:
-      - "false"
-    - Input: $(params.NAMESPACE)
-      Operator: in
-      Values:
-      - "fybrik-system"
-    - Input: $(params.IMAGE_DIGEST)
-      Operator: in
-      Values:
-      - "none"
-    - Input: $(params.INCREMENTAL_RESTART)
-      Operator: notin
-      Values:
-      - "true"
-    - Input: $(params.INCREMENTAL_CODE_RESTART)
-      Operator: notin
-      Values:
-      - "true"
-    workspaces:
-    - name: source
-      workspace: shared-workspace
+  #- name: oc-install-flight-opensource-crds-absent
+  #  params:
+  #  - name: ARGS
+  #    value:
+  #    - apply -f https://github.com/mesh-for-data/arrow-flight-module/releases/latest/download/module.yaml
+  #      -n $(params.NAMESPACE)
+  #  runAfter:
+  #  - upgrade-helm-crd-from-source
+  #  taskRef:
+  #    kind: Task
+  #    name: openshift-client
+  #  when:
+  #  - Input: $(params.IMAGE_DIGEST)
+  #    Operator: in
+  #    Values:
+  #    - "none"
+  #  - Input: $(params.INCREMENTAL_RESTART)
+  #    Operator: notin
+  #    Values:
+  #    - "true"
+  #  - Input: $(params.INCREMENTAL_CODE_RESTART)
+  #    Operator: notin
+  #    Values:
+  #    - "true"
+  #  workspaces:
+  #  - name: source
+  #    workspace: shared-workspace
+  #- name: oc-install-flight-opensource-crds-present
+  #  params:
+  #  - name: ARGS
+  #    value:
+  #    - apply -f https://github.com/mesh-for-data/arrow-flight-module/releases/latest/download/module.yaml
+  #      -n $(params.NAMESPACE)
+  #  taskRef:
+  #    kind: Task
+  #    name: openshift-client
+  #  when:
+  #  - Input: $(params.deployCRD)
+  #    Operator: in
+  #    Values:
+  #    - "false"
+  #  - Input: $(params.NAMESPACE)
+  #    Operator: in
+  #    Values:
+  #    - "fybrik-system"
+  #  - Input: $(params.IMAGE_DIGEST)
+  #    Operator: in
+  #    Values:
+  #    - "none"
+  #  - Input: $(params.INCREMENTAL_RESTART)
+  #    Operator: notin
+  #    Values:
+  #    - "true"
+  #  - Input: $(params.INCREMENTAL_CODE_RESTART)
+  #    Operator: notin
+  #    Values:
+  #    - "true"
+  #  workspaces:
+  #  - name: source
+  #    workspace: shared-workspace
   - name: run-integration-tests-full-deploy
     params:
     - name: target

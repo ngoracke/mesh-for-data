@@ -1,10 +1,8 @@
 {{- if .Values.worker.enabled }}
-{{- if not (.Values.clusterScoped) }}
-# Role batchtransfer-editor allows managing batchtransfers
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: {{ template "fybrik.fullname" . }}-batchtransfer-role
+  name: batchtransfer-editor
 rules:
 - apiGroups: ["motion.fybrik.io"]
   resources: ["batchtransfers", "batchtransfers/finalizers"]
@@ -12,5 +10,4 @@ rules:
 - apiGroups: ["motion.fybrik.io"]
   resources: ["batchtransfers/status"]
   verbs: ["get", "update", "patch"]
-{{- end }}
 {{- end }}
