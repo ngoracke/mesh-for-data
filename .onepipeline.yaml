@@ -58,7 +58,10 @@ containerize:
     oc project fybrik-system
     oc delete pipelinerun --all --wait
     set -e
-    github_workspace=`pwd`/../mesh-for-data run_tkn=$(get_env run_tkn) skip_tests=true GH_TOKEN=$(get_env different-git-token) git_user=$(get_env git-user) bash -x pipeline/bootstrap-pipeline.sh fybrik-system
+    export GH_TOKEN=(get_env different-git-token)
+    export git_user=$(get_env git-user)
+    . pipeline/source-internal.sh
+    github_workspace=`pwd`/../mesh-for-data run_tkn=$(get_env run_tkn) skip_tests=true bash -x pipeline/bootstrap-pipeline.sh fybrik-system
     kubectl get po -o wide
     . pipeline/common_functions.sh
     cat > ${TMP}/streams_csv_check_script.sh <<EOH
