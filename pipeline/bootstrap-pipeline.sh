@@ -5,10 +5,7 @@ set +e
 run_tkn=${run_tkn:-0}
 skip_tests=${skip_tests:-false}
 GH_TOKEN=${GH_TOKEN}
-<<<<<<< HEAD
 cluster_scoped=${cluster_scoped:-false}
-=======
->>>>>>> pipeline
 ARTIFACTORY_APIKEY=${ARTIFACTORY_APIKEY}
 git_user=${git_user}
 github=${github:-github.ibm.com}
@@ -54,14 +51,9 @@ else
 fi
 set -e
 
-<<<<<<< HEAD
 extra_params="-p clusterScoped=${cluster_scoped}"
 
 # Figure out if we're using air-gapped machines that should pull images from somewhere other than dockerhub
-=======
-# Figure out if we're using air-gapped machines that should pull images from somewhere other than dockerhub
-extra_params=''
->>>>>>> pipeline
 is_external="false"
 is_internal="false"
 helm_image=
@@ -135,7 +127,6 @@ else
 fi
 unique_prefix=$(kubectl config view --minify --output 'jsonpath={..namespace}'; echo)
 
-<<<<<<< HEAD
 if [[ "${unique_prefix}" == "fybrik-system" ]]; then
   blueprint_namespace="fybrik-blueprints"
 else
@@ -191,8 +182,6 @@ oc delete -f ${TMP}/approle.yaml
 set -e
 oc apply -f ${TMP}/approle.yaml
 
-=======
->>>>>>> pipeline
 set +e
 # Be smarter about this - just a quick hack for typical default OpenShift & Kind installs so we can control the default storage class
 oc patch storageclass managed-nfs-storage -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": "true"}}}'
@@ -210,11 +199,7 @@ set -x
 oc get -n openshift-pipelines csv | grep redhat-openshift-pipelines-operator 
 oc get -n openshift-pipelines csv | grep redhat-openshift-pipelines-operator | grep Succeeded
 EOH
-<<<<<<< HEAD
     chmod u+x ${TMP}/streams_csv_check_script.sh
-=======
-chmod u+x ${TMP}/streams_csv_check_script.sh
->>>>>>> pipeline
     try_command "${TMP}/streams_csv_check_script.sh"  40 true 5
 
     cat > ${TMP}/streams_csv_check_script.sh <<EOH
@@ -223,13 +208,8 @@ set -x
 oc get -n openshift-operators csv | grep serverless-operator
 oc get -n openshift-operators csv | grep serverless-operator | grep -e Succeeded -e Replacing
 EOH
-<<<<<<< HEAD
     chmod u+x ${TMP}/streams_csv_check_script.sh
 #    try_command "${TMP}/streams_csv_check_script.sh"  40 false 5
-=======
-chmod u+x ${TMP}/streams_csv_check_script.sh
-    try_command "${TMP}/streams_csv_check_script.sh"  40 false 5
->>>>>>> pipeline
     oc apply -f ${repo_root}/pipeline/knative-eventing.yaml
 else
     kubectl apply --filename https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
@@ -256,12 +236,8 @@ if [[ ${is_openshift} == "true" ]]; then
     oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${unique_prefix}:pipeline
     oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${unique_prefix}:root-sa
     oc adm policy add-role-to-group system:image-puller system:serviceaccounts:${unique_prefix} --namespace ${unique_prefix}
-<<<<<<< HEAD
     oc adm policy add-role-to-group system:image-puller system:serviceaccounts:${blueprint_namespace} --namespace ${unique_prefix}
     oc adm policy add-role-to-group system:image-puller system:serviceaccounts:${unique_prefix}-app --namespace ${unique_prefix}
-=======
-    oc adm policy add-role-to-group system:image-puller system:serviceaccounts:fybrik-blueprints --namespace ${unique_prefix}
->>>>>>> pipeline
     oc adm policy add-role-to-user system:image-puller system:serviceaccount:${unique_prefix}:wkc-connector --namespace ${unique_prefix}
     
     # Temporary hack pending a better solution
@@ -281,10 +257,7 @@ helper_text="If this step fails, tekton related pods may be restarting or initia
 "
 set -x
 oc apply -f ${repo_root}/pipeline/make.yaml
-<<<<<<< HEAD
 oc apply -f ${repo_root}/pipeline/shell.yaml
-=======
->>>>>>> pipeline
 oc apply -f ${repo_root}/pipeline/git-clone.yaml
 oc apply -f ${repo_root}/pipeline/buildah.yaml
 oc apply -f ${repo_root}/pipeline/skopeo-copy.yaml
@@ -398,23 +371,10 @@ else
     kubectl patch serviceaccount default -p '{"secrets": [{"name": "regcred"}]}'
 fi
 
-<<<<<<< HEAD
 extra_params="${extra_params} -p deployVault='true'"
 deploy_vault="true"
 set +e
 oc get crd | grep "fybrikapplications.app.fybrik.io"
-=======
-# Install resources that are cluster scoped only if installing to fybrik-system
-cluster_scoped="false"
-deploy_vault="false"
-if [[ "${unique_prefix}" == "fybrik-system" ]]; then
-    extra_params="${extra_params} -p clusterScoped='true' -p deployVault='true'"
-    cluster_scoped="true"
-    deploy_vault="true"
-fi
-set +e
-oc get crd | grep "fybrikapplications.app.fybrik.ibm.com"
->>>>>>> pipeline
 rc=$?
 deploy_crd="false"
 if [[ $rc -ne 0 ]]; then
@@ -432,11 +392,7 @@ if [[ $rc -ne 0 ]]; then
 fi
 
 set +e
-<<<<<<< HEAD
 kubectl get ns fybrik-system
-=======
-oc get ns fybrik-system
->>>>>>> pipeline
 rc=$?
 set -e
 if [[ $rc -ne 0 ]]; then
@@ -574,7 +530,6 @@ type: kubernetes.io/Opaque
 stringData:
   CP4D_USERNAME: admin 
   CP4D_PASSWORD: password
-<<<<<<< HEAD
   WKC_username: admin
   WKC_password: password
   CP4D_SERVER_URL: https://cpd-cpd4.apps.cpstreamsx4.cp.fyre.ibm.com
@@ -597,13 +552,6 @@ stringData:
 EOH
     oc apply -f ${TMP}/wkc-credentials.yaml
     extra_params="${extra_params} -p wkcConnectorServerUrl=https://cpd-cpd4.apps.cpstreamsx4.cp.fyre.ibm.com"
-=======
-  CP4D_SERVER_URL: https://cpd-tooling-2q21-cpd.apps.cpstreamsx3.cp.fyre.ibm.com
-EOH
-    cat ${TMP}/wkc-credentials.yaml
-    oc apply -f ${TMP}/wkc-credentials.yaml
-    extra_params="${extra_params} -p wkcConnectorServerUrl=https://cpd-tooling-2q21-cpd.apps.cpstreamsx3.cp.fyre.ibm.com"
->>>>>>> pipeline
 fi
 
 # Determine whether images should be sent to ICR for security scanning if creds exist
@@ -623,15 +571,11 @@ if [[ ! -z "${github_workspace}" ]]; then
     try_command "kubectl wait pod workspace-0 --for=condition=Ready --timeout=1m" 15 false 5
     ls ${github_workspace}
     ls ${github_workspace}/..
-<<<<<<< HEAD
     if [[ ${is_kubernetes} == "true" ]]; then
         kubectl cp $github_workspace workspace-0:/workspace/source/
     else 
         oc rsync $github_workspace workspace-0:/workspace/source/
     fi
-=======
-    oc cp $github_workspace workspace-0:/workspace/source/
->>>>>>> pipeline
     git_url=""
     extra_params="${extra_params} -p git-url="
 fi
@@ -661,7 +605,6 @@ spec:
     value: ${image_repo}
   - name: dockerhub-hostname
     value: ${dockerhub_hostname}
-<<<<<<< HEAD
   - name: blueprintNamespace
     value: ${blueprint_namespace}
   - name: docker-namespace
@@ -670,14 +613,6 @@ spec:
     value: pipeline
   - name: wkcConnectorServerUrl
     value: https://cpd-cpd4.apps.cpstreamsx4.cp.fyre.ibm.com
-=======
-  - name: docker-namespace
-    value: ${unique_prefix} 
-  - name: git-revision
-    value: pipeline
-  - name: wkcConnectorServerUrl
-    value: https://cpd-tooling-2q21-cpd.apps.cpstreamsx3.cp.fyre.ibm.com
->>>>>>> pipeline
   - name: git-url
     value: "${git_url}"
   - name: wkc-connector-git-url
@@ -717,10 +652,6 @@ spec:
       claimName: source-pvc
 EOH
     cat ${TMP}/pipelinerun.yaml
-<<<<<<< HEAD
-=======
-
->>>>>>> pipeline
     oc apply -f ${TMP}/pipelinerun.yaml
  
     cat > ${TMP}/streams_csv_check_script.sh <<EOH
