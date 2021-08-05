@@ -204,13 +204,13 @@ helper_text="If this step fails, tekton related pods may be restarting or initia
 1. Please rerun in a minute or so
 "
 set -x
-oc apply -f ${repo_root}/pipeline/make.yaml
-oc apply -f ${repo_root}/pipeline/git-clone.yaml
-oc apply -f ${repo_root}/pipeline/buildah.yaml
-oc apply -f ${repo_root}/pipeline/skopeo-copy.yaml
-oc apply -f ${repo_root}/pipeline/openshift-client.yaml
-oc apply -f ${repo_root}/pipeline/helm-upgrade-from-source.yaml 
-oc apply -f ${repo_root}/pipeline/helm-upgrade-from-repo.yaml 
+oc apply -f ${repo_root}/pipeline/tasks/make.yaml
+oc apply -f ${repo_root}/pipeline/tasks/git-clone.yaml
+oc apply -f ${repo_root}/pipeline/tasks/buildah.yaml
+oc apply -f ${repo_root}/pipeline/tasks/skopeo-copy.yaml
+oc apply -f ${repo_root}/pipeline/tasks/openshift-client.yaml
+oc apply -f ${repo_root}/pipeline/tasks/helm-upgrade-from-source.yaml 
+oc apply -f ${repo_root}/pipeline/tasks/helm-upgrade-from-repo.yaml 
 helper_text=""
 
 # Wipe old pipeline definitions in case of merge conflicts
