@@ -9,7 +9,6 @@ setup:
     OWNER=$(jq -r '.services[] | select(.toolchain_binding.name=="app-repo") | .parameters.owner_id' /toolchain/toolchain.json)
     REPO=$(jq -r '.services[] | select(.toolchain_binding.name=="app-repo") | .parameters.repo_name' /toolchain/toolchain.json)
     curl -u ":$GH_TOKEN" https://github.ibm.com/api/v3/repos/$OWNER/$REPO/branches/master/protection -XPUT -d '{"required_pull_request_reviews":{"dismiss_stale_reviews":true},"required_status_checks":{"strict":true,"contexts":["tekton/code-branch-protection","tekton/code-unit-tests","tekton/code-cis-check","tekton/code-vulnerability-scan","tekton/code-detect-secrets"]},"enforce_admins":null,"restrictions":null}'
-    #npm ci
     env
     ls $WORKSPACE
     oc login $(get_env openshift_cluster) -u $(get_env admin_user) -p $(get_env admin_pw) --insecure-skip-tls-verify=true
@@ -29,14 +28,24 @@ test:
   script: |
     #!/usr/bin/env bash
     #cd ../"$(load_repo app-repo path)"
-    #npm ci
-    #npm test
+    if [[ "$PIPELINE_DEBUG" == 1 ]]; then
+      trap env EXIT
+      env
+      set -x
+    fi
     set -x
     env
     ls $WORKSPACE
     oc login $(get_env openshift_cluster) -u $(get_env admin_user) -p $(get_env admin_pw) --insecure-skip-tls-verify=true
+    set +e
+    oc new-project fybrik-system
     oc project fybrik-system
-    kubectl get po -o wide
+    oc delete pipelinerun --all --wait
+    set -e
+    export GH_TOKEN=(get_env different-git-token)
+    export git_user=$(get_env git-user)
+    . pipeline/source-internal.sh
+    github_workspace=`pwd`/../mesh-for-data run_tkn=$(get_env run_tkn) skip_tests=true bash -x pipeline/bootstrap-pipeline.sh fybrik-system
 containerize:
   dind: true
   image: wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/compliance-baseimage-with-tkn:2.26.1
@@ -53,16 +62,16 @@ containerize:
     env
     ls $WORKSPACE
     oc login $(get_env openshift_cluster) -u $(get_env admin_user) -p $(get_env admin_pw) --insecure-skip-tls-verify=true
-    set +e
-    oc new-project fybrik-system
-    oc project fybrik-system
-    oc delete pipelinerun --all --wait
-    set -e
-    export GH_TOKEN=(get_env different-git-token)
-    export git_user=$(get_env git-user)
-    . pipeline/source-internal.sh
-    github_workspace=`pwd`/../mesh-for-data run_tkn=$(get_env run_tkn) skip_tests=true bash -x pipeline/bootstrap-pipeline.sh fybrik-system
-    kubectl get po -o wide
+    #set +e
+    #oc new-project fybrik-system
+    #oc project fybrik-system
+    ##oc delete pipelinerun --all --wait
+    #set -e
+    #export GH_TOKEN=(get_env different-git-token)
+    #export git_user=$(get_env git-user)
+    #. pipeline/source-internal.sh
+    #github_workspace=`pwd`/../mesh-for-data run_tkn=$(get_env run_tkn) skip_tests=true bash -x pipeline/bootstrap-pipeline.sh fybrik-system
+    #kubectl get po -o wide
     . pipeline/common_functions.sh
     cat > ${TMP}/streams_csv_check_script.sh <<EOH
     #!/bin/bash
