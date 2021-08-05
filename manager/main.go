@@ -5,7 +5,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -37,7 +36,6 @@ import (
 	"fybrik.io/fybrik/pkg/helm"
 	kapps "k8s.io/api/apps/v1"
 	kbatch "k8s.io/api/batch/v1"
-	"sigs.k8s.io/controller-runtime/pkg/cache"
 )
 
 var (
@@ -53,35 +51,27 @@ func init() {
 	_ = kapps.AddToScheme(scheme)
 }
 
-func getWatchNamespace() (string, error) {
-	// WatchNamespaceEnvVar is the constant for env variable WATCH_NAMESPACE
-	// which specifies the Namespace to watch.
-	// An empty value means the operator is running with cluster scope.
-	var watchNamespaceEnvVar = "WATCH_NAMESPACE"
-
-	ns, found := os.LookupEnv(watchNamespaceEnvVar)
-	if !found {
-		return "", fmt.Errorf("%s must be set", watchNamespaceEnvVar)
-	}
-	return ns, nil
-}
-
 func run(namespace string, metricsAddr string, enableLeaderElection bool,
 	enableApplicationController, enableBlueprintController, enablePlotterController, enableMotionController bool) int {
-<<<<<<< HEAD
-	setupLog.Info("creating manager law5")
+	setupLog.Info("creating manager")
 
-	watchNamespace, err := getWatchNamespace()
-	if err != nil {
-		setupLog.Error(err, "unable to get WatchNamespace environment variable; the manager will watch and manage resources in all namespaces")
+	var applicationNamespaceSelector fields.Selector
+	applicationNamespace := os.Getenv("APPLICATION_NAMESPACE")
+	if len(applicationNamespace) > 0 {
+		applicationNamespaceSelector = fields.SelectorFromSet(fields.Set{"metadata.namespace": applicationNamespace})
+	}
+	setupLog.Info("Application namespace: " + applicationNamespace)
+
+	// Replace with the getBlueprintNamespace()
+	blueprintNamespace := os.Getenv("BLUEPRINT_NAMESPACE")
+	if len(blueprintNamespace) <= 0 {
+		blueprintNamespace = app.BlueprintNamespace
 	}
 
-	options := ctrl.Options{
-=======
-	setupLog.Info("creating manager")
 	systemNamespaceSelector := fields.SelectorFromSet(fields.Set{"metadata.namespace": utils.GetSystemNamespace()})
-	workerNamespaceSelector := fields.SelectorFromSet(fields.Set{"metadata.namespace": app.BlueprintNamespace})
+	workerNamespaceSelector := fields.SelectorFromSet(fields.Set{"metadata.namespace": blueprintNamespace})
 	selectorsByObject := cache.SelectorsByObject{
+		&appv1.FybrikApplication{}:      {Field: applicationNamespaceSelector},
 		&appv1.Plotter{}:                {Field: systemNamespaceSelector},
 		&appv1.FybrikModule{}:           {Field: systemNamespaceSelector},
 		&appv1.FybrikStorageAccount{}:   {Field: systemNamespaceSelector},
@@ -98,29 +88,14 @@ func run(namespace string, metricsAddr string, enableLeaderElection bool,
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
->>>>>>> pipeline
 		Scheme:             scheme,
-		Namespace:          watchNamespace, // namespaced-scope when the value is not an empty string
+		Namespace:          namespace,
 		MetricsBindAddress: metricsAddr,
 		LeaderElection:     enableLeaderElection,
 		LeaderElectionID:   "fybrik-operator-leader-election",
 		Port:               9443,
-<<<<<<< HEAD
-	}
-
-	if strings.Contains(watchNamespace, ",") {
-		setupLog.Info("manager set up with multiple namespaces", "namespaces", watchNamespace)
-		options.NewCache = cache.MultiNamespacedCacheBuilder(strings.Split(watchNamespace, ","))
-	} else {
-		setupLog.Info("Watch namespace list is empty, watching all namespaces.")
-	}
-
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), options)
-
-=======
 		NewCache:           cache.BuilderWithOptions(cache.Options{SelectorsByObject: selectorsByObject}),
 	})
->>>>>>> pipeline
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		return 1

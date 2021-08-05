@@ -112,28 +112,6 @@ Get blueprints namespace
 {{- end -}}
 
 {{/*
-Set watch namespace 
-*/}}
-{{- define "fybrik.setWatchNamespace" -}}
-{{- if .Values.manager.watchNamespaces }}
-- name: WATCH_NAMESPACE
-  value: {{.Values.manager.watchNamespaces }}
-{{- else if .Values.clusterScoped }}
-- name: WATCH_NAMESPACE
-  value: ""
-{{- else }}
-{{- $bluens := include "fybrik.getBlueprintNamespace" . -}}
-{{- if not ( eq .Release.Namespace $bluens ) }}
-- name: WATCH_NAMESPACE
-  value: {{ printf "%s%s%s" .Release.Namespace "," $bluens }}
-{{- else }}
-- name: WATCH_NAMESPACE
-  value: {{ .Release.Namespace }} 
-{{- end -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
 Indicate when webhooks should be enabled
 */}}
 {{- define "fybrik.enableWebhooks" -}}

@@ -86,10 +86,13 @@ spec:
               value: "false"
             {{- end }}
 
-            {{- include "fybrik.setWatchNamespace" . | indent 12 }}   
-
             - name: BLUEPRINT_NAMESPACE
               value: {{ include "fybrik.getBlueprintNamespace" . }}
+
+            {{- if .Values.applicationNamespace }}
+            - name: APPLICATION_NAMESPACE
+              value: {{ .Values.applicationNamespace }}
+            {{- end }}
 
             {{- if .Values.manager.extraEnvs }}
             {{- toYaml .Values.manager.extraEnvs | nindent 12 }}

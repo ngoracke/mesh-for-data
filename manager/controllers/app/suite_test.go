@@ -90,6 +90,11 @@ var _ = BeforeSuite(func(done Done) {
 		k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
 		Expect(err).ToNot(HaveOccurred())
 	} else {
+		fmt.Printf("Setup fake environment... \n")
+		controllerNamespace := getControllerNamespace()
+		blueprintNamespace := getBlueprintNamespace()
+		fmt.Printf("Using controller namespace: " + controllerNamespace + " using blueprint namespace: " + blueprintNamespace + "\n")
+
 		systemNamespaceSelector := fields.SelectorFromSet(fields.Set{"metadata.namespace": utils.GetSystemNamespace()})
 		workerNamespaceSelector := fields.SelectorFromSet(fields.Set{"metadata.namespace": blueprintNamespace})
 		// the testing environment will restrict access to secrets, modules and storage accounts

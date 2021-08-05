@@ -99,12 +99,11 @@ var _ = BeforeSuite(func(done Done) {
 		logf.Log.Info("Using existing controller in existing cluster...")
 		k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
 	} else {
-		fmt.Printf("Setup fake environment... law \n")
+		fmt.Printf("Setup fake environment... \n")
 
-		controllerNamespace := os.Getenv("CONTROLLER_NAMESPACE")
 		blueprintNamespace := os.Getenv("BLUEPRINT_NAMESPACE")
-		fmt.Printf("LAW: Using controller namespace: " + controllerNamespace + " using blueprint namespace: " + blueprintNamespace)
-		workerNamespaceSelector := fields.SelectorFromSet(fields.Set{"metadata.namespace": "fybrik-blueprints"})
+		fmt.Printf("Motion test suite using blueprint namespace: " + blueprintNamespace)
+		workerNamespaceSelector := fields.SelectorFromSet(fields.Set{"metadata.namespace": blueprintNamespace})
 		selectorsByObject := cache.SelectorsByObject{
 			&motionv1.BatchTransfer{}:       {Field: workerNamespaceSelector},
 			&motionv1.StreamTransfer{}:      {Field: workerNamespaceSelector},

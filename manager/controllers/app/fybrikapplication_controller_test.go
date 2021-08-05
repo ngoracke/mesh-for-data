@@ -17,7 +17,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const timeout = time.Second * 30
@@ -55,7 +54,10 @@ var _ = Describe("FybrikApplication Controller", func() {
 				Expect(k8sClient.Create(context.TODO(), secret1)).NotTo(HaveOccurred(), "a secret could not be created")
 				secret2 := &corev1.Secret{Type: corev1.SecretTypeOpaque, StringData: map[string]string{"password": "123"}}
 				secret2.Name = "test-secret"
-				secret2.Namespace = BlueprintNamespace
+
+				blueprintNamespace := getBlueprintNamespace()
+				fmt.Printf("Application test using blueprint namespace: " + blueprintNamespace)
+				secret2.Namespace = blueprintNamespace
 				Expect(k8sClient.Create(context.TODO(), secret2)).NotTo(HaveOccurred(), "a secret could not be created")
 				secretList := &corev1.SecretList{}
 				Expect(k8sClient.List(context.Background(), secretList)).NotTo(HaveOccurred())
