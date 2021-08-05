@@ -64,7 +64,7 @@ containerize:
     oc login $(get_env openshift_cluster) -u $(get_env admin_user) -p $(get_env admin_pw) --insecure-skip-tls-verify=true
     #set +e
     #oc new-project fybrik-system
-    #oc project fybrik-system
+    oc project fybrik-system
     ##oc delete pipelinerun --all --wait
     #set -e
     #export GH_TOKEN=$(get_env different-git-token)
