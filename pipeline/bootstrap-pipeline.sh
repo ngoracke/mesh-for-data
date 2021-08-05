@@ -443,11 +443,13 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: wkc-credentials
-  namespace: ${unique_prefix} 
+  namespace: ${unique_prefix}
 type: kubernetes.io/Opaque
 stringData:
   CP4D_USERNAME: ${cpd_username}
   CP4D_PASSWORD: ${cpd_password}
+  WKC_username: ${cpd_username}
+  WKC_password: ${cpd_password}
   WKC_USERNAME: ${cpd_username}
   WKC_PASSWORD: ${cpd_password}
   CP4D_SERVER_URL: ${cpd_url}
