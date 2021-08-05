@@ -74,7 +74,7 @@ else
     helm_image="${dockerhub_hostname}/k8s-helm"
     extra_params="${extra_params} -p build_image=${build_image} -p helm_image=${helm_image}"
     cp ${repo_root}/pipeline/statefulset.yaml ${TMP}/
-    sed -i.bak "s|image: docker.io/yakinikku/suede:latest|${dockerhub_hostname}/suede|g" ${TMP}/statefulset.yaml
+    sed -i.bak "s|image: docker.io/yakinikku/suede:latest|image: ${dockerhub_hostname}/suede|g" ${TMP}/statefulset.yaml
 fi
 
 # Figure out if we're running on OpenShift or Kubernetes (kind)
