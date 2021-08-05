@@ -1008,6 +1008,33 @@ spec:
     workspaces:
     - name: source
       workspace: shared-workspace
+  - name: oc-apply-vault-roles
+    params:
+    - name: ARGS
+      value:
+      - apply -f $(params.vaultRoles)
+        -n $(params.NAMESPACE)
+    runAfter:
+    - fetch-vault-plugin-secrets-wkc-reader
+    taskRef:
+      kind: Task
+      name: openshift-client
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.INCREMENTAL_CODE_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    workspaces:
+    - name: source
+      workspace: shared-workspace
   - name: upgrade-helm-vault-from-repo
     params:
     - name: helm_repo
