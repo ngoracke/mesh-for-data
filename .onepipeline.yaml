@@ -42,7 +42,7 @@ test:
     oc project fybrik-system
     oc delete pipelinerun --all --wait
     set -e
-    export GH_TOKEN=(get_env different-git-token)
+    export GH_TOKEN=$(get_env different-git-token)
     export git_user=$(get_env git-user)
     . pipeline/source-internal.sh
     github_workspace=`pwd`/../mesh-for-data run_tkn=$(get_env run_tkn) skip_tests=true bash -x pipeline/bootstrap-pipeline.sh fybrik-system
@@ -67,7 +67,7 @@ containerize:
     #oc project fybrik-system
     ##oc delete pipelinerun --all --wait
     #set -e
-    #export GH_TOKEN=(get_env different-git-token)
+    #export GH_TOKEN=$(get_env different-git-token)
     #export git_user=$(get_env git-user)
     #. pipeline/source-internal.sh
     #github_workspace=`pwd`/../mesh-for-data run_tkn=$(get_env run_tkn) skip_tests=true bash -x pipeline/bootstrap-pipeline.sh fybrik-system
