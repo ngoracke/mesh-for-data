@@ -6,7 +6,7 @@ run_tkn=${run_tkn:-0}
 skip_tests=${skip_tests:-false}
 GH_TOKEN=${GH_TOKEN}
 cluster_scoped=${cluster_scoped:-false}
-use_app_namespace=${use_app_namespace:-false}
+use_application_namespace=${use_application_namespace:-false}
 ARTIFACTORY_APIKEY=${ARTIFACTORY_APIKEY}
 git_user=${git_user}
 github=${github:-github.ibm.com}
@@ -137,14 +137,14 @@ extra_params="${extra_params} -p blueprintNamespace=${blueprint_namespace}"
 
 mesh_for_data_values="cluster.name=AmsterdamCluster,cluster.zone=Netherlands,cluster.region=Netherlands,cluster.vaultAuthPath=kubernetes"
 if [[ ${cluster_scoped} == "false" ]]; then
-    if [[ ${use_app_namespace} == "false" ]]; then
+    if [[ ${use_application_namespace} == "false" ]]; then
       mesh_for_data_values="${mesh_for_data_values},applicationNamespace=${unique_prefix}"
     else 
       mesh_for_data_values="${mesh_for_data_values},applicationNamespace=${unique_prefix}-app"
     fi
 fi
 
-if [[ ${cluster_scoped} == "false" && ${use_app_namespace} == "true"  ]]; then
+if [[ ${cluster_scoped} == "false" && ${use_application_namespace} == "true"  ]]; then
   set +e
   rc=1
   kubectl get ns ${unique_prefix}-app
@@ -549,7 +549,7 @@ EOH
     cat ${TMP}/wkc-credentials.yaml
     oc apply -f ${TMP}/wkc-credentials.yaml
 
-#  if [[ "{$use_app_namespace}" == "true" ]]; then 
+#  if [[ "{$use_application_namespace}" == "true" ]]; then 
 #    cat > ${TMP}/wkc-credentials.yaml <<EOH
 #apiVersion: v1
 #kind: Secret
