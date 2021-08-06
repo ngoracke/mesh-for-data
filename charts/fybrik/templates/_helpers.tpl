@@ -111,13 +111,3 @@ Get blueprints namespace
 {{- end -}}
 {{- end -}}
 
-{{/*
-Indicate when webhooks should be enabled
-*/}}
-{{- define "fybrik.enableWebhooks" -}}
-{{- if .Values.clusterScoped -}}
-true
-{{- else  -}}
-false
-{{- end -}}
-{{- end -}}

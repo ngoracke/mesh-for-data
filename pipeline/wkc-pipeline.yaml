@@ -874,7 +874,7 @@ spec:
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
-      value: blueprintNamespace=$(params.blueprintNamespace),applicationNamespace='$(params.NAMESPACE)-app',clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),opaConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,$(params.mesh-for-data-values)
+      value: blueprintNamespace=$(params.blueprintNamespace),clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),opaConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,$(params.mesh-for-data-values)
     - name: release_version
       value: 0.1.0
     - name: image
@@ -1215,66 +1215,68 @@ spec:
       Operator: notin
       Values:
       - "true"
-  - name: oc-install-flight-opensource-crds-absent
-    params:
-    - name: ARGS
-      value:
-      - apply -f https://github.com/mesh-for-data/arrow-flight-module/releases/latest/download/module.yaml
-        -n $(params.NAMESPACE)
-    runAfter:
-    - upgrade-helm-crd-from-source
-    taskRef:
-      kind: Task
-      name: openshift-client
-    when:
-    - Input: $(params.IMAGE_DIGEST)
-      Operator: in
-      Values:
-      - "none"
-    - Input: $(params.INCREMENTAL_RESTART)
-      Operator: notin
-      Values:
-      - "true"
-    - Input: $(params.INCREMENTAL_CODE_RESTART)
-      Operator: notin
-      Values:
-      - "true"
-    workspaces:
-    - name: source
-      workspace: shared-workspace
-  - name: oc-install-flight-opensource-crds-present
-    params:
-    - name: ARGS
-      value:
-      - apply -f https://github.com/mesh-for-data/arrow-flight-module/releases/latest/download/module.yaml
-        -n $(params.NAMESPACE)
-    taskRef:
-      kind: Task
-      name: openshift-client
-    when:
-    - Input: $(params.deployCRD)
-      Operator: in
-      Values:
-      - "false"
-    - Input: $(params.NAMESPACE)
-      Operator: in
-      Values:
-      - "fybrik-system"
-    - Input: $(params.IMAGE_DIGEST)
-      Operator: in
-      Values:
-      - "none"
-    - Input: $(params.INCREMENTAL_RESTART)
-      Operator: notin
-      Values:
-      - "true"
-    - Input: $(params.INCREMENTAL_CODE_RESTART)
-      Operator: notin
-      Values:
-      - "true"
-    workspaces:
-    - name: source
-      workspace: shared-workspace
+#  - name: oc-install-flight-opensource-crds-absent
+#    params:
+#    - name: ARGS
+#      value:
+#      - apply -f https://github.com/fybrik/arrow-flight-module/releases/latest/download/module.yaml
+#        -n $(params.NAMESPACE)
+#    runAfter:
+#    - upgrade-helm-crd-from-source
+#    taskRef:
+#      kind: Task
+#      name: openshift-client
+#    when:
+#    - Input: $(params.IMAGE_DIGEST)
+#      Operator: in
+#      Values:
+#      - "none"
+#    - Input: $(params.INCREMENTAL_RESTART)
+#      Operator: notin
+#      Values:
+#      - "true"
+#    - Input: $(params.INCREMENTAL_CODE_RESTART)
+#      Operator: notin
+#      Values:
+#      - "true"
+#    workspaces:
+#    - name: source
+#      workspace: shared-workspace
+#  - name: oc-install-flight-opensource-crds-present
+#    params:
+#    - name: ARGS
+#      value:
+#      - apply -f https://github.com/fybrik/arrow-flight-module/releases/latest/download/module.yaml
+#        -n $(params.NAMESPACE)
+#    taskRef:
+#      kind: Task
+#      name: openshift-client
+#    when:
+#    - Input: $(params.deployCRD)
+#      Operator: in
+#      Values:
+#      - "false"
+### Donot include Ask Nick
+#    - Input: $(params.NAMESPACE)
+#      Operator: in
+#      Values:
+#      - "fybrik-system"
+### End donot include 
+#    - Input: $(params.IMAGE_DIGEST)
+#      Operator: in
+#      Values:
+#      - "none"
+#    - Input: $(params.INCREMENTAL_RESTART)
+#      Operator: notin
+#      Values:
+#      - "true"
+#    - Input: $(params.INCREMENTAL_CODE_RESTART)
+#      Operator: notin
+#      Values:
+#      - "true"
+#    workspaces:
+#    - name: source
+#      workspace: shared-workspace
   - name: run-integration-tests-full-deploy
     params:
     - name: target
