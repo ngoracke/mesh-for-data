@@ -104,11 +104,7 @@ deploy:
       env
       set -x
     fi
-    env
-    ls $WORKSPACE
-    oc login $(get_env openshift_cluster) -u $(get_env admin_user) -p $(get_env admin_pw) --insecure-skip-tls-verify=true
-    kubectl get po -o wide
-    kubectl get po -o wide
+    # No-op, already deployed as part of build/unit testing
 acceptance-test:
   abort_on_failure: false
   image: wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial/compliance-baseimage-with-tkn:2.26.1
@@ -125,8 +121,5 @@ release:
   image: wcp-compliance-automation-team-docker-local.artifactory.swg-devops.com/ibm-compliance-automation:1.2.4@sha256:dc98cc52c0caede42149c08727147520e30e81fee543b8dd5939b45d06baa142
   script: |
     #!/usr/bin/env bash
-    #source scripts/release.sh
     env
-    ls $WORKSPACE
-    oc login ${openshift_cluster} -u ${admin_user} -p ${admin_pw} --insecure-skip-tls-verify=true
-    kubectl get po -o wide
+    # No-op, no release process from one pipeline in place yet
