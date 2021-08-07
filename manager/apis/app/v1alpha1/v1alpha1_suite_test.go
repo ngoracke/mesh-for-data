@@ -4,7 +4,6 @@
 package v1alpha1
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -20,18 +19,16 @@ var cfg *rest.Config
 var c client.Client
 
 func TestMain(m *testing.M) {
-	path, errz := os.Getwd()
-	if errz != nil {
-		fmt.Println(errz)
+	path, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
 	}
-	fmt.Println("path is")
-	fmt.Println(path)
 	t := &envtest.Environment{
 		CRDDirectoryPaths:     []string{filepath.Join(path, "..", "..", "..", "..", "charts", "fybrik-crd", "templates")},
 		ErrorIfCRDPathMissing: true,
 	}
 
-	err := SchemeBuilder.AddToScheme(scheme.Scheme)
+	err = SchemeBuilder.AddToScheme(scheme.Scheme)
 	if err != nil {
 		log.Fatal(err)
 	}

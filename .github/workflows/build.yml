@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - pipeline
     tags:
       - '*'
   pull_request:

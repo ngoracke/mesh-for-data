@@ -355,24 +355,29 @@ popd
 oc apply -f ${TMP}/release.yaml
 oc apply -f ${TMP}/interceptors.yaml
 
+# Delete old apiserversource
+set +e
+oc delete apiserversource generic-watcher
+set -e
+
 # Install triggers for rebuilds of specific tasks
-oc apply -f ${repo_root}/pipeline/eventlistener/generic-triggerbinding.yaml
-oc apply -f ${repo_root}/pipeline/eventlistener/generic-triggertemplate.yaml
-oc apply -f ${repo_root}/pipeline/eventlistener/generic-watcher-apiserversource.yaml
-oc apply -f ${repo_root}/pipeline/eventlistener/generic-watcher-role.yaml
-oc apply -f ${repo_root}/pipeline/eventlistener/generic-watcher-serviceaccount.yaml
-oc apply -f ${repo_root}/pipeline/eventlistener/print-generic-task.yaml
+oc apply -f ${repo_root}/pipeline/eventlistener/triggerbinding.yaml
+oc apply -f ${repo_root}/pipeline/eventlistener/triggertemplate.yaml
+oc apply -f ${repo_root}/pipeline/eventlistener/apiserversource.yaml
+oc apply -f ${repo_root}/pipeline/eventlistener/role.yaml
+oc apply -f ${repo_root}/pipeline/eventlistener/serviceaccount.yaml
 
 set +x
 helper_text="If this step fails, run again - knative related pods may be restarting and unable to process the webhook
 "
 set -x
-oc apply -f ${repo_root}/pipeline/eventlistener/generic-eventlistener.yaml
+oc apply -f ${repo_root}/pipeline/eventlistener/eventlistener.yaml
 helper_text=""
 set +e
 oc delete rolebinding generic-watcher
+oc delete rolebinding tekton-task-watcher
 set -e
-oc create rolebinding generic-watcher --role=generic-watcher --serviceaccount=${unique_prefix}:generic-watcher
+oc create rolebinding tekton-task-watcher --role=tekton-task-watcher --serviceaccount=${unique_prefix}:tekton-task-watcher
 
 set +e
 oc delete secret git-ssh-key

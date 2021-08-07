@@ -13,3 +13,10 @@ export dockerhub_hostname="${dockerhub_hostname:-docker.io}"
 export git_url="https://github.com/fybrik/fybrik.git"
 export wkc_connector_git_url=""
 export vault_plugin_secrets_wkc_reader_url=""
+echo "
+## Git credentials
+For authenticated registries, if you use a git token instead of ssh key, credentials will not be deleted when the run is complete (and therefore, you will not have to regenerate them when restarting tasks).
+https://github.com/settings/tokens
+export GH_TOKEN=xxxxxxx
+export git_user=user@email.com
+"

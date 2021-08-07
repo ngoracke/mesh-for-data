@@ -1,15 +1,16 @@
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: EventListener
 metadata:
-  name: generic-eventlistener
+  name: tekton-task-eventlistener
 spec:
   serviceAccountName: pipeline
   triggers:
+    # Detect an image rebuild
     - bindings:
-        - ref: generic-triggerbinding
-      name: print-generic
+        - ref: image-triggerbinding
+      name: image-rebuild
       template:
-        ref: "print-generic-template"
+        ref: "image-build-template"
       interceptors:
         - cel:
             filter: header.match('Ce-Type', 'dev.knative.apiserver.resource.update')
@@ -19,6 +20,7 @@ spec:
             filter: body.status.conditions[0].reason == "Succeeded"
         - cel:
             filter: body.spec.taskRef.name == "buildah"
+    # Detect a code change
     - bindings:
         - ref: code-change-triggerbinding
       name: code-change
@@ -45,12 +47,12 @@ spec:
             filter: body.spec.params[2].value != 'run-integration-tests'
         - cel:
             filter: body.spec.params[2].value != 'test'
-#body.spec.params[?(@.name=='docker-namespace')].value
+    # Detect a code change has triggered an image build
     - bindings:
-        - ref: generic-triggerbinding
-      name: print-generic
+        - ref: image-triggerbinding
+      name: image-rebuild-from-codechange
       template:
-        ref: "print-generic-template"
+        ref: "image-build-template"
       interceptors:
         - cel:
             filter: header.match('Ce-Type', 'dev.knative.apiserver.resource.update')
