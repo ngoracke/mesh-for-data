@@ -5,6 +5,7 @@ package motion
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"

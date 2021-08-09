@@ -5,6 +5,7 @@ package motion
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"time"
