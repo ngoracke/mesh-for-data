@@ -549,24 +549,26 @@ EOH
     cat ${TMP}/wkc-credentials.yaml
     oc apply -f ${TMP}/wkc-credentials.yaml
 
-#  if [[ "{$use_application_namespace}" == "true" ]]; then 
-#    cat > ${TMP}/wkc-credentials.yaml <<EOH
-#apiVersion: v1
-#kind: Secret
-#metadata:
-#  name: wkc-credentials
-#  namespace: ${unique_prefix}-app
-#type: kubernetes.io/Opaque
-#stringData:
-#  CP4D_USERNAME: admin
-#  CP4D_PASSWORD: password
-#  WKC_username: admin
-#  WKC_password: password
-#  CP4D_SERVER_URL: https://cpd-cpd4.apps.cpstreamsx4.cp.fyre.ibm.com
-#EOH
-#    oc apply -f ${TMP}/wkc-credentials.yaml
-#    extra_params="${extra_params} -p wkcConnectorServerUrl=https://cpd-cpd4.apps.cpstreamsx4.cp.fyre.ibm.com"
-#  fi
+  extra_params="${extra_params} -p wkcConnectorServerUrl=https://cpd-cpd4.apps.cpstreamsx4.cp.fyre.ibm.com"
+
+  if [[ "{$use_application_namespace}" == "true" ]]; then 
+    cat > ${TMP}/wkc-credentials.yaml <<EOH
+apiVersion: v1
+kind: Secret
+metadata:
+  name: wkc-credentials
+  namespace: ${unique_prefix}-app
+type: kubernetes.io/Opaque
+stringData:
+  CP4D_USERNAME: admin
+  CP4D_PASSWORD: password
+  WKC_username: admin
+  WKC_password: password
+  CP4D_SERVER_URL: https://cpd-cpd4.apps.cpstreamsx4.cp.fyre.ibm.com
+EOH
+    oc apply -f ${TMP}/wkc-credentials.yaml
+  fi
+
 fi
 
 
