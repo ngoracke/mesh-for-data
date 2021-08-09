@@ -539,6 +539,7 @@ EOH
     cat ${TMP}/wkc-credentials.yaml
     oc apply -f ${TMP}/wkc-credentials.yaml
     extra_params="${extra_params} -p wkcConnectorServerUrl=${cpd_url}"
+  fi
 fi
 
 
