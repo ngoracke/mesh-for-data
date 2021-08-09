@@ -551,7 +551,7 @@ EOH
 
   extra_params="${extra_params} -p wkcConnectorServerUrl=https://cpd-cpd4.apps.cpstreamsx4.cp.fyre.ibm.com"
 
-  if [[ "{$use_application_namespace}" == "true" ]]; then 
+  if [[ ${cluster_scoped} == "false" && ${use_application_namespace} == "true" ]]; then 
     cat > ${TMP}/wkc-credentials.yaml <<EOH
 apiVersion: v1
 kind: Secret
