@@ -5,7 +5,6 @@ package motion
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"time"
@@ -83,7 +82,6 @@ var _ = Describe("BatchTransfer Controller", func() {
 					batchTransfer.Spec.Image = registry + "/dummy-mover:latest"
 				}
 			}
-			fmt.Printf("%v\n", registry)
 			key := client.ObjectKeyFromObject(batchTransfer)
 
 			// Create BatchTransfer

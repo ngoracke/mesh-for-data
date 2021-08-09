@@ -5,7 +5,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"time"
 
@@ -79,10 +78,8 @@ var _ = Describe("FybrikApplication Controller", func() {
 		It("Test end-to-end for FybrikApplication", func() {
 			connector := os.Getenv("USE_WKC_CONTROLLER")
 			if len(connector) > 0 && connector == "true" {
-				fmt.Printf("%v\n", "got here")
 				return
 			}
-			fmt.Printf("connector value %v\n", connector)
 			module := &app.FybrikModule{}
 			Expect(readObjectFromFile("../../testdata/e2e/module-read.yaml", module)).ToNot(HaveOccurred())
 			moduleKey := client.ObjectKeyFromObject(module)

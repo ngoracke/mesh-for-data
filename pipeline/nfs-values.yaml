@@ -2,7 +2,7 @@ affinity: {}
 nfs:
   mountOptions: null
   path: /
-  server: 10.96.21.211
+  server: 127.0.0.1
 rbac:
   create: true
 serviceAccount:
