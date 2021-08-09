@@ -19,6 +19,7 @@ export cpd_url="${cpd_url:-https://cpd.fake.com}"
 export git_url="${git_url:-https://github.com/fybrik/fybrik.git}"
 export wkc_connector_git_url="${wkc_connector_git_url}"
 export vault_plugin_secrets_wkc_reader_url="${vault_plugin_secrets_wkc_reader_url}"
+export use_application_namespace=${use_application_namespace:-false}
 
 helper_text=""
 realpath() {
@@ -140,22 +141,32 @@ else
 fi
 extra_params="${extra_params} -p blueprintNamespace=${blueprint_namespace}"
 
-set +e
-rc=1
-kubectl get ns ${unique_prefix}-app
-rc=$?
-set -e
-# Create new project if necessary
-if [[ $rc -ne 0 ]]; then
-    if [[ ${is_openshift} == "true" ]]; then
-        oc new-project ${unique_prefix}-app
-        oc project ${unique_prefix} 
-    else
-        kubectl create ns ${unique_prefix}-app 
+mesh_for_data_values='cluster.name="AmsterdamCluster",cluster.zone="Netherlands",cluster.region="Netherlands",cluster.vaultAuthPath="kubernetes",coordinator.catalog="WKC",coordinator.catalogConnectorURL="wkc-connector:50090"'
+if [[ ${cluster_scoped} == "false" ]]; then
+    if [[ ${use_application_namespace} == "false" ]]; then
+      mesh_for_data_values="${mesh_for_data_values},applicationNamespace=${unique_prefix}"
+    else 
+      mesh_for_data_values="${mesh_for_data_values},applicationNamespace=${unique_prefix}-app"
     fi
 fi
 
-cat > ${TMP}/approle.yaml <<EOH
+if [[ ${cluster_scoped} == "false" && ${use_application_namespace} == "true"  ]]; then
+  set +e
+  rc=1
+  kubectl get ns ${unique_prefix}-app
+  rc=$?
+  set -e
+  # Create new project if necessary
+  if [[ $rc -ne 0 ]]; then
+    if [[ ${is_openshift} == "true" ]]; then
+      oc new-project ${unique_prefix}-app
+      oc project ${unique_prefix} 
+    else
+      kubectl create ns ${unique_prefix}-app 
+    fi
+  fi
+
+  cat > ${TMP}/approle.yaml <<EOH
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -183,10 +194,11 @@ subjects:
   name: manager
   namespace: ${unique_prefix}
 EOH
-set +e
-oc delete -f ${TMP}/approle.yaml
-set -e
-oc apply -f ${TMP}/approle.yaml
+  set +e
+  oc delete -f ${TMP}/approle.yaml
+  set -e
+  oc apply -f ${TMP}/approle.yaml
+fi
 
 set +e
 # Be smarter about this - just a quick hack for typical default OpenShift & Kind installs so we can control the default storage class
@@ -374,16 +386,6 @@ if [[ $rc -ne 0 ]]; then
     deploy_cert_manager="true"
 fi
 
-set +e
-kubectl get ns fybrik-system
-rc=$?
-set -e
-if [[ $rc -ne 0 ]]; then
-    set +x
-    helper_text="please install into fybrik-system first - currently vault can only be installed in one namespace, and needs to go in fybrik-system"
-    exit 1
-fi
-
 # Create a workspace to allow users to exec in and run arbitrary commands
 oc apply -f ${repo_root}/pipeline/rootsa.yaml
 oc apply -f ${TMP}/statefulset.yaml
@@ -514,6 +516,10 @@ stringData:
 EOH
     cat ${TMP}/wkc-credentials.yaml
     oc apply -f ${TMP}/wkc-credentials.yaml
+
+  extra_params="${extra_params} -p wkcConnectorServerUrl=https://cpd-cpd4.apps.cpstreamsx4.cp.fyre.ibm.com"
+
+  if [[ ${cluster_scoped} == "false" && ${use_application_namespace} == "true" ]]; then 
     cat > ${TMP}/wkc-credentials.yaml <<EOH
 apiVersion: v1
 kind: Secret
@@ -534,6 +540,7 @@ EOH
     oc apply -f ${TMP}/wkc-credentials.yaml
     extra_params="${extra_params} -p wkcConnectorServerUrl=${cpd_url}"
 fi
+
 
 # Determine whether images should be sent to ICR for security scanning if creds exist
 set +e
@@ -564,7 +571,7 @@ set +x
 
 echo "
 # for a pre-existing PVC that will be deleted when the namespace is deleted
-tkn pipeline start build-and-deploy -w name=images-url,emptyDir=\"\" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=${image_repo} -p dockerhub-hostname=${dockerhub_hostname} -p docker-namespace=${unique_prefix} -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} ${extra_params} -p git-revision=pipeline"
+tkn pipeline start build-and-deploy -w name=images-url,emptyDir=\"\" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=${image_repo} -p dockerhub-hostname=${dockerhub_hostname} -p docker-namespace=${unique_prefix} -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} -p mesh-for-data-values=${mesh_for_data_values} ${extra_params} -p git-revision=pipeline"
 
 if [[ ${run_tkn} -eq 1 ]]; then
     set -x
@@ -617,6 +624,8 @@ spec:
     value: "${deploy_cert_manager}"
   - name: vaultValues
     value: "${vault_values}"
+  - name: mesh-for-data-values
+    value: "${mesh_for_data_values}"
   pipelineRef:
     name: build-and-deploy
   serviceAccountName: ${pipeline_sa}

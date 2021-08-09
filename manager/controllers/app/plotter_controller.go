@@ -127,7 +127,7 @@ func (r *PlotterReconciler) reconcile(plotter *app.Plotter) (ctrl.Result, []erro
 	isReady := true
 
 	blueprintNamespace := getBlueprintNamespace()
-	r.Log.Info("blueprint namespace" + blueprintNamespace)
+	r.Log.Info("Using blueprint namespace: " + blueprintNamespace)
 
 	var errorCollection []error
 	for cluster, blueprintSpec := range plotter.Spec.Blueprints {

@@ -69,7 +69,7 @@ var _ = Describe("Blueprint Controller Real Env", func() {
 			Expect(readObjectFromFile("../../testdata/blueprint-read.yaml", blueprint)).ToNot(HaveOccurred())
 			blueprint.SetNamespace("default")
 			_ = k8sClient.Delete(context.Background(), blueprint)
-			blueprint.SetNamespace("fybrik-blueprints")
+			blueprint.SetNamespace(blueprintNamespace)
 			_ = k8sClient.Delete(context.Background(), blueprint)
 			time.Sleep(interval)
 		})

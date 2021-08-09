@@ -41,7 +41,7 @@ func readBlueprint(f string) (*app.Blueprint, error) {
 func TestBlueprintReconcile(t *testing.T) {
 
 	blueprintNamespace := getBlueprintNamespace()
-	fmt.Printf("LAW: using blueprint namespace: " + blueprintNamespace)
+	fmt.Printf("Using blueprint namespace: " + blueprintNamespace)
 
 	t.Parallel()
 	g := gomega.NewGomegaWithT(t)
