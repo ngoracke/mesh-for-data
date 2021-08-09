@@ -86,7 +86,7 @@ var _ = BeforeSuite(func(done Done) {
 
 	if os.Getenv("USE_EXISTING_CONTROLLER") == "true" {
 		logf.Log.Info("Using existing controller in existing cluster...")
-		fmt.Printf("Using existing controller in existing cluster... law\n")
+		fmt.Printf("Using existing controller in existing cluster... \n")
 		k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
 		Expect(err).ToNot(HaveOccurred())
 	} else {

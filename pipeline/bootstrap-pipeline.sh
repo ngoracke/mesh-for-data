@@ -135,7 +135,7 @@ else
 fi
 extra_params="${extra_params} -p blueprintNamespace=${blueprint_namespace}"
 
-mesh_for_data_values="cluster.name=AmsterdamCluster,cluster.zone=Netherlands,cluster.region=Netherlands,cluster.vaultAuthPath=kubernetes"
+mesh_for_data_values='cluster.name="AmsterdamCluster",cluster.zone="Netherlands",cluster.region="Netherlands",cluster.vaultAuthPath="kubernetes",coordinator.catalog="WKC",coordinator.catalogConnectorURL="wkc-connector:50090"'
 if [[ ${cluster_scoped} == "false" ]]; then
     if [[ ${use_application_namespace} == "false" ]]; then
       mesh_for_data_values="${mesh_for_data_values},applicationNamespace=${unique_prefix}"
@@ -599,7 +599,7 @@ set +x
 
 echo "
 # for a pre-existing PVC that will be deleted when the namespace is deleted
-tkn pipeline start build-and-deploy -w name=images-url,emptyDir=\"\" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=${image_repo} -p dockerhub-hostname=${dockerhub_hostname} -p docker-namespace=${unique_prefix} -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} -p mesh-for-data-values=${mesh_for_data_values} ${extra_params}  -p git-revision=pipeline"
+tkn pipeline start build-and-deploy -w name=images-url,emptyDir=\"\" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=${image_repo} -p dockerhub-hostname=${dockerhub_hostname} -p docker-namespace=${unique_prefix} -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} -p mesh-for-data-values=${mesh_for_data_values} ${extra_params} -p git-revision=pipeline"
 
 if [[ ${run_tkn} -eq 1 ]]; then
     set -x

@@ -232,8 +232,6 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
-	setupLog.Info("starting law debug")
-
 	os.Exit(run(namespace, metricsAddr, enableLeaderElection,
 		enableApplicationController, enableBlueprintController, enablePlotterController, enableMotionController))
 }
