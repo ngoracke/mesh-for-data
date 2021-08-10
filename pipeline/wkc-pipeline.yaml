@@ -10,6 +10,9 @@ spec:
   - description: namespace to deploy control plane to.  If nobody has deployed fybrik on this cluster before, choose fybrik-system.
     name: NAMESPACE
     type: string
+  - description: namespace to deploy blueprints to. Name will be derived from control plane namespace.  If control plane namespace is set to fybrik-system; this will default to fybrik-blueprints.
+    name: blueprintNamespace
+    type: string
   - default: wcp-ibm-streams-docker-local.artifactory.swg-devops.com
     description: docker registry hostname.  This is where images will be pushed once built
     name: docker-hostname
@@ -229,6 +232,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
@@ -266,6 +271,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     runAfter:
     - build-wkc-connector
     taskRef:
@@ -322,6 +329,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: "$(params.blueprintNamespace)"
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
@@ -359,6 +368,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     runAfter:
     - build-manager
     taskRef:
@@ -419,6 +430,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     runAfter:
     - fetch-repository
     taskRef:
@@ -475,6 +488,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
@@ -512,6 +527,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     runAfter:
     - build-katalog
     taskRef:
@@ -568,6 +585,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
@@ -605,6 +624,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     runAfter:
     - build-opa
     taskRef:
@@ -661,6 +682,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
@@ -698,6 +721,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: "$(params.blueprintNamespace)"
     runAfter:
     - build-datacatalog
     taskRef:
@@ -754,6 +779,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
@@ -791,6 +818,8 @@ spec:
       value: "$(params.docker-hostname)"
     - name: docker-namespace
       value: "$(params.docker-namespace)"
+    - name: blueprintNamespace
+      value: $(params.blueprintNamespace)
     runAfter:
     - build-servicepolicymanager
     taskRef:
@@ -845,7 +874,7 @@ spec:
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
-      value: clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),opaConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://vault.fybrik-system:8200,vault.address=http://vault.fybrik-system:8200,$(params.mesh-for-data-values)
+      value: blueprintNamespace=$(params.blueprintNamespace),clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),opaConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,$(params.mesh-for-data-values)
     - name: release_version
       value: 0.1.0
     - name: image
@@ -915,7 +944,7 @@ spec:
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
-      value: clusterScoped=$(params.clusterScoped),global.imagePullSecrets=,wkcConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/wkc-connector@$(tasks.build-image-wkc-connector.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://vault.fybrik-system:8200,wkcConnector.vault.address=http://vault.fybrik-system:8200,wkcConnector.serverURL=$(params.wkcConnectorServerUrl)
+      value: clusterScoped=$(params.clusterScoped),global.imagePullSecrets=,wkcConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/wkc-connector@$(tasks.build-image-wkc-connector.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,wkcConnector.vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,wkcConnector.serverURL=$(params.wkcConnectorServerUrl)
     - name: release_version
       value: 0.1.0
     - name: image
@@ -1008,14 +1037,81 @@ spec:
     workspaces:
     - name: source
       workspace: shared-workspace
-  - name: oc-apply-vault-roles
+  - name: update-helm-vault-values
+    params:
+    - name: context
+      value: .
+    - name: command
+      value: sed -i 's|bound_service_account_namespaces=.*"|bound_service_account_namespaces="$(params.blueprintNamespace)"|g' $(params.vaultValues)
+    runAfter:
+    - fetch-vault-plugin-secrets-wkc-reader
+    taskRef:
+      kind: Task
+      name: shell
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+    when:
+    - Input: $(params.deployVault)
+      Operator: in
+      Values:
+      - "true"
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.INCREMENTAL_CODE_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+  - name: update-helm-vault-roles
+    params:
+    - name: context
+      value: .
+    - name: command
+      value: |
+        sed -i 's|namespace: .*|namespace: $(params.NAMESPACE)|g' $(params.vaultRoles)
+        sed -i 's|name: role-tokenreview-binding|name: $(params.NAMESPACE)-role-tokenreview-binding|g' $(params.vaultRoles)
+        sed -i 's|name: vault-secrets-manager|name: $(params.NAMESPACE)-vault-secrets-manager|g' $(params.vaultRoles)
+        sed -i 's|name: vault|name: $(params.NAMESPACE)-vault|g' $(params.vaultRoles)
+#        sed -i '0,/name: vault$/{s/name: vault$/name: $(params.NAMESPACE)-vault/}' $(params.vaultRoles)
+    runAfter:
+    - fetch-vault-plugin-secrets-wkc-reader
+    taskRef:
+      kind: Task
+      name: shell
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+    when:
+    - Input: $(params.deployVault)
+      Operator: in
+      Values:
+      - "true"
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.INCREMENTAL_CODE_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+  - name: oc-apply-vault-crds
     params:
     - name: ARGS
       value:
       - apply -f $(params.vaultRoles)
         -n $(params.NAMESPACE)
     runAfter:
-    - fetch-vault-plugin-secrets-wkc-reader
+    - update-helm-vault-roles
     taskRef:
       kind: Task
       name: openshift-client
@@ -1047,7 +1143,7 @@ spec:
     - name: release_version
       value: 0.9.1
     - name: release_name
-      value: vault
+      value: $(params.NAMESPACE)-vault
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
@@ -1055,7 +1151,8 @@ spec:
     - name: image
       value: $(params.helm_image)
     runAfter:
-    - fetch-vault-plugin-secrets-wkc-reader
+    - update-helm-vault-values
+    - update-helm-vault-roles
     taskRef:
       kind: Task
       name: helm-upgrade-from-repo
@@ -1118,66 +1215,68 @@ spec:
       Operator: notin
       Values:
       - "true"
-  #- name: oc-install-flight-opensource-crds-absent
-  #  params:
-  #  - name: ARGS
-  #    value:
-  #    - apply -f https://github.com/mesh-for-data/arrow-flight-module/releases/latest/download/module.yaml
-  #      -n $(params.NAMESPACE)
-  #  runAfter:
-  #  - upgrade-helm-crd-from-source
-  #  taskRef:
-  #    kind: Task
-  #    name: openshift-client
-  #  when:
-  #  - Input: $(params.IMAGE_DIGEST)
-  #    Operator: in
-  #    Values:
-  #    - "none"
-  #  - Input: $(params.INCREMENTAL_RESTART)
-  #    Operator: notin
-  #    Values:
-  #    - "true"
-  #  - Input: $(params.INCREMENTAL_CODE_RESTART)
-  #    Operator: notin
-  #    Values:
-  #    - "true"
-  #  workspaces:
-  #  - name: source
-  #    workspace: shared-workspace
-  #- name: oc-install-flight-opensource-crds-present
-  #  params:
-  #  - name: ARGS
-  #    value:
-  #    - apply -f https://github.com/mesh-for-data/arrow-flight-module/releases/latest/download/module.yaml
-  #      -n $(params.NAMESPACE)
-  #  taskRef:
-  #    kind: Task
-  #    name: openshift-client
-  #  when:
-  #  - Input: $(params.deployCRD)
-  #    Operator: in
-  #    Values:
-  #    - "false"
-  #  - Input: $(params.NAMESPACE)
-  #    Operator: in
-  #    Values:
-  #    - "fybrik-system"
-  #  - Input: $(params.IMAGE_DIGEST)
-  #    Operator: in
-  #    Values:
-  #    - "none"
-  #  - Input: $(params.INCREMENTAL_RESTART)
-  #    Operator: notin
-  #    Values:
-  #    - "true"
-  #  - Input: $(params.INCREMENTAL_CODE_RESTART)
-  #    Operator: notin
-  #    Values:
-  #    - "true"
-  #  workspaces:
-  #  - name: source
-  #    workspace: shared-workspace
+#  - name: oc-install-flight-opensource-crds-absent
+#    params:
+#    - name: ARGS
+#      value:
+#      - apply -f https://github.com/fybrik/arrow-flight-module/releases/latest/download/module.yaml
+#        -n $(params.NAMESPACE)
+#    runAfter:
+#    - upgrade-helm-crd-from-source
+#    taskRef:
+#      kind: Task
+#      name: openshift-client
+#    when:
+#    - Input: $(params.IMAGE_DIGEST)
+#      Operator: in
+#      Values:
+#      - "none"
+#    - Input: $(params.INCREMENTAL_RESTART)
+#      Operator: notin
+#      Values:
+#      - "true"
+#    - Input: $(params.INCREMENTAL_CODE_RESTART)
+#      Operator: notin
+#      Values:
+#      - "true"
+#    workspaces:
+#    - name: source
+#      workspace: shared-workspace
+#  - name: oc-install-flight-opensource-crds-present
+#    params:
+#    - name: ARGS
+#      value:
+#      - apply -f https://github.com/fybrik/arrow-flight-module/releases/latest/download/module.yaml
+#        -n $(params.NAMESPACE)
+#    taskRef:
+#      kind: Task
+#      name: openshift-client
+#    when:
+#    - Input: $(params.deployCRD)
+#      Operator: in
+#      Values:
+#      - "false"
+### Donot include Ask Nick
+#    - Input: $(params.NAMESPACE)
+#      Operator: in
+#      Values:
+#      - "fybrik-system"
+### End donot include 
+#    - Input: $(params.IMAGE_DIGEST)
+#      Operator: in
+#      Values:
+#      - "none"
+#    - Input: $(params.INCREMENTAL_RESTART)
+#      Operator: notin
+#      Values:
+#      - "true"
+#    - Input: $(params.INCREMENTAL_CODE_RESTART)
+#      Operator: notin
+#      Values:
+#      - "true"
+#    workspaces:
+#    - name: source
+#      workspace: shared-workspace
   - name: run-integration-tests-full-deploy
     params:
     - name: target
@@ -1187,7 +1286,7 @@ spec:
     - name: image
       value: $(params.build_image)
     - name: flags
-      value: DOCKER_HOSTNAME=$(params.docker-hostname) DOCKER_NAMESPACE=$(params.docker-namespace)
+      value: DOCKER_HOSTNAME=$(params.docker-hostname) DOCKER_NAMESPACE=$(params.docker-namespace) CONTROLLER_NAMESPACE=$(params.NAMESPACE) BLUEPRINT_NAMESPACE=$(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
@@ -1215,7 +1314,7 @@ spec:
     - name: image
       value: $(params.build_image)
     - name: flags
-      value: DOCKER_HOSTNAME=$(params.docker-hostname) DOCKER_NAMESPACE=$(params.docker-namespace)
+      value: DOCKER_HOSTNAME=$(params.docker-hostname) DOCKER_NAMESPACE=$(params.docker-namespace) CONTROLLER_NAMESPACE=$(params.NAMESPACE) BLUEPRINT_NAMESPACE=$(params.blueprintNamespace)
     runAfter:
     - upgrade-helm-partial
     when:
@@ -1235,6 +1334,8 @@ spec:
       value: test
     - name: context
       value: mesh-for-data
+    - name: flags
+      value: CONTROLLER_NAMESPACE=$(params.NAMESPACE) BLUEPRINT_NAMESPACE=$(params.blueprintNamespace)
     - name: image
       value: $(params.build_image)
     - name: INCREMENTAL_CODE_RESTART
@@ -1259,6 +1360,8 @@ spec:
       value: test
     - name: context
       value: mesh-for-data
+    - name: flags
+      value: CONTROLLER_NAMESPACE=$(params.NAMESPACE) BLUEPRINT_NAMESPACE=$(params.blueprintNamespace)
     - name: image
       value: $(params.build_image)
     runAfter:
