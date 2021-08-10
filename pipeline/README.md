@@ -30,11 +30,18 @@ You can deploy Fybrik using the pipeline as cluster scoped or namespaced scoped.
 ## Bootstrapping
 
 Run the following command to bootstrap a Fybrik instance. The instance will be cluster scoped or namespace scoped depending on environment variables see [Running cluster scoped or namespace scoped](#running-cluster-scoped-or-namespace-scoped)
+
+The parameter specified is the *system* namespace. 
 ```
 . source-external.sh
 bash -x bootstrap-pipeline.sh fybrik-myname
 # follow on screen instructions
 ```
+
+After running the tkn command from the script the following namespaces will be created. Using the example *system* namespace of fybrik-myname:
+1. fybrik-myname - This will be the *system* namespace where Fybrik is deployed. 
+2. fybrik-myname-blueprints - this is the designated namespace for blueprints custom resources. This is also where the data access module is deployed to. 
+3. fybrik-myname-app - This namespace is only created if running cluster_scope=false AND use_application_namespace=true is set.  
 
 ## Restarting individual tasks
 
