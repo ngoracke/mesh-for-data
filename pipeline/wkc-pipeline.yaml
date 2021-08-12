@@ -133,6 +133,14 @@ spec:
     name: transfer-images-to-icr
     type: string
     default: "false"
+  - description: url of the git repo for the code of deployment
+    name: proprietary-git-url
+    type: string
+    default: https://github.ibm.com/IBM-Data-Fabric/proprietary.git
+  - default: master
+    description: branch/revision to be used from repo of the code for deployment
+    name: proprietary-git-revision
+    type: string
   tasks:
   #git@github.ibm.com:data-mesh-research/WKC-connector.git
   - name: fetch-vault-plugin-secrets-wkc-reader
@@ -164,6 +172,35 @@ spec:
       Operator: notin
       Values:
       - "true"
+  - name: fetch-proprietary
+    params:
+    - name: url
+      value: $(params.proprietary-git-url)
+    - name: subdirectory
+      value: "proprietary"
+    - name: deleteExisting
+      value: "true"
+    - name: revision
+      value: $(params.proprietary-git-revision)
+    - name: INCREMENTAL_CODE_RESTART
+      value: $(params.INCREMENTAL_CODE_RESTART)
+    - name: sslVerify
+      value: "false"
+    taskRef:
+      kind: Task
+      name: git-clone
+    workspaces:
+    - name: output
+      workspace: shared-workspace
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"  
   - name: fetch-wkc-connector
     params:
     - name: url
@@ -874,7 +911,7 @@ spec:
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
-      value: blueprintNamespace=$(params.blueprintNamespace),clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),opaConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,$(params.mesh-for-data-values)
+      value: blueprintNamespace=$(params.blueprintNamespace),clusterScoped=$(params.clusterScoped),manager.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST),manager.chartVolume=charts-pvc,katalogConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/$(params.KATALOG_IMAGE)@$(tasks.build-image-katalog.results.IMAGE_DIGEST),opaConnector.image=$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,$(params.mesh-for-data-values)
     - name: release_version
       value: 0.1.0
     - name: image
@@ -1037,6 +1074,22 @@ spec:
     workspaces:
     - name: source
       workspace: shared-workspace
+  - name: update-flight-module
+    params:
+    - name: context
+      value: .
+    - name: command
+      value: |
+        sed -i.bak 's|      global.cpdUrl: .*|      global.cpdUrl: $(params.wkcConnectorServerUrl) |g' /workspace/source/proprietary/modules/wdp-connect-flight-module.yaml
+        oc apply -f /workspace/source/proprietary/modules/wdp-connect-flight-module.yaml
+    runAfter:
+    - fetch-proprietary
+    taskRef:
+      kind: Task
+      name: shell
+    workspaces:
+    - name: source
+      workspace: shared-workspace
   - name: update-helm-vault-values
     params:
     - name: context
@@ -1068,6 +1121,32 @@ spec:
       Operator: notin
       Values:
       - "true"
+  - name: oc-apply-proprietary-charts
+    params:
+    - name: command
+      value: |
+        oc cp /workspace/source/proprietary/charts workspace-0:/opt/fybrik/
+    runAfter:
+    - fetch-proprietary
+    taskRef:
+      kind: Task
+      name: shell
+    when:
+    - Input: $(params.IMAGE_DIGEST)
+      Operator: in
+      Values:
+      - "none"
+    - Input: $(params.INCREMENTAL_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    - Input: $(params.INCREMENTAL_CODE_RESTART)
+      Operator: notin
+      Values:
+      - "true"
+    workspaces:
+    - name: source
+      workspace: shared-workspace
   - name: update-helm-vault-roles
     params:
     - name: context
