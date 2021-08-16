@@ -19,6 +19,7 @@ export cpd_url="${cpd_url:-https://cpd.fake.com}"
 export git_url="${git_url:-https://github.com/fybrik/fybrik.git}"
 export wkc_connector_git_url="${wkc_connector_git_url}"
 export vault_plugin_secrets_wkc_reader_url="${vault_plugin_secrets_wkc_reader_url}"
+export proprietary_git_url="${proprietary_git_url}"
 export use_application_namespace=${use_application_namespace:-false}
 
 helper_text=""
@@ -494,7 +495,7 @@ EOH
     fi
     set -e
 fi
-extra_params="${extra_params} -p git-url=${git_url} -p wkc-connector-git-url=${wkc_connector_git_url} -p vault-plugin-secrets-wkc-reader-url=${vault_plugin_secrets_wkc_reader_url}"
+extra_params="${extra_params} -p git-url=${git_url} -p wkc-connector-git-url=${wkc_connector_git_url} -p vault-plugin-secrets-wkc-reader-url=${vault_plugin_secrets_wkc_reader_url} -p proprietary-git-url=${proprietary_git_url}"
 
 # Set up credentials for WKC
 if [[ "${github}" != "github.com" ]]; then
@@ -563,10 +564,19 @@ if [[ ! -z "${github_workspace}" ]]; then
     if [[ ${is_kubernetes} == "true" ]]; then
         kubectl cp $github_workspace workspace-0:/workspace/source/
     else 
-        oc rsync $github_workspace workspace-0:/workspace/source/
+        oc rsync --exclude=*.git/* $github_workspace workspace-0:/workspace/source/
     fi
     git_url=""
     extra_params="${extra_params} -p git-url="
+    if [[ -d ${github_workspace}/../proprietary ]]; then
+        if [[ ${is_kubernetes} == "true" ]]; then
+            kubectl cp $github_workspace/../proprietary workspace-0:/workspace/source/
+        else
+            oc rsync --exclude=*.git/* $github_workspace/../proprietary workspace-0:/workspace/source/
+        fi
+        proprietary_git_url=""
+        extra_params="${extra_params} -p proprietary-git-url="
+    fi
 fi
 set +x
 
@@ -607,6 +617,8 @@ spec:
     value: "${wkc_connector_git_url}" 
   - name: vault-plugin-secrets-wkc-reader-url 
     value: "${vault_plugin_secrets_wkc_reader_url}"
+  - name: proprietary-git-url
+    value: "${proprietary_git_url}"
   - name: skipTests
     value: "${skip_tests}"
   - name: transfer-images-to-icr

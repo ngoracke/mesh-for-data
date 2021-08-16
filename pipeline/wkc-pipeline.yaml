@@ -37,6 +37,14 @@ spec:
     name: wkc-connector-git-url
     type: string
     default: git@github.ibm.com:ngoracke/WKC-connector.git
+  - description: wkc catalog id for testing
+    name: catalogID
+    default: 46328147-09d9-42e2-9987-a46c8f38002f
+    type: string
+  - description: wkc asset id for testing
+    name: assetID
+    default: bd8495a7-601e-46da-ab43-6b77254b9d51
+    type: string    
   - description: url of the git repo for the code of deployment
     name: vault-plugin-secrets-wkc-reader-url
     type: string
@@ -1074,12 +1082,66 @@ spec:
     workspaces:
     - name: source
       workspace: shared-workspace
+  - name: run-flight-tests
+    params:
+    - name: context
+      value: .
+    - name: command
+      value: |
+        echo "#!/bin/bash" > /workspace/source/proprietary/tests/exports
+        echo "export IBM_NGINX_ROUTE=$(params.wkcConnectorServerUrl)" >> /workspace/source/proprietary/tests/exports
+        echo "export ADMIN_USER=$(kubectl get secret wkc-credentials -o jsonpath="{.data.WKC_username}" | base64 --decode)" >> /workspace/source/proprietary/tests/exports
+        echo "export ADMIN_PASSWORD=$(kubectl get secret wkc-credentials -o jsonpath="{.data.WKC_password}" | base64 --decode)" >> /workspace/source/proprietary/tests/exports
+        echo "export BLUEPRINT_NAMESPACE=$(params.blueprintNamespace)" >> /workspace/source/proprietary/tests/exports
+        echo "export CATALOG_ID=$(params.catalogID)" >> /workspace/source/proprietary/tests/exports
+        echo "export ASSET_ID=$(params.assetID)" >> /workspace/source/proprietary/tests/exports
+        source /workspace/source/proprietary/tests/exports
+        sed -i 's|asset_id*,|asset_id": "$(params.assetID)",|g' /workspace/source/proprietary/tests/app.yaml
+        sed -i 's|catalog_id*}|catalog_id": "$(params.catalogID)"}|g' /workspace/source/proprietary/tests/app.yaml
+        cat /workspace/source/proprietary/tests/app.yaml
+        oc apply -f /workspace/source/proprietary/tests/app.yaml -n $(params.NAMESPACE)-app
+        oc wait fybrikapplication -n $(params.NAMESPACE)-app jw-cpd-app-x4 --for=condition=Ready
+        sleep 10
+        echo "export BLUEPRINT_SVC=$(oc get fybrikapplication -n $(params.NAMESPACE)-app jw-cpd-app-x4 -o jsonpath={.status.readEndpointsMap..hostname})" >> /workspace/source/proprietary/tests/exports
+        source /workspace/source/proprietary/tests/exports
+        pushd /workspace/source/proprietary/tests/ && nose2
+    - name: image
+      value: wcp-ibm-streams-docker-local.artifactory.swg-devops.com/elvis_build/tester:latest
+    runAfter:
+    - update-flight-module
+    - upgrade-wkc-connector-helm-full
+    taskRef:
+      kind: Task
+      name: shell
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: restart-wkc-pod
+    params:
+    - name: context
+      value: .
+    - name: command
+      value: |
+        sleep 30
+        export po=$(oc get po -l app.kubernetes.io/component=wkc-connector --no-headers | grep "ImagePullBackOff" | cut -d' ' -f1)
+        if [[ ! -z ${po} ]]; then
+          oc delete po ${po}
+        fi
+    runAfter:
+    - upgrade-wkc-connector-helm-full
+    taskRef:
+      kind: Task
+      name: shell
+    workspaces:
+    - name: source
+      workspace: shared-workspace
   - name: update-flight-module
     params:
     - name: context
       value: .
     - name: command
       value: |
+        oc wait --for condition=established --timeout=180s crd/fybrikmodules.app.fybrik.io
         sed -i.bak 's|      global.cpdUrl: .*|      global.cpdUrl: $(params.wkcConnectorServerUrl) |g' /workspace/source/proprietary/modules/wdp-connect-flight-module.yaml
         oc apply -f /workspace/source/proprietary/modules/wdp-connect-flight-module.yaml
     runAfter:
