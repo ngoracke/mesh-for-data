@@ -47,6 +47,9 @@ spec:
           - name: blueprintNamespace
             value: $(tt.params.blueprintNamespace)
         workspaces:
+          - name: maven-settings
+            configMap:
+              name: custom-maven-settings  
           - name: shared-workspace
             persistentVolumeClaim:
               claimName: source-pvc
@@ -104,6 +107,9 @@ spec:
           - name: shared-workspace
             persistentVolumeClaim:
               claimName: source-pvc
+          - name: maven-settings
+            configMap:
+              name: custom-maven-settings
           - name: images-url
             emptyDir: {}
           - name: artifacts

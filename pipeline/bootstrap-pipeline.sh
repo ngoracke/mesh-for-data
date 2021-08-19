@@ -20,6 +20,7 @@ export git_url="${git_url:-https://github.com/fybrik/fybrik.git}"
 export wkc_connector_git_url="${wkc_connector_git_url}"
 export vault_plugin_secrets_wkc_reader_url="${vault_plugin_secrets_wkc_reader_url}"
 export proprietary_git_url="${proprietary_git_url}"
+export data_fabric_git_url="${data_fabric_git_url}"
 export use_application_namespace=${use_application_namespace:-false}
 
 helper_text=""
@@ -495,7 +496,7 @@ EOH
     fi
     set -e
 fi
-extra_params="${extra_params} -p git-url=${git_url} -p wkc-connector-git-url=${wkc_connector_git_url} -p vault-plugin-secrets-wkc-reader-url=${vault_plugin_secrets_wkc_reader_url} -p proprietary-git-url=${proprietary_git_url}"
+extra_params="${extra_params} -p git-url=${git_url} -p wkc-connector-git-url=${wkc_connector_git_url} -p vault-plugin-secrets-wkc-reader-url=${vault_plugin_secrets_wkc_reader_url} -p proprietary-git-url=${proprietary_git_url} -p data-fabric-git-url=${data_fabric_git_url}"
 
 # Set up credentials for WKC
 if [[ "${github}" != "github.com" ]]; then
@@ -518,7 +519,7 @@ EOH
     cat ${TMP}/wkc-credentials.yaml
     oc apply -f ${TMP}/wkc-credentials.yaml
 
-  extra_params="${extra_params} -p wkcConnectorServerUrl=https://cpd-cpd4.apps.cpstreamsx4.cp.fyre.ibm.com"
+  extra_params="${extra_params} -p DataFabricControlPlaneServerUrl=https://cpd-cpd4.apps.cpstreamsx4.cp.fyre.ibm.com"
 
   if [[ ${cluster_scoped} == "false" && ${use_application_namespace} == "true" ]]; then 
     cat > ${TMP}/wkc-credentials.yaml <<EOH
@@ -539,7 +540,7 @@ stringData:
 EOH
     cat ${TMP}/wkc-credentials.yaml
     oc apply -f ${TMP}/wkc-credentials.yaml
-    extra_params="${extra_params} -p wkcConnectorServerUrl=${cpd_url}"
+    extra_params="${extra_params} -p DataFabricControlPlaneServerUrl=${cpd_url}"
   fi
 fi
 
@@ -582,7 +583,7 @@ set +x
 
 echo "
 # for a pre-existing PVC that will be deleted when the namespace is deleted
-tkn pipeline start build-and-deploy -w name=images-url,emptyDir=\"\" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=${image_repo} -p dockerhub-hostname=${dockerhub_hostname} -p docker-namespace=${unique_prefix} -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} -p mesh-for-data-values=${mesh_for_data_values} ${extra_params} -p git-revision=pipeline"
+tkn pipeline start build-and-deploy -w name=images-url,emptyDir=\"\" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -w name=maven-settings,config=maven-settings -p docker-hostname=${image_repo} -p dockerhub-hostname=${dockerhub_hostname} -p docker-namespace=${unique_prefix} -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} -p mesh-for-data-values=${mesh_for_data_values} ${extra_params} -p git-revision=pipeline"
 
 if [[ ${run_tkn} -eq 1 ]]; then
     set -x
@@ -609,7 +610,7 @@ spec:
     value: ${unique_prefix} 
   - name: git-revision
     value: pipeline
-  - name: wkcConnectorServerUrl
+  - name: DataFabricControlPlaneServerUrl
     value: ${cpd_url}
   - name: git-url
     value: "${git_url}"
@@ -619,6 +620,8 @@ spec:
     value: "${vault_plugin_secrets_wkc_reader_url}"
   - name: proprietary-git-url
     value: "${proprietary_git_url}"
+  - name: data-fabric-git-url
+    value: "${data_fabric_git_url}"
   - name: skipTests
     value: "${skip_tests}"
   - name: transfer-images-to-icr
@@ -652,6 +655,9 @@ spec:
   - name: shared-workspace
     persistentVolumeClaim:
       claimName: source-pvc
+  - name: maven-settings
+    configMap:
+      name: custom-maven-settings
 EOH
     cat ${TMP}/pipelinerun.yaml
     oc apply -f ${TMP}/pipelinerun.yaml

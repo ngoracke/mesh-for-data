@@ -29,6 +29,7 @@ if [[ ! -z ${GH_TOKEN} ]]; then
     export wkc_connector_git_url="https://${github}/ngoracke/WKC-connector.git"
     export vault_plugin_secrets_wkc_reader_url="https://${github}/data-mesh-research/vault-plugin-secrets-wkc-reader.git"
     export proprietary_git_url="https://${github}/IBM-Data-Fabric/proprietary.git"
+    export data_fabric_git_url="https://${github}/IBM-Data-Fabric/data-fabric-control-plane.git"
 fi
 
 echo "
