@@ -1532,6 +1532,17 @@ spec:
     workspaces:
     - name: source
       workspace: shared-workspace
+  - name: finally-remove-test-resources
+    params:
+    - name: ARGS
+      value:
+      - delete -f /workspace/source/proprietary/tests/app.yaml -n $(params.NAMESPACE)-app --ignore-not-found=true
+    taskRef:
+      kind: Task
+      name: openshift-client
+    workspaces:
+    - name: source
+      workspace: shared-workspace
   workspaces:
   - name: shared-workspace
   - name: artifacts
