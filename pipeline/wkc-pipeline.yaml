@@ -318,7 +318,7 @@ spec:
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
-    - fetch-wkc-connector
+    - move-wkc-connector
     taskRef:
       kind: Task
       name: make
@@ -334,16 +334,15 @@ spec:
       Operator: notin
       Values:
       - "true"
-
   - name: move-wkc-connector
     params:
     - name: context
       value: /workspace/source/
     - name: command
       value: |
-        mv WKC-connector /data-fabric-control-plane
+        mv /workspace/source/WKC-connector /workspace/source/data-fabric-control-plane
     runAfter:
-    - build-wkc-connector
+    - fetch-wkc-connector
     taskRef:
       kind: Task
       name: shell
@@ -353,20 +352,36 @@ spec:
 
   - name: build-data-fabric-control-plane
     params:
+    - name: CONTEXT_DIR
+      value: data-fabric-control-plane/
+    - name: GOALS
+      value:
+        - -DskipTests
+        - clean
+        - install
+    runAfter:
+    - build-wkc-connector
+    taskRef:
+      name: maven
+    workspaces:
+    - name: maven-settings
+      workspace: maven-settings
+    - name: source
+      workspace: shared-workspace
+
+  - name: create-pg-secret-file
+    params:
     - name: context
-      value: /workspace/source/data-fabric-control-plane/
+      value: /workspace/source/
     - name: command
       value: |
-        mvn install
-        mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
+        kubectl create secret generic pg-secret-cr --from-file=/workspace/source/postgres-DEV.crt
     runAfter:
-    - move-wkc-connector
+    - fetch-data-fabric-control-plane
     taskRef:
       kind: Task
       name: shell
     workspaces:
-    - name: maven-settings
-      workspace: maven-settings
     - name: source
       workspace: shared-workspace
 
@@ -1279,21 +1294,6 @@ spec:
       Operator: notin
       Values:
       - "true"
-    workspaces:
-    - name: source
-      workspace: shared-workspace
-
-  - name: create-pg-secret-file
-    params:
-    - name: command
-      value: |
-        oc cp postgres-DEV.crt workspace-0:/workspace/source/postgres-DEV.crt
-        kubectl create secret generic pg-secret-cr --from-file=/workspace/source/postgres-DEV.crt=./postgres-DEV.crt
-    runAfter:
-    - fetch-data-fabric-control-plane
-    taskRef:
-      kind: Task
-      name: shell
     workspaces:
     - name: source
       workspace: shared-workspace

@@ -388,6 +388,9 @@ if [[ $rc -ne 0 ]]; then
     deploy_cert_manager="true"
 fi
 
+# Adding maven task
+kubectl apply -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/maven/0.2/maven.yaml
+
 # Create a workspace to allow users to exec in and run arbitrary commands
 oc apply -f ${repo_root}/pipeline/rootsa.yaml
 oc apply -f ${TMP}/statefulset.yaml
@@ -581,9 +584,12 @@ if [[ ! -z "${github_workspace}" ]]; then
 fi
 set +x
 
+# add postgres secret file
+oc cp postgres-DEV.crt workspace-0:/workspace/source/postgres-DEV.crt
+
 echo "
 # for a pre-existing PVC that will be deleted when the namespace is deleted
-tkn pipeline start build-and-deploy -w name=images-url,emptyDir=\"\" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -w name=maven-settings,config=maven-settings -p docker-hostname=${image_repo} -p dockerhub-hostname=${dockerhub_hostname} -p docker-namespace=${unique_prefix} -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} -p mesh-for-data-values=${mesh_for_data_values} ${extra_params} -p git-revision=pipeline"
+tkn pipeline start build-and-deploy -w name=images-url,emptyDir=\"\" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -w name=maven-settings,config=custom-maven-settings -p docker-hostname=${image_repo} -p dockerhub-hostname=${dockerhub_hostname} -p docker-namespace=${unique_prefix} -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} -p mesh-for-data-values=${mesh_for_data_values} ${extra_params} -p git-revision=pipeline"
 
 if [[ ${run_tkn} -eq 1 ]]; then
     set -x
