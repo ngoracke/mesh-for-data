@@ -1084,6 +1084,8 @@ spec:
       workspace: shared-workspace
   - name: run-flight-tests
     params:
+    - name: image
+      value: $(params.dockerhub-hostname)/tester:latest
     - name: context
       value: .
     - name: command
@@ -1105,8 +1107,6 @@ spec:
         echo "export BLUEPRINT_SVC=$(oc get fybrikapplication -n $(params.NAMESPACE)-app jw-cpd-app-x4 -o jsonpath={.status.readEndpointsMap..hostname})" >> /workspace/source/proprietary/tests/exports
         source /workspace/source/proprietary/tests/exports
         pushd /workspace/source/proprietary/tests/ && nose2
-    - name: image
-      value: wcp-ibm-streams-docker-local.artifactory.swg-devops.com/elvis_build/tester:latest
     runAfter:
     - update-flight-module
     - upgrade-wkc-connector-helm-full
@@ -1118,6 +1118,8 @@ spec:
       workspace: shared-workspace
   - name: restart-wkc-pod
     params:
+    - name: image
+      value: $(params.dockerhub-hostname)/suede:latest
     - name: context
       value: .
     - name: command
@@ -1137,6 +1139,8 @@ spec:
       workspace: shared-workspace
   - name: update-flight-module
     params:
+    - name: image
+      value: $(params.dockerhub-hostname)/suede:latest
     - name: context
       value: .
     - name: command
@@ -1154,6 +1158,8 @@ spec:
       workspace: shared-workspace
   - name: update-helm-vault-values
     params:
+    - name: image
+      value: $(params.dockerhub-hostname)/suede:latest
     - name: context
       value: .
     - name: command
@@ -1185,6 +1191,8 @@ spec:
       - "true"
   - name: oc-apply-proprietary-charts
     params:
+    - name: image
+      value: $(params.dockerhub-hostname)/suede:latest
     - name: command
       value: |
         oc cp /workspace/source/proprietary/charts workspace-0:/opt/fybrik/
@@ -1211,6 +1219,8 @@ spec:
       workspace: shared-workspace
   - name: update-helm-vault-roles
     params:
+    - name: image
+      value: $(params.dockerhub-hostname)/suede:latest
     - name: context
       value: .
     - name: command
