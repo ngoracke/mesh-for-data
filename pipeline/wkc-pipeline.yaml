@@ -193,7 +193,7 @@ spec:
     - name: deleteExisting
       value: "true"
     - name: revision
-      value: $(params.proprietary-git-revision)
+      value: kritika-dataFabricCharts
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     - name: sslVerify
@@ -273,7 +273,6 @@ spec:
       Operator: notin
       Values:
       - "true"
-
   - name: fetch-repository
     params:
     - name: url
@@ -301,6 +300,22 @@ spec:
       Operator: notin
       Values:
       - "true"
+  - name: fetch-secrets-from-vault
+    params:
+    - name: context
+      value: /workspace/source/
+    - name: command
+      value: |
+        sh fetch-secrets-from-vault.sh
+        kubectl create secret generic pg-creds --from-file=bootstrap-sensitive-config.properties=./bootstrap-sensitive-config.properties
+        oc create configmap custom-maven-settings --from-file=settings.xml
+        kubectl create secret generic pg-secret-cr --from-file=postgres-DEV.crt=./postgres-DEV.crt
+    taskRef:
+      kind: Task
+      name: shell
+    workspaces:
+    - name: source
+      workspace: shared-workspace
   - name: build-wkc-connector
     params:
     - name: target
@@ -318,7 +333,7 @@ spec:
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
-    - move-wkc-connector
+    - fetch-wkc-connector
     taskRef:
       kind: Task
       name: make
@@ -334,22 +349,6 @@ spec:
       Operator: notin
       Values:
       - "true"
-  - name: move-wkc-connector
-    params:
-    - name: context
-      value: /workspace/source/
-    - name: command
-      value: |
-        mv /workspace/source/WKC-connector /workspace/source/data-fabric-control-plane
-    runAfter:
-    - fetch-wkc-connector
-    taskRef:
-      kind: Task
-      name: shell
-    workspaces:
-    - name: source
-      workspace: shared-workspace
-
   - name: build-data-fabric-control-plane
     params:
     - name: CONTEXT_DIR
@@ -368,23 +367,22 @@ spec:
       workspace: maven-settings
     - name: source
       workspace: shared-workspace
-
-  - name: create-pg-secret-file
+  - name: pre-data-fabric-image-build
     params:
     - name: context
       value: /workspace/source/
     - name: command
       value: |
-        kubectl create secret generic pg-secret-cr --from-file=/workspace/source/postgres-DEV.crt
+        mv /workspace/source/WKC-connector /workspace/source/data-fabric-control-plane
+        mkdir -p data-fabric-control-plane/target/dependency && (cd data-fabric-control-plane/target/dependency; jar -xf ../*.jar)
     runAfter:
-    - fetch-data-fabric-control-plane
+    - build-data-fabric-control-plane
     taskRef:
       kind: Task
       name: shell
     workspaces:
     - name: source
       workspace: shared-workspace
-
   - name: build-image-data-fabric-control-plane
     params:
     - name: IMAGE
@@ -406,7 +404,7 @@ spec:
     - name: blueprintNamespace
       value: $(params.blueprintNamespace)
     runAfter:
-    - build-data-fabric-control-plane
+    - pre-data-fabric-image-build
     taskRef:
       kind: Task
       name: buildah
@@ -427,7 +425,6 @@ spec:
       Values:
       - "all"
       - "WKC-connector/java"
-
   - name: transfer-image-wkc-connector-vulnerability-advisor
     retries: 3
     taskRef:
@@ -1077,7 +1074,7 @@ spec:
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
-      value: clusterScoped=$(params.clusterScoped),ImagePullSecrets=,Image.image=$(params.docker-hostname)/$(params.docker-namespace)/data-fabric-control-plane@$(tasks.build-image-data-fabric-control-plane.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200, DataFabricControlPlane.vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,DataFabricControlPlane.serverURL=$(params.DataFabricControlPlaneServerUrl)
+      value: clusterScoped=$(params.clusterScoped),imagePullSecrets=,image.repository=$(params.docker-hostname),image.image=$(params.docker-namespace)/data-fabric-control-plane@$(tasks.build-image-data-fabric-control-plane.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200, controlPlane.vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,controlPlane.serverURL=$(params.DataFabricControlPlaneServerUrl)
     - name: release_version
       value: 0.1.0
     - name: image
@@ -1297,7 +1294,6 @@ spec:
     workspaces:
     - name: source
       workspace: shared-workspace
-
   - name: update-helm-vault-roles
     params:
     - name: context

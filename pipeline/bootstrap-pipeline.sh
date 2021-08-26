@@ -304,6 +304,17 @@ set +e
 oc delete secret -n ${unique_prefix} regcred --wait
 oc delete secret -n ${unique_prefix} regcred-test --wait
 oc delete secret -n ${unique_prefix} sourceregcred --wait
+
+oc delete secret -n ${unique_prefix} vault-creds --wait
+oc delete secret -n ${unique_prefix} pg-secret-cr --wait
+oc delete secret -n ${unique_prefix} pg-creds --wait
+
+# Delete maven config map
+oc delete cm -n ${unique_prefix} custom-maven-settings --wait
+
+# Delete bootstrap env config
+oc delete cm -n ${unique_prefix} env-conf --wait
+
 set -e
 set -x
 
@@ -584,8 +595,18 @@ if [[ ! -z "${github_workspace}" ]]; then
 fi
 set +x
 
-# add postgres secret file
-oc cp postgres-DEV.crt workspace-0:/workspace/source/postgres-DEV.crt
+# get vault credentials
+vaultPath=`jq -r '.vault_path' vault_credentials.json`
+vaultRoleId=`jq -r '.vault_role_id' vault_credentials.json`
+vaultSecretId=`jq -r '.vault_secret_id' vault_credentials.json`
+vaultServer=`jq -r '.vault_server' vault_credentials.json`
+
+# create secret for vault credentials
+kubectl create secret generic vault-creds --from-literal=vault_path=$vaultPath --from-literal=vault_role_id=$vaultRoleId --from-literal=vault_secret_id=$vaultSecretId --from-literal=vault_server=$vaultServer
+oc cp fetch-secrets-from-vault.sh workspace-0:/workspace/source/secrets-from-vault.sh
+
+# create bootstrap config for data fabric control plane
+kubectl create cm env-conf --from-file=bootstrap-config.properties=./bootstrap-config.properties
 
 echo "
 # for a pre-existing PVC that will be deleted when the namespace is deleted
