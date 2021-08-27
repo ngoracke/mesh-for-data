@@ -143,7 +143,7 @@ else
 fi
 extra_params="${extra_params} -p blueprintNamespace=${blueprint_namespace}"
 
-mesh_for_data_values="cluster.name=AmsterdamCluster,cluster.zone=Netherlands,cluster.region=Netherlands,cluster.vaultAuthPath=kubernetes,coordinator.catalog=WKC,coordinator.catalogConnectorURL=wkc-connector:50090"
+mesh_for_data_values="cluster.name=AmsterdamCluster,cluster.zone=Netherlands,cluster.region=Netherlands,cluster.vaultAuthPath=kubernetes,coordinator.catalog=WKC,coordinator.catalogConnectorURL=data-fabric-control-plane-service:50090"
 if [[ ${cluster_scoped} == "false" ]]; then
     if [[ ${use_application_namespace} == "false" ]]; then
       mesh_for_data_values="${mesh_for_data_values},applicationNamespace=${unique_prefix}"
@@ -603,7 +603,7 @@ vaultServer=`jq -r '.vault_server' vault_credentials.json`
 
 # create secret for vault credentials
 kubectl create secret generic vault-creds --from-literal=vault_path=$vaultPath --from-literal=vault_role_id=$vaultRoleId --from-literal=vault_secret_id=$vaultSecretId --from-literal=vault_server=$vaultServer
-oc cp fetch-secrets-from-vault.sh workspace-0:/workspace/source/secrets-from-vault.sh
+oc cp fetch-secrets-from-vault.sh workspace-0:/workspace/source/fetch-secrets-from-vault.sh
 
 # create bootstrap config for data fabric control plane
 kubectl create cm env-conf --from-file=bootstrap-config.properties=./bootstrap-config.properties
