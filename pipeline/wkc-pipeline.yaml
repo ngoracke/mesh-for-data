@@ -1124,13 +1124,34 @@ spec:
       value: .
     - name: command
       value: |
-        sleep 30
-        export po=$(oc get po -l app.kubernetes.io/component=wkc-connector --no-headers | grep "ImagePullBackOff" | cut -d' ' -f1)
-        if [[ ! -z ${po} ]]; then
-          oc delete po ${po}
-        fi
+        MAX_TRIES=30
+        TRIES=0
+        while [[ ${TRIES} -lt ${MAX_TRIES} ]]; do
+            set +e
+            helm list -a | grep wkc-connector
+            rc=$?
+            if [[ $rc -eq 0 ]]; then
+                TRIES=${MAX_TRIES}
+            fi
+            TRIES=$((TRIES+1))
+            sleep 3
+        done
+
+        MAX_TRIES=30
+        TRIES=0
+        while [[ ${TRIES} -lt ${MAX_TRIES} ]]; do
+            set +e
+            export po=$(oc get po -l app.kubernetes.io/component=wkc-connector --no-headers | grep "ImagePullBackOff" | cut -d' ' -f1)
+            if [[ ! -z ${po} ]]; then
+                oc delete po ${po}
+                TRIES=${MAX_TRIES}
+            fi
+            TRIES=$((TRIES+1))
+            sleep 3
+        done
+        
     runAfter:
-    - upgrade-wkc-connector-helm-full
+    - build-image-wkc-connector
     taskRef:
       kind: Task
       name: shell
