@@ -57,15 +57,15 @@ coordinator:
 
   # Overrides the catalog connector URL.
   # Defaults to `<catalog>-connector:80`.
-  catalogConnectorURL: ""
+  catalogConnectorURL: "data-fabric-control-plane-service:50090"
 
   # Configures the policy manager system name to be used by the coordinator manager.
   # Accepted values are "opa" or any meaningful name if a third party connector is used.
-  policyManager: "opa"
+  policyManager: "WKC"
 
   # Overrides the policy manager connector URL.
   # Defaults to `<policyManager>-connector:80`.
-  policyManagerConnectorURL: ""
+  policyManagerConnectorURL: "data-fabric-control-plane-service:50090"
 
   # Configure the vault instance to be used by the coordinator manager
   vault:

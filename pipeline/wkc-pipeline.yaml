@@ -61,7 +61,7 @@ spec:
     description: deploy vault or no.  If deploying to the fybrik-system namespace, make this true.
     name: deployVault
     type: string
-  - default: 'cluster.name="AmsterdamCluster",cluster.zone="Netherlands",cluster.region="Netherlands",cluster.vaultAuthPath="kubernetes",coordinator.catalog="WKC",coordinator.catalogConnectorURL="wkc-connector:50090"'
+  - default: 'cluster.name="AmsterdamCluster",cluster.zone="Netherlands",cluster.region="Netherlands",cluster.vaultAuthPath="kubernetes",coordinator.catalog="WKC",coordinator.catalogConnectorURL="data-fabric-control-plane-service:50090",coordinator.policyManager="WKC",coordinator.policyManagerConnectorURL="data-fabric-control-plane-service:50090"'
     description: values to pass to helm install of mesh-for-data charts
     type: string
     name: mesh-for-data-values
@@ -307,9 +307,9 @@ spec:
     - name: command
       value: |
         sh fetch-secrets-from-vault.sh
-        kubectl create secret generic pg-creds --from-file=bootstrap-sensitive-config.properties=./bootstrap-sensitive-config.properties
-        oc create configmap custom-maven-settings --from-file=settings.xml
-        kubectl create secret generic pg-secret-cr --from-file=postgres-DEV.crt=./postgres-DEV.crt
+        kubectl create secret -n $(params.NAMESPACE) generic pg-creds --from-file=bootstrap-sensitive-config.properties=./bootstrap-sensitive-config.properties
+        oc create configmap -n $(params.NAMESPACE) custom-maven-settings --from-file=settings.xml
+        kubectl create secret -n $(params.NAMESPACE) generic pg-secret-cr --from-file=postgres-DEV.crt=./postgres-DEV.crt
     taskRef:
       kind: Task
       name: shell

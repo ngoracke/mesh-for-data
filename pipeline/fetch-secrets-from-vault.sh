@@ -1,4 +1,5 @@
 #!/bin/bash
+
 server_url="$VAULT_SERVER/v1/auth/approle/login"
 
 response=`curl -w "%{http_code}" -X POST --data "{\"role_id\":\"$VAULT_ROLE_ID\",\"secret_id\":\"$VAULT_SECRET_ID\"}" $server_url`
