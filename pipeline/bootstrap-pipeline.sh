@@ -639,6 +639,8 @@ spec:
     value: "${vault_values}"
   - name: mesh-for-data-values
     value: "${mesh_for_data_values}"
+  - name: va-scan-namespace
+    value: "${va_scan_namespace:-mesh-for-data-ci}"
   pipelineRef:
     name: build-and-deploy
   serviceAccountName: ${pipeline_sa}

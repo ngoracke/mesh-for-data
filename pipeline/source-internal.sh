@@ -23,6 +23,7 @@ export vault_plugin_secrets_wkc_reader_url="git@${github}:data-mesh-research/vau
 export proprietary_git_url="git@${github}:IBM-Data-Fabric/proprietary.git"
 export cluster_scoped=false
 export use_application_namespace=true
+export va_scan_namespace=${va_scan_namespace:-mesh-for-data-ci}
 
 if [[ ! -z ${GH_TOKEN} ]]; then
     export git_url="https://${github}/IBM-Data-Fabric/mesh-for-data.git"

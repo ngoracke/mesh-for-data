@@ -38,6 +38,7 @@ test:
     set -e
     export GH_TOKEN=$(get_env different-git-token)
     export git_user=$(get_env git-user)
+    export va_scan_namespace=$(get_env va_scan_namespace)
     . pipeline/source-internal.sh
     github_workspace=`pwd`/../mesh-for-data run_tkn=$(get_env run_tkn) skip_tests=false bash -x pipeline/bootstrap-pipeline.sh fybrik-system
     for i in $(oc get po --no-headers | grep run-unit | cut -d' ' -f1); do oc logs $i -c step-unit-test > $i.logs ; save_artifact test log_$i=$i.logs; done
