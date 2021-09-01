@@ -59,6 +59,9 @@ spec:
   - default: ""
     name: blueprintNamespace
     type: string
+  - default: "false"
+    name: useBuiltImage
+    type: string
   results:
   - description: Digest of the image just built.
     name: IMAGE_DIGEST
@@ -77,10 +80,15 @@ spec:
     name: build
     resources: {}
     script: |
-      buildah --storage-driver=$(params.STORAGE_DRIVER) bud \
-        $(params.BUILD_EXTRA_ARGS) --format=$(params.FORMAT) \
-        --tls-verify=$(params.TLSVERIFY) --no-cache \
-        -f $(params.DOCKERFILE) -t $(params.IMAGE) $(params.CONTEXT)
+      if [[ $(params.useBuiltImage) == "false" ]]; then
+          buildah --storage-driver=$(params.STORAGE_DRIVER) bud \
+            $(params.BUILD_EXTRA_ARGS) --format=$(params.FORMAT) \
+            --tls-verify=$(params.TLSVERIFY) --no-cache \
+            -f $(params.DOCKERFILE) -t $(params.IMAGE) $(params.CONTEXT)
+      else
+          echo "No-op, re-using built image"
+      fi
+     
     securityContext:
       privileged: true
     volumeMounts:
@@ -91,17 +99,33 @@ spec:
     name: push
     resources: {}
     script: |
-      unique_id=$(echo $(params.IMAGE) | sed 's/.*\///')
-      buildah --storage-driver=$(params.STORAGE_DRIVER) push \
-        $(params.PUSH_EXTRA_ARGS) --tls-verify=$(params.TLSVERIFY) \
-        --digestfile $(workspaces.source.path)/image-digest-${unique_id} $(params.IMAGE) \
-        docker://$(params.IMAGE)
+      if [[ $(params.useBuiltImage) == "false" ]]; then
+          unique_id=$(echo $(params.IMAGE) | sed 's/.*\///')
+          buildah --storage-driver=$(params.STORAGE_DRIVER) push \
+            $(params.PUSH_EXTRA_ARGS) --tls-verify=$(params.TLSVERIFY) \
+            --digestfile $(workspaces.source.path)/image-digest-${unique_id} $(params.IMAGE) \
+            docker://$(params.IMAGE)
+      else
+          echo "No-op, re-using built image"
+      fi
     securityContext:
       privileged: true
     volumeMounts:
     - mountPath: /var/lib/containers
       name: varlibcontainers
     workingDir: $(workspaces.source.path)
+  - image: quay.io/skopeo/stable:v1.1.1
+    name: skopeo-copy
+    resources: {}
+    script: |
+      # Function to copy multiple images.
+      #
+      # If single image is to be copied then, it can be passed through
+      # params in the taskrun.
+      unique_id=$(echo $(params.IMAGE) | sed 's/.*\///')
+      digest=$(skopeo inspect --tls-verify=false docker://$(params.IMAGE):latest | grep Digest | cut -d' ' -f6 | sed 's|",||g' | sed 's|"sha|sha|g')
+      echo -n ${digest} > $(workspaces.source.path)/image-digest-${unique_id}
+      echo -n $(params.IMAGE)@${digest} > /tekton/results/FULL_IMAGE
   - image: $(params.BUILDER_IMAGE)
     name: digest-to-results
     resources: {}
