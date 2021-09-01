@@ -1092,14 +1092,27 @@ spec:
       value: |
         echo "#!/bin/bash" > /workspace/source/proprietary/tests/exports
         echo "export IBM_NGINX_ROUTE=$(params.wkcConnectorServerUrl)" >> /workspace/source/proprietary/tests/exports
-        echo "export ADMIN_USER=$(kubectl get secret wkc-credentials -o jsonpath="{.data.WKC_username}" | base64 --decode)" >> /workspace/source/proprietary/tests/exports
-        echo "export ADMIN_PASSWORD=$(kubectl get secret wkc-credentials -o jsonpath="{.data.WKC_password}" | base64 --decode)" >> /workspace/source/proprietary/tests/exports
+        echo "export ADMIN_USER=$(kubectl get secret wkc-credentials -o jsonpath="{.data.CP4D_USERNAME}" | base64 --decode)" >> /workspace/source/proprietary/tests/exports
+        echo "export ADMIN_PASSWORD=$(kubectl get secret wkc-credentials -o jsonpath="{.data.CP4D_PASSWORD}" | base64 --decode)" >> /workspace/source/proprietary/tests/exports
+        echo "export CP4D_URL=$(kubectl get secret wkc-credentials -o jsonpath="{.data.CP4D_SERVER_URL}" | base64 --decode)" >> /workspace/source/proprietary/tests/exports
         echo "export BLUEPRINT_NAMESPACE=$(params.blueprintNamespace)" >> /workspace/source/proprietary/tests/exports
         echo "export CATALOG_ID=$(params.catalogID)" >> /workspace/source/proprietary/tests/exports
         echo "export ASSET_ID=$(params.assetID)" >> /workspace/source/proprietary/tests/exports
         source /workspace/source/proprietary/tests/exports
         sed -i 's|asset_id*,|asset_id": "$(params.assetID)",|g' /workspace/source/proprietary/tests/app.yaml
         sed -i 's|catalog_id*}|catalog_id": "$(params.catalogID)"}|g' /workspace/source/proprietary/tests/app.yaml
+
+        token=$(curl -k -X POST --header "Content-Type: application/json" -d '{"username":"'${ADMIN_USER}'","password":"'${ADMIN_PASSWORD}'"}' ${CP4D_URL}/icp4d-api/v1/authorize | jq .token)
+        echo $token
+
+        oc get secret -n $(params.NAMESPACE)-app wkc-credentials -o yaml > /tmp/secret
+        oc delete secret -n $(params.NAMESPACE)-app wkc-credentials
+        yq w -i /tmp/secret data.WKC_ownerId OTk5
+        yq w -i /tmp/secret data.WKC_password $(echo -n $ADMIN_PASSWORD | base64)
+        yq w -i /tmp/secret data.WKC_username $(echo -n $ADMIN_USER | base64)
+        yq w -i /tmp/secret data.WKC_token $(echo -n $token | base64 -w 0)
+        oc create -f /tmp/secret
+
         cat /workspace/source/proprietary/tests/app.yaml
         oc apply -f /workspace/source/proprietary/tests/app.yaml -n $(params.NAMESPACE)-app
         oc wait fybrikapplication -n $(params.NAMESPACE)-app jw-cpd-app-x4 --for=condition=Ready
