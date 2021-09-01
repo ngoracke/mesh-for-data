@@ -306,14 +306,14 @@ oc delete secret -n ${unique_prefix} regcred-test --wait
 oc delete secret -n ${unique_prefix} sourceregcred --wait
 
 oc delete secret -n ${unique_prefix} vault-creds --wait
-oc delete secret -n ${unique_prefix} pg-secret-cr --wait
-oc delete secret -n ${unique_prefix} pg-creds --wait
+# oc delete secret -n ${unique_prefix} pg-secret-cr --wait
+# oc delete secret -n ${unique_prefix} pg-creds --wait
 
 # Delete maven config map
-oc delete cm -n ${unique_prefix} custom-maven-settings --wait
+# oc delete cm -n ${unique_prefix} custom-maven-settings --wait
 
 # Delete bootstrap env config
-oc delete cm -n ${unique_prefix} env-conf --wait
+# oc delete cm -n ${unique_prefix} env-conf --wait
 
 set -e
 set -x

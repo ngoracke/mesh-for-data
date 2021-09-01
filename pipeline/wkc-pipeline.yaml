@@ -1084,7 +1084,7 @@ spec:
       Operator: in
       Values:
       - "true"
-  - name: upgrade-wkc-connector-helm-full
+  - name: upgrade-control-plane-helm-full
     params:
     - name: charts_dir
       value: /workspace/source/proprietary/charts/data-fabric-control-plane
@@ -1120,7 +1120,7 @@ spec:
       Operator: notin
       Values:
       - "true"
-  - name: upgrade-wkc-connector-helm-partial
+  - name: upgrade-control-plane-helm-partial
     params:
     - name: charts_dir
       value: /workspace/source/proprietary/charts/data-fabric-control-plane
@@ -1214,7 +1214,7 @@ spec:
       value: wcp-ibm-streams-docker-local.artifactory.swg-devops.com/elvis_build/tester:latest
     runAfter:
     - update-flight-module
-    - upgrade-wkc-connector-helm-full
+    - upgrade-control-plane-helm-full
     taskRef:
       kind: Task
       name: shell
@@ -1228,12 +1228,12 @@ spec:
     - name: command
       value: |
         sleep 30
-        export po=$(oc get po -l app.kubernetes.io/component=wkc-connector --no-headers | grep "ImagePullBackOff" | cut -d' ' -f1)
+        export po=$(oc get po -l app.kubernetes.io/component=data-fabric-control-plane --no-headers | grep "ImagePullBackOff" | cut -d' ' -f1)
         if [[ ! -z ${po} ]]; then
           oc delete po ${po}
         fi
     runAfter:
-    - upgrade-wkc-connector-helm-full
+    - upgrade-control-plane-helm-full
     taskRef:
       kind: Task
       name: shell
@@ -1539,7 +1539,7 @@ spec:
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
     - upgrade-helm-full
-    - upgrade-wkc-connector-helm-full
+    - upgrade-control-plane-helm-full
     - build-image-datacatalog
     - build-image-serverpolicymanager
     when:
@@ -1590,7 +1590,7 @@ spec:
       value: $(params.INCREMENTAL_CODE_RESTART)
     runAfter:
     - upgrade-helm-full
-    - upgrade-wkc-connector-helm-full
+    - upgrade-control-plane-helm-full
     when:
     - Input: $(params.skipTests)
       Operator: notin
@@ -1614,7 +1614,7 @@ spec:
       value: $(params.build_image)
     runAfter:
     - upgrade-helm-partial
-    - upgrade-wkc-connector-helm-partial
+    - upgrade-control-plane-helm-partial
     when:
     - Input: $(params.skipTests)
       Operator: notin
