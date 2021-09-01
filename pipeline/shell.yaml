@@ -78,21 +78,25 @@ spec:
         secretKeyRef:
           name: vault-creds
           key: vault_path
+          optional: true
     - name: VAULT_ROLE_ID
       valueFrom:
         secretKeyRef:
           name: vault-creds
           key: vault_role_id
+          optional: true
     - name: VAULT_SECRET_ID
       valueFrom:
         secretKeyRef:
           name: vault-creds
           key: vault_secret_id
+          optional: true
     - name: VAULT_SERVER
       valueFrom:
         secretKeyRef:
           name: vault-creds
           key: vault_server
+          optional: true
     image: $(params.image)
     name: unit-test
     resources: {}

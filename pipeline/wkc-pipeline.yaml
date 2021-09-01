@@ -57,11 +57,15 @@ spec:
     description: branch/revision to be used from repo of the code for deployment
     name: wkc-connector-git-revision
     type: string
+  - default: lappanna-api
+    description: branch/revision to be used from repo of the code for deployment
+    name: data-fabric-git-revision
+    type: string
   - default: "false"
     description: deploy vault or no.  If deploying to the fybrik-system namespace, make this true.
     name: deployVault
     type: string
-  - default: 'cluster.name="AmsterdamCluster",cluster.zone="Netherlands",cluster.region="Netherlands",cluster.vaultAuthPath="kubernetes",coordinator.catalog="WKC",coordinator.catalogConnectorURL="data-fabric-control-plane-service:50090",coordinator.policyManager="WKC",coordinator.policyManagerConnectorURL="data-fabric-control-plane-service:50090"'
+  - default: 'cluster.name="AmsterdamCluster",cluster.zone="Netherlands",cluster.region="Netherlands",cluster.vaultAuthPath="kubernetes",coordinator.catalog="WKC",coordinator.catalogConnectorURL="data-fabric-control-plane-service:50090",coordinator.credentialsManager="WKC",coordinator.credentialsManagerConnectorURL="data-fabric-control-plane-service:50090",coordinator.policyManager="WKC",coordinator.policyManagerConnectorURL="data-fabric-control-plane-service:50090"'
     description: values to pass to helm install of mesh-for-data charts
     type: string
     name: mesh-for-data-values
@@ -149,9 +153,12 @@ spec:
     name: proprietary-git-url
     type: string
     default: https://github.ibm.com/IBM-Data-Fabric/proprietary.git
-  - default: master
+  - default: kritika-dataFabricCharts
     description: branch/revision to be used from repo of the code for deployment
     name: proprietary-git-revision
+    type: string
+  - default: "false"
+    name: OVERWRITE_SECRETS
     type: string
   tasks:
   #git@github.ibm.com:data-mesh-research/WKC-connector.git
@@ -193,7 +200,7 @@ spec:
     - name: deleteExisting
       value: "true"
     - name: revision
-      value: kritika-dataFabricCharts
+      value: $(params.proprietary-git-revision)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     - name: sslVerify
@@ -222,7 +229,7 @@ spec:
     - name: deleteExisting
       value: "true"
     - name: revision
-      value: "lappanna-api"
+      value: $(params.data-fabric-git-revision)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
     - name: sslVerify
@@ -307,9 +314,22 @@ spec:
     - name: command
       value: |
         sh fetch-secrets-from-vault.sh
-        kubectl create secret -n $(params.NAMESPACE) generic pg-creds --from-file=bootstrap-sensitive-config.properties=./bootstrap-sensitive-config.properties
-        oc create configmap -n $(params.NAMESPACE) custom-maven-settings --from-file=settings.xml
-        kubectl create secret -n $(params.NAMESPACE) generic pg-secret-cr --from-file=postgres-DEV.crt=./postgres-DEV.crt
+        kubectl create namespace $(params.NAMESPACE) || true
+        if [[ "$params.OVERWRITE_SECRETS" == "true" ]]
+        then
+          kubectl delete secret -n $(params.NAMESPACE) generic pg-creds || true
+          kubectl delete configmap -n $(params.NAMESPACE) custom-maven-settings || true
+          kubectl delete secret -n $(params.NAMESPACE) generic pg-secret-cr || true
+          kubectl delete cm -n $(params.NAMESPACE) env-conf || true
+        fi
+        kubectl create secret -n $(params.NAMESPACE) generic pg-creds --from-file=bootstrap-sensitive-config.properties=./bootstrap-sensitive-config.properties || true
+        kubectl create configmap -n $(params.NAMESPACE) custom-maven-settings --from-file=settings.xml || true
+        kubectl create secret -n $(params.NAMESPACE) generic pg-secret-cr --from-file=postgres.crt=./postgres.crt || true
+        kubectl create cm env-conf -n $(params.NAMESPACE) --from-literal=spring.jpa.properties.hibernate.default_schema=m4d_latha || true
+
+        # rm -f ./postgres.crt
+        # rm -f ./settings.xml
+        # rm -f ./bootstrap-sensitive-config.properties
     taskRef:
       kind: Task
       name: shell
@@ -1074,7 +1094,7 @@ spec:
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
-      value: clusterScoped=$(params.clusterScoped),imagePullSecrets=,image.repository=$(params.docker-hostname),image.image=$(params.docker-namespace)/data-fabric-control-plane@$(tasks.build-image-data-fabric-control-plane.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200, controlPlane.vault.address=http://$(params.NAMESPACE)-vault.$(params.NAMESPACE):8200,controlPlane.serverURL=$(params.DataFabricControlPlaneServerUrl)
+      value: clusterScoped=$(params.clusterScoped),imagePullSecrets=,image.repository=$(params.docker-hostname),image.image=$(params.docker-namespace)/data-fabric-control-plane@$(tasks.build-image-data-fabric-control-plane.results.IMAGE_DIGEST),cluster.name=$(params.NAMESPACE),coordinator.vault.address=http://$(params.NAMESPACE)-vault:8200,controlPlane.vault.address=http://$(params.NAMESPACE)-vault:8200,controlPlane.serverURL=$(params.DataFabricControlPlaneServerUrl)
     - name: release_version
       value: 0.1.0
     - name: image
@@ -1242,7 +1262,9 @@ spec:
     - name: context
       value: .
     - name: command
-      value: sed -i 's|bound_service_account_namespaces=.*"|bound_service_account_namespaces="$(params.blueprintNamespace)"|g' $(params.vaultValues)
+      value: |
+        sed -i 's|fybrik-blueprints|$(params.blueprintNamespace)|g' $(params.vaultValues)
+        sed -i 's|fybrik-system|$(params.NAMESPACE)|g' $(params.vaultValues)
     runAfter:
     - fetch-vault-plugin-secrets-wkc-reader
     taskRef:
@@ -1373,7 +1395,7 @@ spec:
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
-      value: server.dev.enabled=true,injector.enabled=false,global.openshift=true,server.image.repository=$(params.dockerhub-hostname)/vault
+      value: server.dev.enabled=true,injector.enabled=true,global.openshift=true,server.image.repository=$(params.dockerhub-hostname)/vault,injector.agentImage.repository=$(params.dockerhub-hostname)/vault,injector.image.repository=$(params.dockerhub-hostname)/vault-k8s
     - name: image
       value: $(params.helm_image)
     runAfter:

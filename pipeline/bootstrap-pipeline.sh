@@ -143,7 +143,7 @@ else
 fi
 extra_params="${extra_params} -p blueprintNamespace=${blueprint_namespace}"
 
-mesh_for_data_values="cluster.name=AmsterdamCluster,cluster.zone=Netherlands,cluster.region=Netherlands,cluster.vaultAuthPath=kubernetes,coordinator.catalog=WKC,coordinator.catalogConnectorURL=data-fabric-control-plane-service:50090,coordinator.policyManager=WKC,coordinator.policyManagerConnectorURL=data-fabric-control-plane-service:50090"
+mesh_for_data_values="cluster.name=AmsterdamCluster,cluster.zone=Netherlands,cluster.region=Netherlands,cluster.vaultAuthPath=kubernetes,coordinator.catalog=WKC,coordinator.catalogConnectorURL=data-fabric-control-plane-service:50090,coordinator.credentialsManager=WKC,coordinator.credentialsManagerConnectorURL=data-fabric-control-plane-service:50090,coordinator.policyManager=WKC,coordinator.policyManagerConnectorURL=data-fabric-control-plane-service:50090"
 if [[ ${cluster_scoped} == "false" ]]; then
     if [[ ${use_application_namespace} == "false" ]]; then
       mesh_for_data_values="${mesh_for_data_values},applicationNamespace=${unique_prefix}"
@@ -226,7 +226,7 @@ EOH
 #!/bin/bash
 set -x
 oc get -n openshift-operators csv | grep serverless-operator
-oc get -n openshift-operators csv | grep serverless-operator | grep -e Succeeded -e Replacing
+oc get -n openshift-operators csv | grep serverless-operator | grep -e Succeeded -e Replacing -e Installing
 EOH
     chmod u+x ${TMP}/streams_csv_check_script.sh
     try_command "${TMP}/streams_csv_check_script.sh"  40 false 5
@@ -524,10 +524,6 @@ type: kubernetes.io/Opaque
 stringData:
   CP4D_USERNAME: ${cpd_username}
   CP4D_PASSWORD: ${cpd_password}
-  WKC_username: ${cpd_username}
-  WKC_password: ${cpd_password}
-  WKC_USERNAME: ${cpd_username}
-  WKC_PASSWORD: ${cpd_password}
   CP4D_SERVER_URL: ${cpd_url}
 EOH
     cat ${TMP}/wkc-credentials.yaml
