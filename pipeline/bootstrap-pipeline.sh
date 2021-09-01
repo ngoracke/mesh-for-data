@@ -509,13 +509,13 @@ type: kubernetes.io/Opaque
 stringData:
   CP4D_USERNAME: ${cpd_username}
   CP4D_PASSWORD: ${cpd_password}
-  WKC_username: ${cpd_username}
-  WKC_password: ${cpd_password}
-  WKC_USERNAME: ${cpd_username}
-  WKC_PASSWORD: ${cpd_password}
+  #WKC_username: ${cpd_username}
+  #WKC_password: ${cpd_password}
+  #WKC_USERNAME: ${cpd_username}
+  #WKC_PASSWORD: ${cpd_password}
   CP4D_SERVER_URL: ${cpd_url}
-  WKC_token: ${cpd_username}
-  WKC_ownerId: 999
+  #WKC_token: ${cpd_username}
+  #WKC_ownerId: 999
 EOH
     cat ${TMP}/wkc-credentials.yaml
     oc apply -f ${TMP}/wkc-credentials.yaml
@@ -533,13 +533,13 @@ type: kubernetes.io/Opaque
 stringData:
   CP4D_USERNAME: ${cpd_username}
   CP4D_PASSWORD: ${cpd_password}
-  WKC_username: ${cpd_username}
-  WKC_password: ${cpd_password}
-  WKC_USERNAME: ${cpd_username}
-  WKC_PASSWORD: ${cpd_password}
+  #WKC_username: ${cpd_username}
+  #WKC_password: ${cpd_password}
+  #WKC_USERNAME: ${cpd_username}
+  #WKC_PASSWORD: ${cpd_password}
   CP4D_SERVER_URL: ${cpd_url}
-  WKC_token: ${cpd_username}
-  WKC_ownerId: 999
+  #WKC_token: ${cpd_username}
+  #WKC_ownerId: 999
 EOH
     cat ${TMP}/wkc-credentials.yaml
     oc apply -f ${TMP}/wkc-credentials.yaml
