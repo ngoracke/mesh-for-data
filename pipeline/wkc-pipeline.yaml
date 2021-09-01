@@ -57,7 +57,7 @@ spec:
     description: deploy vault or no.  If deploying to the fybrik-system namespace, make this true.
     name: deployVault
     type: string
-  - default: 'cluster.name="AmsterdamCluster",cluster.zone="Netherlands",cluster.region="Netherlands",cluster.vaultAuthPath="kubernetes",coordinator.catalog="WKC",coordinator.catalogConnectorURL="wkc-connector:50090"'
+  - default: 'cluster.name="AmsterdamCluster",cluster.zone="Netherlands",cluster.region="Netherlands",cluster.vaultAuthPath="kubernetes",coordinator.catalog="WKC",coordinator.catalogConnectorURL="wkc-connector:50090",coordinator.credentialsManager="WKC",coordinator.credentialsManagerConnectorURL="wkc-connector:50090",coordinator.policyManager="WKC",coordinator.policyManagerConnectorURL="wkc-connector:50090"'
     description: values to pass to helm install of mesh-for-data charts
     type: string
     name: mesh-for-data-values
@@ -1149,7 +1149,7 @@ spec:
             TRIES=$((TRIES+1))
             sleep 3
         done
-        
+
     runAfter:
     - build-image-wkc-connector
     taskRef:
@@ -1184,7 +1184,9 @@ spec:
     - name: context
       value: .
     - name: command
-      value: sed -i 's|bound_service_account_namespaces=.*"|bound_service_account_namespaces="$(params.blueprintNamespace)"|g' $(params.vaultValues)
+      value: |
+        sed -i 's|fybrik-blueprints|$(params.blueprintNamespace)|g' $(params.vaultValues)
+        sed -i 's|fybrik-system|$(params.NAMESPACE)|g' $(params.vaultValues)
     runAfter:
     - fetch-vault-plugin-secrets-wkc-reader
     taskRef:
@@ -1319,7 +1321,7 @@ spec:
     - name: release_namespace
       value: $(params.NAMESPACE)
     - name: overwrite_values
-      value: server.dev.enabled=true,injector.enabled=false,global.openshift=true,server.image.repository=$(params.dockerhub-hostname)/vault
+      value: server.dev.enabled=true,injector.enabled=true,global.openshift=true,server.image.repository=$(params.dockerhub-hostname)/vault,injector.agentImage.repository=$(params.dockerhub-hostname)/vault,injector.image.repository=$(params.dockerhub-hostname)/vault-k8s
     - name: image
       value: $(params.helm_image)
     runAfter:

@@ -142,7 +142,7 @@ else
 fi
 extra_params="${extra_params} -p blueprintNamespace=${blueprint_namespace}"
 
-mesh_for_data_values="cluster.name=AmsterdamCluster,cluster.zone=Netherlands,cluster.region=Netherlands,cluster.vaultAuthPath=kubernetes,coordinator.catalog=WKC,coordinator.catalogConnectorURL=wkc-connector:50090"
+mesh_for_data_values="cluster.name=AmsterdamCluster,cluster.zone=Netherlands,cluster.region=Netherlands,cluster.vaultAuthPath=kubernetes,coordinator.catalog=WKC,coordinator.catalogConnectorURL=wkc-connector:50090,coordinator.credentialsManager=WKC,coordinator.credentialsManagerConnectorURL=wkc-connector:50090,coordinator.policyManager=WKC,coordinator.policyManagerConnectorURL=wkc-connector:50090"
 if [[ ${cluster_scoped} == "false" ]]; then
     if [[ ${use_application_namespace} == "false" ]]; then
       mesh_for_data_values="${mesh_for_data_values},applicationNamespace=${unique_prefix}"
@@ -225,7 +225,7 @@ EOH
 #!/bin/bash
 set -x
 oc get -n openshift-operators csv | grep serverless-operator
-oc get -n openshift-operators csv | grep serverless-operator | grep -e Succeeded -e Replacing
+oc get -n openshift-operators csv | grep serverless-operator | grep -e Succeeded -e Replacing -e Installing
 EOH
     chmod u+x ${TMP}/streams_csv_check_script.sh
     try_command "${TMP}/streams_csv_check_script.sh"  40 false 5
@@ -514,6 +514,8 @@ stringData:
   WKC_USERNAME: ${cpd_username}
   WKC_PASSWORD: ${cpd_password}
   CP4D_SERVER_URL: ${cpd_url}
+  WKC_token: ${cpd_username}
+  WKC_ownerId: 999
 EOH
     cat ${TMP}/wkc-credentials.yaml
     oc apply -f ${TMP}/wkc-credentials.yaml
@@ -536,6 +538,8 @@ stringData:
   WKC_USERNAME: ${cpd_username}
   WKC_PASSWORD: ${cpd_password}
   CP4D_SERVER_URL: ${cpd_url}
+  WKC_token: ${cpd_username}
+  WKC_ownerId: 999
 EOH
     cat ${TMP}/wkc-credentials.yaml
     oc apply -f ${TMP}/wkc-credentials.yaml
