@@ -1281,7 +1281,7 @@ spec:
         done
 
     runAfter:
-    - build-image-wkc-connector
+    - build-image-data-fabric-control-plane
     taskRef:
       kind: Task
       name: shell
