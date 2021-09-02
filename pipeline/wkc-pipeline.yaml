@@ -325,7 +325,11 @@ spec:
         kubectl create secret -n $(params.NAMESPACE) generic pg-creds --from-file=bootstrap-sensitive-config.properties=./bootstrap-sensitive-config.properties || true
         kubectl create configmap -n $(params.NAMESPACE) custom-maven-settings --from-file=settings.xml || true
         kubectl create secret -n $(params.NAMESPACE) generic pg-secret-cr --from-file=postgres.crt=./postgres.crt || true
-        kubectl create cm env-conf -n $(params.NAMESPACE) --from-literal=spring.jpa.properties.hibernate.default_schema=m4d_latha || true
+        cat <<EOF >> bootstrap-config.properties 
+        spring.jpa.properties.hibernate.default_schema=m4d_latha
+        namespace=${KUBE_NAMESPACE}-app
+        EOF
+        kubectl create cm -n $(params.NAMESPACE)  env-conf --from-file=bootstrap-config.properties=./bootstrap-config.properties || true
 
         # rm -f ./postgres.crt
         # rm -f ./settings.xml
