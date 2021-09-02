@@ -327,7 +327,7 @@ spec:
         kubectl create secret -n $(params.NAMESPACE) generic pg-secret-cr --from-file=postgres.crt=./postgres.crt || true
         cat <<EOF >> bootstrap-config.properties 
         spring.jpa.properties.hibernate.default_schema=m4d_latha
-        namespace=${KUBE_NAMESPACE}-app
+        namespace=$(params.NAMESPACE)-app
         EOF
         kubectl create cm -n $(params.NAMESPACE)  env-conf --from-file=bootstrap-config.properties=./bootstrap-config.properties || true
 
