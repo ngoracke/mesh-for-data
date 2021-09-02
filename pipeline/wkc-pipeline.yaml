@@ -57,7 +57,7 @@ spec:
     description: branch/revision to be used from repo of the code for deployment
     name: wkc-connector-git-revision
     type: string
-  - default: lappanna-api
+  - default: master
     description: branch/revision to be used from repo of the code for deployment
     name: data-fabric-git-revision
     type: string
