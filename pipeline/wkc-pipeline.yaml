@@ -331,9 +331,10 @@ spec:
         EOF
         kubectl create cm -n $(params.NAMESPACE)  env-conf --from-file=bootstrap-config.properties=./bootstrap-config.properties || true
 
-        # rm -f ./postgres.crt
-        # rm -f ./settings.xml
-        # rm -f ./bootstrap-sensitive-config.properties
+        rm -f ./postgres.crt
+        rm -f ./settings.xml
+        rm -f ./bootstrap-sensitive-config.properties
+        rm -f ./bootstrap-config.properties
     taskRef:
       kind: Task
       name: shell
@@ -1201,10 +1202,6 @@ spec:
       value: |
         echo "#!/bin/bash" > /workspace/source/proprietary/tests/exports
         echo "export IBM_NGINX_ROUTE=$(params.DataFabricControlPlaneServerUrl)" >> /workspace/source/proprietary/tests/exports
-        echo "export ADMIN_USER=$(kubectl get secret wkc-credentials -o jsonpath="{.data.WKC_username}" | base64 --decode)" >> /workspace/source/proprietary/tests/exports
-        echo "export ADMIN_PASSWORD=$(kubectl get secret wkc-credentials -o jsonpath="{.data.WKC_password}" | base64 --decode)" >> /workspace/source/proprietary/tests/exports
-        
-        echo "export IBM_NGINX_ROUTE=$(params.wkcConnectorServerUrl)" >> /workspace/source/proprietary/tests/exports
         echo "export ADMIN_USER=$(kubectl get secret wkc-credentials -o jsonpath="{.data.CP4D_USERNAME}" | base64 --decode)" >> /workspace/source/proprietary/tests/exports
         echo "export ADMIN_PASSWORD=$(kubectl get secret wkc-credentials -o jsonpath="{.data.CP4D_PASSWORD}" | base64 --decode)" >> /workspace/source/proprietary/tests/exports
         echo "export CP4D_URL=$(kubectl get secret wkc-credentials -o jsonpath="{.data.CP4D_SERVER_URL}" | base64 --decode)" >> /workspace/source/proprietary/tests/exports
@@ -1242,7 +1239,7 @@ spec:
     workspaces:
     - name: source
       workspace: shared-workspace
-  - name: restart-wkc-pod
+  - name: restart-control-plane-pod
     params:
     - name: image
       value: $(params.dockerhub-hostname)/suede:latest
@@ -1261,7 +1258,7 @@ spec:
         TRIES=0
         while [[ ${TRIES} -lt ${MAX_TRIES} ]]; do
             set +e
-            helm list -a | grep wkc-connector
+            helm list -a | grep data-fabric-control-plane
             rc=$?
             if [[ $rc -eq 0 ]]; then
                 TRIES=${MAX_TRIES}
@@ -1274,7 +1271,7 @@ spec:
         TRIES=0
         while [[ ${TRIES} -lt ${MAX_TRIES} ]]; do
             set +e
-            export po=$(oc get po -l app.kubernetes.io/component=wkc-connector --no-headers | grep "ImagePullBackOff" | cut -d' ' -f1)
+            export po=$(oc get po -l app.kubernetes.io/component=data-fabric-control-plane --no-headers | grep "ImagePullBackOff" | cut -d' ' -f1)
             if [[ ! -z ${po} ]]; then
                 oc delete po ${po}
                 TRIES=${MAX_TRIES}
