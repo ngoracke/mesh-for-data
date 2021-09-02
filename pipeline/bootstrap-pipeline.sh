@@ -605,9 +605,6 @@ vaultServer=`jq -r '.vault_server' vault_credentials.json`
 kubectl create secret generic vault-creds --from-literal=vault_path=$vaultPath --from-literal=vault_role_id=$vaultRoleId --from-literal=vault_secret_id=$vaultSecretId --from-literal=vault_server=$vaultServer
 oc cp fetch-secrets-from-vault.sh workspace-0:/workspace/source/fetch-secrets-from-vault.sh
 
-# create bootstrap config for data fabric control plane
-kubectl create cm env-conf --from-file=bootstrap-config.properties=./bootstrap-config.properties
-
 echo "
 # for a pre-existing PVC that will be deleted when the namespace is deleted
 tkn pipeline start build-and-deploy -w name=images-url,emptyDir=\"\" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -w name=maven-settings,config=custom-maven-settings -p docker-hostname=${image_repo} -p dockerhub-hostname=${dockerhub_hostname} -p docker-namespace=${unique_prefix} -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} -p mesh-for-data-values=${mesh_for_data_values} ${extra_params} -p git-revision=pipeline"
