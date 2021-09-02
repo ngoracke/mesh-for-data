@@ -595,6 +595,7 @@ if [[ ! -z "${github_workspace}" ]]; then
 fi
 set +x
 
+helper_text="If you do not have a vault_credentials file, please see: https://github.ibm.com/IBM-Data-Fabric/data-fabric-control-plane/blob/readme/README.md"
 # get vault credentials
 vaultPath=`jq -r '.vault_path' vault_credentials.json`
 vaultRoleId=`jq -r '.vault_role_id' vault_credentials.json`

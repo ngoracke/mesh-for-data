@@ -53,6 +53,9 @@ connectors/egeria/target
 # Downloaded egeria
 third_party/egeria/egeria
 
+# Secrets
+pipeline/vault_credentials.json
+
 # Local development
 .env
 __debug_bin

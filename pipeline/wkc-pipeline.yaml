@@ -1216,11 +1216,11 @@ spec:
         echo $token
 
         oc get secret -n $(params.NAMESPACE)-app wkc-credentials -o yaml > /tmp/secret
-        oc delete secret -n $(params.NAMESPACE)-app wkc-credentials
         yq w -i /tmp/secret data.WKC_ownerId OTk5
         yq w -i /tmp/secret data.WKC_password $(echo -n $ADMIN_PASSWORD | base64)
         yq w -i /tmp/secret data.WKC_username $(echo -n $ADMIN_USER | base64)
         yq w -i /tmp/secret data.WKC_token $(echo -n $token | base64 -w 0)
+        oc delete secret -n $(params.NAMESPACE)-app wkc-credentials
         oc create -f /tmp/secret
 
         cat /workspace/source/proprietary/tests/app.yaml
