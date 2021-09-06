@@ -13,7 +13,7 @@ setup:
     ls $WORKSPACE
     oc login $(get_env openshift_cluster) -u $(get_env admin_user) -p $(get_env admin_pw) --insecure-skip-tls-verify=true
     set +e
-    oc new-project fybrik-system
+    oc new-project fybrik-ci
     set -e
     kubectl get po -o wide
 test:
@@ -32,8 +32,8 @@ test:
     ls $WORKSPACE
     oc login $(get_env openshift_cluster) -u $(get_env admin_user) -p $(get_env admin_pw) --insecure-skip-tls-verify=true
     set +e
-    oc new-project fybrik-system
-    oc project fybrik-system
+    oc new-project fybrik-ci
+    oc project fybrik-ci
     oc delete pipelinerun --all --wait
     set -e
     export GH_TOKEN=$(get_env different-git-token)
@@ -41,7 +41,7 @@ test:
     export va_scan_namespace=$(get_env va_scan_namespace)
     echo "$(get_env vault_credentials_json) > $WORKSPACE/pipeline/vault_credentials.json
     . pipeline/source-internal.sh
-    github_workspace=`pwd`/../mesh-for-data run_tkn=$(get_env run_tkn) skip_tests=false bash -x pipeline/bootstrap-pipeline.sh fybrik-system
+    github_workspace=`pwd`/../mesh-for-data run_tkn=$(get_env run_tkn) skip_tests=false bash -x pipeline/bootstrap-pipeline.sh fybrik-ci
     for i in $(oc get po --no-headers | grep run-unit | cut -d' ' -f1); do oc logs $i -c step-unit-test > $i.logs ; save_artifact test log_$i=$i.logs; done
 containerize:
   dind: true
@@ -57,7 +57,7 @@ containerize:
     env
     ls $WORKSPACE
     oc login $(get_env openshift_cluster) -u $(get_env admin_user) -p $(get_env admin_pw) --insecure-skip-tls-verify=true
-    oc project fybrik-system
+    oc project fybrik-ci
     . pipeline/common_functions.sh
     cat > ${TMP}/streams_csv_check_script.sh <<EOH
     #!/bin/bash
@@ -93,7 +93,7 @@ containerize:
     images=$(yq r /tmp/details 'status.taskRuns[*].status.taskResults' | grep FULL_IMAGE -A1 | grep value: | cut -d':' -f2-)
     for i in $images
     do
-        icr_route_image=$(echo $i | sed "s|image-registry.openshift-image-registry.svc:5000/fybrik-system|$ICR_REGISTRY_REGION.icr.io/$ICR_REGISTRY_NAMESPACE|g")
+        icr_route_image=$(echo $i | sed "s|image-registry.openshift-image-registry.svc:5000/fybrik-ci|$ICR_REGISTRY_REGION.icr.io/$ICR_REGISTRY_NAMESPACE|g")
         save_artifact service type=image name="$(echo ${icr_route_image} | cut -d'@' -f1)" digest="$(echo $i | cut -d'@' -f2)" tags="latest"
         save_artifact service_debug type=image name="$(echo ${icr_route_image} | cut -d'@' -f1)" digest="$(echo $i | cut -d'@' -f2)"
     done
@@ -115,7 +115,7 @@ acceptance-test:
     set -x
     ls $WORKSPACE
     oc login $(get_env openshift_cluster) -u $(get_env admin_user) -p $(get_env admin_pw) --insecure-skip-tls-verify=true
-    oc project fybrik-system
+    oc project fybrik-ci
     # go get github.com/tebeka/go2xunit
     for i in $(oc get po --no-headers | grep run-integr | cut -d' ' -f1); do oc logs $i -c step-unit-test > $i.logs ; cat $i.logs | ~/go/bin/go2xunit > $i.xml; save_artifact acceptance-test log_$i=$i.logs; save_artifact acceptance-test xml_$i=$i.xml ; done
 release:
