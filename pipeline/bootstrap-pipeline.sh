@@ -565,7 +565,7 @@ set +e
 oc get secret us-south-creds
 rc=$?
 transfer_images_to_icr=false
-if [[ $rc -eq 0 && ${use_built_images} != "true" ]]; then
+if [[ $rc -eq 0 && ${use_built_image} != "true" ]]; then
     transfer_images_to_icr=true
 fi
 extra_params="${extra_params} -p transfer-images-to-icr=${transfer_images_to_icr}"

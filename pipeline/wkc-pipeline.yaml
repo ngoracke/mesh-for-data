@@ -407,6 +407,8 @@ spec:
     params:
     - name: context
       value: /workspace/source/
+    - name: useBuiltImage
+      value: $(params.useBuiltImage)
     - name: command
       value: |
         mv /workspace/source/WKC-connector /workspace/source/data-fabric-control-plane

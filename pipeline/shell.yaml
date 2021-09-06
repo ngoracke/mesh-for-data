@@ -56,6 +56,9 @@ spec:
   - default: "false"
     name: INCREMENTAL_CODE_RESTART 
     type: string
+  - default: "false"
+    name: useBuiltImage
+    type: string
   results:
   - description: docker-namespace of the image just built
     name: docker-namespace
@@ -101,8 +104,8 @@ spec:
     name: unit-test
     resources: {}
     script: |
-      if [[ $(params.INCREMENTAL_CODE_RESTART) == "true" ]]; then
-          echo "No-op because we are just building images"
+      if [[ $(params.INCREMENTAL_CODE_RESTART) == "true" || $(params.useBuiltImage) == "true" ]]; then
+          echo "No-op because we are just building images or using prebuilt images"
           exit 0
       fi
       env
