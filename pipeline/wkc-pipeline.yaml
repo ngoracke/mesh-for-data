@@ -153,12 +153,15 @@ spec:
     name: proprietary-git-url
     type: string
     default: https://github.ibm.com/IBM-Data-Fabric/proprietary.git
-  - default: kritika-dataFabricCharts
+  - default: master
     description: branch/revision to be used from repo of the code for deployment
     name: proprietary-git-revision
     type: string
   - default: "false"
     name: OVERWRITE_SECRETS
+    type: string
+  - default: "wcp-ibm-streams-docker-local.artifactory.swg-devops.com/elvis_build/maven:3.6.3-openjdk-8-slim"
+    name: MAVEN_IMAGE
     type: string
   tasks:
   #git@github.ibm.com:data-mesh-research/WKC-connector.git
@@ -376,6 +379,8 @@ spec:
       - "true"
   - name: build-data-fabric-control-plane
     params:
+    - name: MAVEN_IMAGE
+      value: $(params.MAVEN_IMAGE)
     - name: CONTEXT_DIR
       value: data-fabric-control-plane/
     - name: GOALS
