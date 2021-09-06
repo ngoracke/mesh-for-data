@@ -464,7 +464,7 @@ spec:
     - name: srcImageURL
       value: docker://$(params.docker-hostname)/$(params.docker-namespace)/data-fabric-control-plane@$(tasks.build-image-data-fabric-control-plane.results.IMAGE_DIGEST)
     - name: destImageURL
-      value: docker://us.icr.io/$(params.va-scan-namespace)/wkc-connector@$(tasks.build-image-data-fabric-control-plane.results.IMAGE_DIGEST)
+      value: docker://us.icr.io/$(params.va-scan-namespace)/wkc-connector:latest
     - name: srcTLSverify
       value: "false"
     - name: destTLSverify
@@ -561,7 +561,7 @@ spec:
     - name: srcImageURL
       value: docker://$(params.docker-hostname)/$(params.docker-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST)
     - name: destImageURL
-      value: docker://us.icr.io/$(params.va-scan-namespace)/$(params.MANAGER_IMAGE)@$(tasks.build-image-manager.results.IMAGE_DIGEST)
+      value: docker://us.icr.io/$(params.va-scan-namespace)/$(params.MANAGER_IMAGE):latest
     - name: srcTLSverify
       value: "false"
     - name: destTLSverify
@@ -623,7 +623,7 @@ spec:
     - name: srcImageURL
       value: docker://$(params.docker-hostname)/$(params.docker-namespace)/$(params.dummy-image)@$(tasks.build-image-dummy-mover.results.IMAGE_DIGEST)
     - name: destImageURL
-      value: docker://us.icr.io/$(params.va-scan-namespace)/$(params.dummy-image)@$(tasks.build-image-dummy-mover.results.IMAGE_DIGEST)
+      value: docker://us.icr.io/$(params.va-scan-namespace)/$(params.dummy-image):latest
     - name: srcTLSverify
       value: "false"
     - name: destTLSverify
@@ -720,7 +720,7 @@ spec:
     - name: srcImageURL
       value: docker://$(params.docker-hostname)/$(params.docker-namespace)/katalog-connector@$(tasks.build-image-katalog.results.IMAGE_DIGEST)
     - name: destImageURL
-      value: docker://us.icr.io/$(params.va-scan-namespace)/katalog-connector@$(tasks.build-image-katalog.results.IMAGE_DIGEST)
+      value: docker://us.icr.io/$(params.va-scan-namespace)/katalog-connector:latest
     - name: srcTLSverify
       value: "false"
     - name: destTLSverify
@@ -817,7 +817,7 @@ spec:
     - name: srcImageURL
       value: docker://$(params.docker-hostname)/$(params.docker-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST)
     - name: destImageURL
-      value: docker://us.icr.io/$(params.va-scan-namespace)/opa-connector@$(tasks.build-image-opa.results.IMAGE_DIGEST)
+      value: docker://us.icr.io/$(params.va-scan-namespace)/opa-connector:latest
     - name: srcTLSverify
       value: "false"
     - name: destTLSverify
@@ -914,7 +914,7 @@ spec:
     - name: srcImageURL
       value: docker://$(params.docker-hostname)/$(params.docker-namespace)/data-catalog-mock@$(tasks.build-image-datacatalog.results.IMAGE_DIGEST)
     - name: destImageURL
-      value: docker://us.icr.io/$(params.va-scan-namespace)/data-catalog-mock@$(tasks.build-image-datacatalog.results.IMAGE_DIGEST)
+      value: docker://us.icr.io/$(params.va-scan-namespace)/data-catalog-mock:latest
     - name: srcTLSverify
       value: "false"
     - name: destTLSverify
@@ -1011,7 +1011,7 @@ spec:
     - name: srcImageURL
       value: docker://$(params.docker-hostname)/$(params.docker-namespace)/serverpolicymanager-mock@$(tasks.build-image-serverpolicymanager.results.IMAGE_DIGEST)
     - name: destImageURL
-      value: docker://us.icr.io/$(params.va-scan-namespace)/serverpolicymanager-mock@$(tasks.build-image-serverpolicymanager.results.IMAGE_DIGEST)
+      value: docker://us.icr.io/$(params.va-scan-namespace)/serverpolicymanager-mock:latest
     - name: srcTLSverify
       value: "false"
     - name: destTLSverify
