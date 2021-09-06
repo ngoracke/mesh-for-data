@@ -17,6 +17,10 @@ spec:
     description: docker registry hostname.  This is where images will be pushed once built
     name: docker-hostname
     type: string
+  - default: "false"
+    description: build images, or deploy pre-built images
+    name: useBuiltImage
+    type: string
   - default: wcp-ibm-streams-docker-local.artifactory.swg-devops.com/pipelines-tutorial
     description: where to pull dockerhub images from.
     name: dockerhub-hostname
@@ -360,6 +364,8 @@ spec:
       value: $(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
+    - name: useBuiltImage
+      value: $(params.useBuiltImage)
     runAfter:
     - fetch-wkc-connector
     taskRef:
@@ -433,6 +439,8 @@ spec:
       value: "$(params.docker-namespace)"
     - name: blueprintNamespace
       value: $(params.blueprintNamespace)
+    - name: useBuiltImage
+      value: $(params.useBuiltImage)
     runAfter:
     - pre-data-fabric-image-build
     taskRef:
@@ -464,7 +472,7 @@ spec:
     - name: srcImageURL
       value: docker://$(params.docker-hostname)/$(params.docker-namespace)/data-fabric-control-plane@$(tasks.build-image-data-fabric-control-plane.results.IMAGE_DIGEST)
     - name: destImageURL
-      value: docker://us.icr.io/$(params.va-scan-namespace)/wkc-connector:latest
+      value: docker://us.icr.io/$(params.va-scan-namespace)/data-fabric-control-plane:latest
     - name: srcTLSverify
       value: "false"
     - name: destTLSverify
@@ -493,6 +501,8 @@ spec:
       value: "$(params.blueprintNamespace)"
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
+    - name: useBuiltImage
+      value: $(params.useBuiltImage)
     runAfter:
     - fetch-repository
     taskRef:
@@ -530,6 +540,8 @@ spec:
       value: "$(params.docker-namespace)"
     - name: blueprintNamespace
       value: $(params.blueprintNamespace)
+    - name: useBuiltImage
+      value: $(params.useBuiltImage)
     runAfter:
     - build-manager
     taskRef:
@@ -592,6 +604,8 @@ spec:
       value: "$(params.docker-namespace)"
     - name: blueprintNamespace
       value: $(params.blueprintNamespace)
+    - name: useBuiltImage
+      value: $(params.useBuiltImage)
     runAfter:
     - fetch-repository
     taskRef:
@@ -652,6 +666,8 @@ spec:
       value: $(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
+    - name: useBuiltImage
+      value: $(params.useBuiltImage)
     runAfter:
     - fetch-repository
     taskRef:
@@ -689,6 +705,8 @@ spec:
       value: "$(params.docker-namespace)"
     - name: blueprintNamespace
       value: $(params.blueprintNamespace)
+    - name: useBuiltImage
+      value: $(params.useBuiltImage)
     runAfter:
     - build-katalog
     taskRef:
@@ -749,6 +767,8 @@ spec:
       value: $(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
+    - name: useBuiltImage
+      value: $(params.useBuiltImage)
     runAfter:
     - fetch-repository
     taskRef:
@@ -786,6 +806,8 @@ spec:
       value: "$(params.docker-namespace)"
     - name: blueprintNamespace
       value: $(params.blueprintNamespace)
+    - name: useBuiltImage
+      value: $(params.useBuiltImage)
     runAfter:
     - build-opa
     taskRef:
@@ -846,6 +868,8 @@ spec:
       value: $(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
+    - name: useBuiltImage
+      value: $(params.useBuiltImage)
     runAfter:
     - fetch-repository
     taskRef:
@@ -883,6 +907,8 @@ spec:
       value: "$(params.docker-namespace)"
     - name: blueprintNamespace
       value: "$(params.blueprintNamespace)"
+    - name: useBuiltImage
+      value: $(params.useBuiltImage)
     runAfter:
     - build-datacatalog
     taskRef:
@@ -943,6 +969,8 @@ spec:
       value: $(params.blueprintNamespace)
     - name: INCREMENTAL_CODE_RESTART
       value: $(params.INCREMENTAL_CODE_RESTART)
+    - name: useBuiltImage
+      value: $(params.useBuiltImage)
     runAfter:
     - fetch-repository
     taskRef:
@@ -980,6 +1008,8 @@ spec:
       value: "$(params.docker-namespace)"
     - name: blueprintNamespace
       value: $(params.blueprintNamespace)
+    - name: useBuiltImage
+      value: $(params.useBuiltImage)
     runAfter:
     - build-servicepolicymanager
     taskRef:

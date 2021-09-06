@@ -22,6 +22,7 @@ export vault_plugin_secrets_wkc_reader_url="${vault_plugin_secrets_wkc_reader_ur
 export proprietary_git_url="${proprietary_git_url}"
 export data_fabric_git_url="${data_fabric_git_url}"
 export use_application_namespace=${use_application_namespace:-false}
+export use_built_image=${use_built_image:-false}
 
 helper_text=""
 realpath() {
@@ -564,7 +565,7 @@ set +e
 oc get secret us-south-creds
 rc=$?
 transfer_images_to_icr=false
-if [[ $rc -eq 0 ]]; then
+if [[ $rc -eq 0 && ${use_built_images} != "true" ]]; then
     transfer_images_to_icr=true
 fi
 extra_params="${extra_params} -p transfer-images-to-icr=${transfer_images_to_icr}"
@@ -602,6 +603,14 @@ if [[ ! -z "${github_workspace}" ]]; then
         extra_params="${extra_params} -p wkc-connector-git-url="
     fi
 fi
+
+image_namespace=""
+if [[ ${use_built_image} == "true" ]]; then
+    image_repo=us.icr.io
+    image_namespace=mesh-for-data
+else
+    image_namespace=${unique_prefix}
+fi
 set +x
 
 helper_text="If you do not have a vault_credentials file, please see: https://github.ibm.com/IBM-Data-Fabric/data-fabric-control-plane/blob/readme/README.md"
@@ -617,7 +626,7 @@ oc cp ${repo_root}/pipeline/fetch-secrets-from-vault.sh workspace-0:/workspace/s
 
 echo "
 # for a pre-existing PVC that will be deleted when the namespace is deleted
-tkn pipeline start build-and-deploy -w name=images-url,emptyDir=\"\" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -w name=maven-settings,config=custom-maven-settings -p docker-hostname=${image_repo} -p dockerhub-hostname=${dockerhub_hostname} -p docker-namespace=${unique_prefix} -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} -p mesh-for-data-values=${mesh_for_data_values} ${extra_params} -p git-revision=pipeline"
+tkn pipeline start build-and-deploy -w name=images-url,emptyDir=\"\" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -w name=maven-settings,config=custom-maven-settings -p docker-hostname=${image_repo} -p dockerhub-hostname=${dockerhub_hostname} -p docker-namespace=${image_namespace} -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} -p mesh-for-data-values=${mesh_for_data_values} ${extra_params} -p useBuiltImage=${use_built_image} -p git-revision=pipeline"
 
 if [[ ${run_tkn} -eq 1 ]]; then
     set -x
@@ -641,7 +650,7 @@ spec:
   - name: blueprintNamespace
     value: ${blueprint_namespace}
   - name: docker-namespace
-    value: ${unique_prefix} 
+    value: ${image_namespace} 
   - name: git-revision
     value: pipeline
   - name: DataFabricControlPlaneServerUrl
@@ -678,6 +687,8 @@ spec:
     value: "${mesh_for_data_values}"
   - name: va-scan-namespace
     value: "${va_scan_namespace:-mesh-for-data-ci}"
+  - name: useBuiltImage
+    value: $(use_built_image)
   pipelineRef:
     name: build-and-deploy
   serviceAccountName: ${pipeline_sa}
