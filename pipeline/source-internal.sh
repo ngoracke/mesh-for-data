@@ -13,12 +13,12 @@ export image_source_repo="${image_source_repo:-cp.stg.icr.io/cp/cpd}"
 export dockerhub_hostname="${dockerhub_hostname:-cp.stg.icr.io/cp/cpd/pipelines-tutorial}"
 export cpd_url=https://cpd-cpd4.apps.cpstreamsx4.cp.fyre.ibm.com
 export git_url=git@${github}:IBM-Data-Fabric/mesh-for-data.git
-export wkc_connector_git_url=git@${github}:ngoracke/WKC-connector.git
+export wkc_connector_git_url=git@${github}:IBM-Data-Fabric/WKC-connector.git
 export cpd_password=password
 export cpd_username=admin
 export vault_plugin_secrets_wkc_reader_url=git@${github}:data-mesh-research/vault-plugin-secrets-wkc-reader.git
 export git_url="git@${github}:IBM-Data-Fabric/mesh-for-data.git"
-export wkc_connector_git_url="git@${github}:ngoracke/WKC-connector.git"
+export wkc_connector_git_url="git@${github}:IBM-Data-Fabric/WKC-connector.git"
 export vault_plugin_secrets_wkc_reader_url="git@${github}:data-mesh-research/vault-plugin-secrets-wkc-reader.git"
 export proprietary_git_url="git@${github}:IBM-Data-Fabric/proprietary.git"
 export data_fabric_git_url="git@${github}:IBM-Data-Fabric/data-fabric-control-plane.git"
@@ -28,7 +28,7 @@ export va_scan_namespace=${va_scan_namespace:-mesh-for-data-ci}
 
 if [[ ! -z ${GH_TOKEN} ]]; then
     export git_url="https://${github}/IBM-Data-Fabric/mesh-for-data.git"
-    export wkc_connector_git_url="https://${github}/ngoracke/WKC-connector.git"
+    export wkc_connector_git_url="https://${github}/IBM-Data-Fabric/WKC-connector.git"
     export vault_plugin_secrets_wkc_reader_url="https://${github}/data-mesh-research/vault-plugin-secrets-wkc-reader.git"
     export proprietary_git_url="https://${github}/IBM-Data-Fabric/proprietary.git"
     export data_fabric_git_url="https://${github}/IBM-Data-Fabric/data-fabric-control-plane.git"

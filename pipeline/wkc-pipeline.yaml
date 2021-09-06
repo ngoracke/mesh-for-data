@@ -36,7 +36,7 @@ spec:
   - description: url of the git repo for the code of deployment
     name: wkc-connector-git-url
     type: string
-    default: git@github.ibm.com:ngoracke/WKC-connector.git
+    default: git@github.ibm.com:IBM-Data-Fabric/WKC-connector.git
   - description: url of the git repo for the data fabric control plane
     name: data-fabric-git-url
     type: string
