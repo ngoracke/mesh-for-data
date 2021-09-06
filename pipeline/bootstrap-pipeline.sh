@@ -688,7 +688,7 @@ spec:
   - name: va-scan-namespace
     value: "${va_scan_namespace:-mesh-for-data-ci}"
   - name: useBuiltImage
-    value: $(use_built_image)
+    value: "${use_built_image}"
   pipelineRef:
     name: build-and-deploy
   serviceAccountName: ${pipeline_sa}
