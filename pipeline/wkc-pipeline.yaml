@@ -153,7 +153,7 @@ spec:
     name: proprietary-git-url
     type: string
     default: https://github.ibm.com/IBM-Data-Fabric/proprietary.git
-  - default: kritika-dataFabricCharts
+  - default: master
     description: branch/revision to be used from repo of the code for deployment
     name: proprietary-git-revision
     type: string
