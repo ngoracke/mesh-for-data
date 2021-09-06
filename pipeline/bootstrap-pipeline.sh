@@ -597,14 +597,14 @@ set +x
 
 helper_text="If you do not have a vault_credentials file, please see: https://github.ibm.com/IBM-Data-Fabric/data-fabric-control-plane/blob/readme/README.md"
 # get vault credentials
-vaultPath=`jq -r '.vault_path' vault_credentials.json`
-vaultRoleId=`jq -r '.vault_role_id' vault_credentials.json`
-vaultSecretId=`jq -r '.vault_secret_id' vault_credentials.json`
-vaultServer=`jq -r '.vault_server' vault_credentials.json`
+vaultPath=`jq -r '.vault_path' ${repo_root}/pipeline/vault_credentials.json`
+vaultRoleId=`jq -r '.vault_role_id' ${repo_root}/pipeline/vault_credentials.json`
+vaultSecretId=`jq -r '.vault_secret_id' ${repo_root}/pipeline/vault_credentials.json`
+vaultServer=`jq -r '.vault_server' ${repo_root}/pipeline/vault_credentials.json`
 
 # create secret for vault credentials
 kubectl create secret generic vault-creds --from-literal=vault_path=$vaultPath --from-literal=vault_role_id=$vaultRoleId --from-literal=vault_secret_id=$vaultSecretId --from-literal=vault_server=$vaultServer
-oc cp fetch-secrets-from-vault.sh workspace-0:/workspace/source/fetch-secrets-from-vault.sh
+oc cp ${repo_root}/pipeline/fetch-secrets-from-vault.sh workspace-0:/workspace/source/fetch-secrets-from-vault.sh
 
 echo "
 # for a pre-existing PVC that will be deleted when the namespace is deleted
