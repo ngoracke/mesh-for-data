@@ -592,6 +592,15 @@ if [[ ! -z "${github_workspace}" ]]; then
         proprietary_git_url=""
         extra_params="${extra_params} -p proprietary-git-url="
     fi
+    if [[ -d ${github_workspace}/../WKC-connector ]]; then
+        if [[ ${is_kubernetes} == "true" ]]; then
+            kubectl cp $github_workspace/../WKC-connector workspace-0:/workspace/source/
+        else
+            oc rsync --exclude=*.git/* $github_workspace/../WKC-connector workspace-0:/workspace/source/
+        fi
+        wkc_connector_git_url=""
+        extra_params="${extra_params} -p wkc-connector-git-url="
+    fi
 fi
 set +x
 
