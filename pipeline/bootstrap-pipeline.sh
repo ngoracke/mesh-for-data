@@ -23,6 +23,7 @@ export proprietary_git_url="${proprietary_git_url}"
 export data_fabric_git_url="${data_fabric_git_url}"
 export use_application_namespace=${use_application_namespace:-false}
 export use_built_image=${use_built_image:-false}
+export is_kind="${is_kind:-false}"
 
 helper_text=""
 realpath() {
@@ -100,7 +101,7 @@ else
     client=kubectl
     pipeline_sa=default
 fi
-if [[ ${is_kubernetes} == "true" ]]; then
+if [[ ${is_kubernetes} == "true" && ${is_kind} == "true" ]]; then
     # Assume this is a kind cluster, and install nfs client pvc
     set -e
     kubectl apply -f ${repo_root}/pipeline/nfs.yaml
@@ -233,7 +234,7 @@ EOH
     try_command "${TMP}/streams_csv_check_script.sh"  40 false 5
     oc apply -f ${repo_root}/pipeline/knative-eventing.yaml
 else
-    kubectl apply --filename https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
+    kubectl apply --filename https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.26.0/release.yaml
     kubectl apply -f https://github.com/knative/operator/releases/download/v0.15.4/operator.yaml
     kubectl apply -f https://github.com/knative/eventing/releases/download/v0.21.0/eventing-crds.yaml
     kubectl apply -f https://github.com/knative/eventing/releases/download/v0.21.0/eventing-core.yaml
@@ -435,7 +436,9 @@ set -e
 # Install triggers for rebuilds of specific tasks
 oc apply -f ${repo_root}/pipeline/eventlistener/triggerbinding.yaml
 oc apply -f ${repo_root}/pipeline/eventlistener/triggertemplate.yaml
+set +e
 oc apply -f ${repo_root}/pipeline/eventlistener/apiserversource.yaml
+set -e
 oc apply -f ${repo_root}/pipeline/eventlistener/role.yaml
 oc apply -f ${repo_root}/pipeline/eventlistener/serviceaccount.yaml
 
