@@ -616,7 +616,11 @@ else
 fi
 set +x
 
-helper_text="If you do not have a vault_credentials file, please see: https://github.ibm.com/IBM-Data-Fabric/data-fabric-control-plane/blob/readme/README.md"
+helper_text="If you do not have a vault_credentials file or jq installed, please see: https://github.ibm.com/IBM-Data-Fabric/data-fabric-control-plane/blob/readme/README.md"
+if [[ ! -f ${repo_root}/pipeline/vault_credentials.json ]]; then
+    exit 1
+fi
+which jq
 # get vault credentials
 vaultPath=`jq -r '.vault_path' ${repo_root}/pipeline/vault_credentials.json`
 vaultRoleId=`jq -r '.vault_role_id' ${repo_root}/pipeline/vault_credentials.json`
