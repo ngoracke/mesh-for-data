@@ -556,6 +556,10 @@ if [[ $rc -eq 0 ]]; then
 fi
 extra_params="${extra_params} -p transfer-images-to-icr=${transfer_images_to_icr}"
 
+if [[ -f ${repo_root}/pipeline/custom_pre_tkn.sh ]]; then
+    source ${repo_root}/pipeline/custom_pre_workspace.sh
+fi
+
 # If a github_workspace was specified, don't clone the code, copy it to volume from the local host
 set -e
 if [[ ! -z "${github_workspace}" ]]; then
