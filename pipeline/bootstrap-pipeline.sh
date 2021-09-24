@@ -323,11 +323,9 @@ if [[ -f ${repo_root}/pipeline/custom_pipeline_cleanup.sh ]]; then
 fi
 
 set -e
-echo "gonna fire?"
 if [[ "${is_public_repo}" == "true" ]]; then
     kubectl apply -f ${repo_root}/pipeline/pipeline.yaml
 else
-     echo "why not fire?" 
      if [[ -f ${repo_root}/pipeline/custom_pipeline_create.sh ]]; then
          source ${repo_root}/pipeline/custom_pipeline_create.sh
      else
@@ -436,12 +434,12 @@ fi
 
 # Install tekton triggers
 pushd ${TMP}
-wget https://storage.googleapis.com/tekton-releases/triggers/previous/v0.15.2/release.yaml
+wget https://storage.googleapis.com/tekton-releases/triggers/latest/release.yaml
 if [[ ${is_openshift} == "true" ]]; then
     sed -i.bak 's|namespace: tekton-pipelines|namespace: openshift-pipelines|g' ${TMP}/release.yaml
 fi
 cat ${TMP}/release.yaml
-wget https://storage.googleapis.com/tekton-releases/triggers/previous/v0.15.2/interceptors.yaml
+wget https://storage.googleapis.com/tekton-releases/triggers/latest/interceptors.yaml
 if [[ ${is_openshift} == "true" ]]; then
     sed -i.bak 's|namespace: tekton-pipelines|namespace: openshift-pipelines|g' ${TMP}/interceptors.yaml
 fi
