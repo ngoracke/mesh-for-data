@@ -231,8 +231,8 @@ EOH
 else
     kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.26.0/release.yaml
     kubectl apply -f https://github.com/knative/operator/releases/download/v0.15.4/operator.yaml
-    kubectl apply -f https://github.com/knative/eventing/releases/download/v0.21.0/eventing-crds.yaml
-    kubectl apply -f https://github.com/knative/eventing/releases/download/v0.21.0/eventing-core.yaml
+    kubectl apply -f https://github.com/knative/eventing/releases/download/v0.23.0/eventing-crds.yaml
+    kubectl apply -f https://github.com/knative/eventing/releases/download/v0.23.0/eventing-core.yaml
     try_command "kubectl wait pod -n tekton-pipelines --all --for=condition=Ready --timeout=3m" 2 true 1
     set +e
     kubectl create ns knative-eventing
