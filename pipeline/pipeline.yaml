@@ -29,7 +29,7 @@ spec:
     name: git-url
     type: string
     default: github.com/fybrik/fybrik.git
-  - default: pipeline
+  - default: master
     description: branch/revision to be used from repo of the code for deployment
     name: git-revision
     type: string
