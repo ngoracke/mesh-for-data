@@ -115,8 +115,11 @@ if [[ ! -z $1 ]]; then
     kubectl get ns $1
     rc=$?
 else
-    kubectl get ns fybrik-system
-    rc=$?
+    set +x
+    echo "The namespace no longer defaults to anything.  You must specify \"fybrik-system\" if you want to use that namespace."
+    exit 1
+#    kubectl get ns fybrik-system
+#    rc=$?
 fi
 
 # Create new project if necessary
@@ -584,7 +587,7 @@ spec:
   - name: docker-namespace
     value: ${unique_prefix} 
   - name: git-revision
-    value: pipeline
+    value: master
   - name: git-url
     value: "${git_url}"
   - name: skipTests
