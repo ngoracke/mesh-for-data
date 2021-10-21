@@ -558,7 +558,7 @@ set +x
 
 echo "
 # for a pre-existing PVC that will be deleted when the namespace is deleted
-tkn pipeline start build-and-deploy -w name=images-url,emptyDir=\"\" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=${image_repo} -p dockerhub-hostname=${dockerhub_hostname} -p docker-namespace=${unique_prefix} -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} -p fybrik-values=${fybrik_values} ${extra_params} -p git-revision=pipeline"
+tkn pipeline start build-and-deploy -w name=images-url,emptyDir=\"\" -w name=artifacts,claimName=artifacts-pvc -w name=shared-workspace,claimName=source-pvc -p docker-hostname=${image_repo} -p dockerhub-hostname=${dockerhub_hostname} -p docker-namespace=${unique_prefix} -p NAMESPACE=${unique_prefix} -p skipTests=${skip_tests} --use-param-defaults -p fybrik-values=${fybrik_values} ${extra_params} -p git-revision=master-internal"
 
 if [[ ${run_tkn} -eq 1 ]]; then
     set -x
