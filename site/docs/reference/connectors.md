@@ -231,6 +231,7 @@
 
 ### DatasetMetadata
 
+ <!-- end HasExtensions -->
 
 
 | Field | Type | Label | Description |
@@ -239,9 +240,13 @@
 | dataset_tags | [string](#string) | repeated | Tags - can be any free text added to a component (no taxonomy) |
 | components_metadata | [DatasetMetadata.ComponentsMetadataEntry](#connectors.DatasetMetadata.ComponentsMetadataEntry) | repeated | metadata for each component in asset. In tabular data each column is a component, then we will have: column name -> column metadata |
 
+<a name="policy_manager_request.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## policy_manager_request.proto
 
 
-
+ <!-- end services -->
 
 
 <a name="connectors.DatasetMetadata.ComponentsMetadataEntry"></a>
@@ -268,8 +273,10 @@
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| key | [string](#string) |  |  |
-| value | [string](#string) |  |  |
+| credential_path | [string](#string) |  | link to vault plugin for reading k8s secret with user credentials |
+| app_info | [ApplicationDetails](#connectors.ApplicationDetails) |  |  |
+| datasets | [DatasetContext](#connectors.DatasetContext) | repeated |  |
+| general_operations | [AccessOperation](#connectors.AccessOperation) | repeated |  |
 
 
 
@@ -352,11 +359,9 @@
 | KAFKA | 4 |  |
 
 
- <!-- end enums -->
-
- <!-- end HasExtensions -->
 
 
+<a name="connectors.DatasetIdentifier"></a>
 
 <a name="policy_manager_request.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
@@ -364,7 +369,9 @@
 ## policy_manager_request.proto
 
 
- <!-- end services -->
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| dataset_id | [string](#string) |  | identifier of asset - always needed. JSON expected. Interpreted by the Connector, can contain any additional information as part of JSON |
 
 
 <a name="connectors.AccessOperation"></a>
@@ -372,15 +379,24 @@
 ### AccessOperation
 
 
+ <!-- end messages -->
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | type | [AccessOperation.AccessType](#connectors.AccessOperation.AccessType) |  |  |
 | destination | [string](#string) |  | Destination for transfer or write. |
 
+<a name="connectors.AccessOperation.AccessType"></a>
+
+### AccessOperation.AccessType
 
 
-
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| UNKNOWN | 0 |  |
+| READ | 1 |  |
+| COPY | 2 |  |
+| WRITE | 3 |  |
 
 
 <a name="connectors.ApplicationContext"></a>
