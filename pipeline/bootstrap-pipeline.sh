@@ -430,9 +430,11 @@ kubectl delete apiserversource generic-watcher
 set -e
 
 # Install triggers for rebuilds of specific tasks
-try_command "kubectl apply -f ${repo_root}/pipeline/eventlistener/triggerbinding.yaml" 3 true 60
-try_command "kubectl apply -f ${repo_root}/pipeline/eventlistener/triggertemplate.yaml" 3 true 60
-try_command "kubectl apply -f ${repo_root}/pipeline/eventlistener/apiserversource.yaml" 3 true 60
+kubectl apply -f ${repo_root}/pipeline/eventlistener/triggerbinding.yaml
+kubectl apply -f ${repo_root}/pipeline/eventlistener/triggertemplate.yaml
+set +e
+kubectl apply -f ${repo_root}/pipeline/eventlistener/apiserversource.yaml
+set -e
 kubectl apply -f ${repo_root}/pipeline/eventlistener/role.yaml
 kubectl apply -f ${repo_root}/pipeline/eventlistener/serviceaccount.yaml
 
