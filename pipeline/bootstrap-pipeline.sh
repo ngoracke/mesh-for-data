@@ -18,6 +18,7 @@ export dockerhub_hostname="${dockerhub_hostname:-docker.io}"
 export use_application_namespace=${use_application_namespace:-false}
 export git_url="${git_url:-https://github.com/fybrik/fybrik.git}"
 export is_kind="${is_kind:-false}"
+export tekton_minutes_to_wait=${tekton_minutes_to_wait:-31}
 
 helper_text=""
 realpath() {
@@ -644,10 +645,10 @@ set -x
 kubectl get taskrun,pvc,po
 for i in $(kubectl get taskrun --no-headers | grep "False" | cut -d' ' -f1); do kubectl logs -l tekton.dev/taskRun=$i --all-containers; done
 kubectl get pipelinerun --no-headers
-kubectl get pipelinerun --no-headers | grep -e "Failed" -e "Completed"
+kubectl get pipelinerun --no-headers | grep -e "Failed" -e "Completed" -e "PipelineRunCancelled" -e "PipelineRunCancelled" -e "PipelineRunTimeout"
 EOH
     chmod u+x ${TMP}/streams_csv_check_script.sh
-    try_command "${TMP}/streams_csv_check_script.sh"  60 false 31
+    try_command "${TMP}/streams_csv_check_script.sh"  60 false ${tekton_minutes_to_wait:-31}
     echo "debug: pods"
     kubectl describe pods
     echo "debug: events"
