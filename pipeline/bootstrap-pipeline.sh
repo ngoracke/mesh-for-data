@@ -447,7 +447,9 @@ if [[ ${is_openshift} == "true" ]]; then
     try_command "kubectl apply -f ${repo_root}/pipeline/eventlistener/eventlistener.yaml" 3 true 60
 else
     sed -i.bak "s|serviceAccountName: pipeline|serviceAccountName: default|g" ${repo_root}/pipeline/eventlistener/eventlistener.yaml
+    set +e
     kubectl apply -f ${repo_root}/pipeline/eventlistener/eventlistener.yaml
+    set -e
     mv ${repo_root}/pipeline/eventlistener/eventlistener.yaml.bak ${repo_root}/pipeline/eventlistener/eventlistener.yaml
 fi
 
