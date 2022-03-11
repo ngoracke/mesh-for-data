@@ -240,7 +240,7 @@ else
     kubectl apply -f https://github.com/knative/eventing/releases/download/knative-v1.2.0/eventing-crds.yaml
     kubectl apply -f https://github.com/knative/eventing/releases/download/knative-v1.2.0/eventing-core.yaml
     set -e
-    try_command "kubectl wait pod -n tekton-pipelines --all --for=condition=Ready --timeout=3m" 2 true 1
+    try_command "kubectl wait deployment -n tekton-pipelines --all --for=condition=available --timeout=3m" 2 true 1
     set +e
     kubectl create ns knative-eventing
     cat > ${TMP}/knative-eventing.yaml <<EOH
