@@ -37,7 +37,7 @@ endif
 
 .PHONY: wait_for_manager
 wait_for_manager: $(TOOLBIN)/kubectl
-	$(TOOLBIN)/kubectl wait --for=condition=available -n ${CONTROLLER_NAMESPACE} deployment/manager --timeout=120s
+	$(TOOLBIN)/kubectl wait --for=condition=available -n ${CONTROLLER_NAMESPACE} deployment -l app.kubernetes.io/component=manager --timeout=120s
 
 .PHONY: prep-test
 prep-test: export DOCKER_HOSTNAME?=localhost:5000
