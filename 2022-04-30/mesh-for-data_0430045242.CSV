@@ -1,0 +1,17 @@
+HCL AppScan on Cloud
+
+Report Attributes:
+Title,Description,Report Date U T C,Total Issues In The Report
+"Report_mesh_for_data_0430045242",Null,"2022-04-30T11:59:19Z","0"
+
+Application Attributes:
+Business Impact,Business Unit,Description,Hosts,Max Severity,Risk Rating,Testing Status,Url,Date Created,Last Updated,Availability Requirement,Collateral Damage Potential,Confidentiality Requirement,Integrity Requirement,Target Distribution,Business Owner,Development Contact,Tester
+"Medium","Data and AI","","","","Medium","InProgress","","2021-09-27T00:00:00Z","2022-04-30T00:00:00Z","NotDefined","NotDefined","NotDefined","NotDefined","NotDefined","","",""
+
+Issue Counters:
+High Issues,Medium Issues,Low Issues,Informational Issues,Total Issues,New Issues,Open Issues,In Progress,Fixed Issues,Noise Issues,Passed Issues
+"0","0","0","0","0","0","0","0","0","0","0"
+
+Issue Attributes:
+Issue Id,Severity,Severity Id,Issue Type Name,Threat Class,Security Risk,Cause,Application Id,Cvss,Cwe,Cve,Last Comment,Location,Status,Date Created,Last Updated,Api,Line,Calling Method,Class,Discovery Method,Host,Port,Domain,Element,Package,Path,Scheme,Source File,Fix Group Id
+
