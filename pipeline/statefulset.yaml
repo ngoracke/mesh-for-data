@@ -27,13 +27,6 @@ spec:
         - name: workspace 
           imagePullPolicy: Always
           image: docker.io/yakinikku/suede:latest
-          resources:
-            limits:
-              memory: "4G"
-              cpu: "2"
-            requests:
-              memory: "128M"
-              cpu: "10m"
           env:
             - name: JAVA_HOME
               value: "/usr/lib/jvm/java-8-openjdk-amd64/"
