@@ -144,26 +144,10 @@ unique_prefix=$(kubectl config view --minify --output 'jsonpath={..namespace}'; 
 if [[ "${unique_prefix}" == "fybrik-system" ]]; then
   modules_namespace="fybrik-blueprints"
 else
-  modules_namespace="${unique_prefix}-blueprints"
+  modules_namespace="${unique_prefix}"
 fi
 extra_params="${extra_params} -p modulesNamespace=${modules_namespace}"
 
-if [[ ${cluster_scoped} == "false" ]]; then
-  set +e
-  rc=1
-  kubectl get ns ${modules_namespace}
-  rc=$?
-  set -e
-  # Create new project if necessary
-  if [[ $rc -ne 0 ]]; then
-    if [[ ${is_openshift} == "true" ]]; then
-      oc new-project ${modules_namespace}
-      oc project ${unique_prefix} 
-    else
-      kubectl create ns ${modules_namespace} 
-    fi
-  fi
-fi
 
 if [[ -f ${repo_root}/pipeline/custom_fybrik_values.sh ]]; then
     source ${repo_root}/pipeline/custom_fybrik_values.sh
