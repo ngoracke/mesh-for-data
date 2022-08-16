@@ -202,8 +202,8 @@ if [[ ${is_openshift} == "true" ]]; then
     cat > ${TMP}/streams_csv_check_script.sh <<EOH
 #!/bin/bash
 set -x
-oc get -n openshift-pipelines csv | grep openshift-pipelines-operator 
-oc get -n openshift-pipelines csv | grep openshift-pipelines-operator | grep Succeeded
+oc get -n openshift-pipelines csv | grep redhat-openshift-pipelines 
+oc get -n openshift-pipelines csv | grep redhat-openshift-pipelines | grep Succeeded
 EOH
     chmod u+x ${TMP}/streams_csv_check_script.sh
     try_command "${TMP}/streams_csv_check_script.sh"  40 true 5
@@ -526,6 +526,10 @@ if [[ $rc -eq 0 ]]; then
     transfer_images_to_icr=true
 fi
 extra_params="${extra_params} -p transfer-images-to-icr=${transfer_images_to_icr}"
+
+if [[ -f ${repo_root}/pipeline/custom_pre_workspace.sh ]]; then
+    source ${repo_root}/pipeline/custom_pre_workspace.sh
+fi
 
 # If a github_workspace was specified, don't clone the code, copy it to volume from the local host
 set -e
