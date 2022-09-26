@@ -1,6 +1,6 @@
 {
   "settingsInheritedFrom": "whitesource-config/whitesource-config@master",
   "scanSettings": {
-        "baseBranches": ["1.0.1-internal"]
+        "baseBranches": ["v1.1.0-internal"]
   }
 }
