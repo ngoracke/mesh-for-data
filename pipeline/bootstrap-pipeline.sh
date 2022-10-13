@@ -202,8 +202,8 @@ if [[ ${is_openshift} == "true" ]]; then
     cat > ${TMP}/streams_csv_check_script.sh <<EOH
 #!/bin/bash
 set -x
-oc get -n openshift-pipelines csv | grep redhat-openshift-pipelines 
-oc get -n openshift-pipelines csv | grep redhat-openshift-pipelines | grep Succeeded
+oc get -n openshift-pipelines csv | grep 'Red Hat OpenShift Pipelines'
+oc get -n openshift-pipelines csv | grep 'Red Hat OpenShift Pipelines' | grep Succeeded
 EOH
     chmod u+x ${TMP}/streams_csv_check_script.sh
     try_command "${TMP}/streams_csv_check_script.sh"  40 true 5
