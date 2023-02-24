@@ -401,12 +401,12 @@ fi
 # Install tekton triggers
 pushd ${TMP}
 
-wget https://storage.googleapis.com/tekton-releases/triggers/previous/v0.18.0/release.yaml
+wget https://storage.googleapis.com/tekton-releases/triggers/previous/v0.22.2/release.yaml
 if [[ ${is_openshift} == "true" ]]; then
     sed -i.bak 's|namespace: tekton-pipelines|namespace: openshift-pipelines|g' ${TMP}/release.yaml
 fi
 cat ${TMP}/release.yaml
-wget https://storage.googleapis.com/tekton-releases/triggers/previous/v0.18.0/interceptors.yaml
+wget https://storage.googleapis.com/tekton-releases/triggers/previous/v0.22.2/interceptors.yaml
 if [[ ${is_openshift} == "true" ]]; then
     sed -i.bak 's|namespace: tekton-pipelines|namespace: openshift-pipelines|g' ${TMP}/interceptors.yaml
 fi
